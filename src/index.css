@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  font-family: Tajawal, sans-serif;
+}
+ .w-96{
+  width: 50rem !important;
+ }

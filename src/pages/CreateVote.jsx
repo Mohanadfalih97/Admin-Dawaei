@@ -30,62 +30,71 @@ const onRemoveOption = (index) => {
   setOptions(updated);
 };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-    const payload = {
-      voteTitle,
-      dscrp,
-      minMumbersVoted,
-      creationDate: new Date().toISOString(),
-      startDate,
-      finishDate,
-      docUrl: file ? file.name : "string",
-      voteInfo: 0,
-      voteActveStatus,
-    };
-
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}vote`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept-Language": "en",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-      if (response.ok) {
-        toast.success("تم إنشاء التصويت بنجاح");
-
-        // بعد إنشاء التصويت، أرسل كل خيار كـ vote-state
-        const token = localStorage.getItem("token");
-        const sendStates = options.map((option) =>
-          fetch(`${process.env.REACT_APP_API_URL}vote-states`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Accept-Language": "en",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ stateDscrp: option }),
-          })
-        );
-
-        await Promise.all(sendStates);
-        navigate("/VotePageMain");
-      } else {
-        toast.error(result.msg || "حدث خطأ أثناء إنشاء التصويت");
-      }
-    } catch (error) {
-      toast.error("فشل الاتصال بالخادم");
-    } finally {
-      setLoading(false);
-    }
+  const payload = {
+    voteTitle,
+    dscrp,
+    minMumbersVoted,
+    creationDate: new Date().toISOString(),
+    startDate,
+    finishDate,
+    docUrl: file ? file.name : "string",
+    voteInfo: 0,
+    voteActveStatus,
   };
+
+  try {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}vote`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept-Language": "en",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+    if (response.ok) {
+      toast.success("تم إنشاء التصويت بنجاح");
+
+      // إرسال خيارات التصويت باستخدام `voteId`
+      const voteId = result.data?.id; // استلام الـ voteId
+      if (voteId) {
+        // إرسال خيارات التصويت
+        await Promise.all(
+          options.map((option) =>
+            fetch(`${process.env.REACT_APP_API_URL}vote-options`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Accept-Language": "en",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({
+                voteId,
+                voteDscrp: option, // إرسال كل خيار كـ voteDscrp
+              }),
+            })
+          )
+        );
+        toast.success("تم إضافة الخيارات بنجاح");
+      }
+
+      navigate("/VotePageMain");
+    } else {
+      toast.error(result.msg || "حدث خطأ أثناء إنشاء التصويت");
+    }
+  } catch (error) {
+    toast.error("فشل الاتصال بالخادم");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <section className="flex flex-col">
@@ -118,12 +127,12 @@ const onRemoveOption = (index) => {
           setVoteActveStatus={setVoteActveStatus}
         />
 
-      <VoteNominations
-  options={options}
-  onAddOption={onAddOption}
-  onOptionChange={onOptionChange}
-  onRemoveOption={onRemoveOption}
-/>
+   <VoteNominations
+        options={options}
+        onAddOption={onAddOption}
+        onOptionChange={onOptionChange}
+        onRemoveOption={onRemoveOption}
+      />
 
 
         <div className="w-full flex justify-between mt-5" style={{ direction: "rtl" }}>

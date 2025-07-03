@@ -44,7 +44,7 @@ const Topbar = () => {
     <div className="bg-priamy text-white h-[65px] flex items-center justify-between px-5 py-4" >
       <div className="flex items-center gap-4">
     <Link
-  to="/LoginAsMember"
+  to="/Login"
   onClick={handleLogout}
 
   className="w-36 bg-blue-500 hover:bg-blue-700 text-white text-center p-2.5 rounded-md transition duration-300"

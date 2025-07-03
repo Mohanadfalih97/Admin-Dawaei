@@ -48,7 +48,7 @@ const App = () => {
       <>
         <Routes>
           <Route path="/" element={<MainLayout />}>
-            <Route index element={<Navigate to="/loginAsMember" replace />} />
+            <Route index element={<Navigate to="/login" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="votes/create" element={<CreateVote />} />
             <Route path="votes/:id" element={<VoteDetails />} />

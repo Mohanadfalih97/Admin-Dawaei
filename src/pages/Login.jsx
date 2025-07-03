@@ -86,9 +86,9 @@ if (response.ok && result.data?.token) {
       <div className="w-full max-w-sm bg-white rounded-xl shadow-md p-8 text-center"
        style={{ maxWidth: "50rem", width: "100%", maxHeight: "1123px" }}>
            <div className="text-blue-700 mb-4 text-3xl font-bold">
-          <Link to="/LoginAsMember" className="hover:text-blue-900 transition">
+       {/*    <Link to="/LoginAsMember" className="hover:text-blue-900 transition">
             <Home />
-          </Link>
+          </Link> */}
         </div>
         <div className="flex flex-col items-center justify-center gap-2">
        

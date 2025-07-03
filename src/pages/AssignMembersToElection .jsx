@@ -11,34 +11,34 @@ const AssignMembersToElection = () => {
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [electionCycles, setElectionCycles] = useState([]);
   const [selectedCycleId, setSelectedCycleId] = useState("");
-   const navigate = useNavigate();
+  const [changes, setChanges] = useState([]); // لتخزين التغييرات
+  const navigate = useNavigate();
 
   // جلب الأعضاء
- useEffect(() => {
-  const fetchMembers = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}members`);
-      const items = response.data.data.items || [];
-      setMembers(items);
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}members`);
+        const items = response.data.data.items || [];
+        setMembers(items);
 
-      // استخراج الأعضاء الذين لديهم دورة انتخابية
-      const assigned = items
-        .filter((member) => member.cycleId && member.cycleId !== 0)
-        .map((member) => member.id);
+        // استخراج الأعضاء الذين لديهم دورة انتخابية
+        const assigned = items
+          .filter((member) => member.cycleId && member.cycleId !== 0)
+          .map((member) => member.id);
 
-      setSelectedMembers(assigned);
-    } catch (error) {
-      console.error("حدث خطأ أثناء جلب الأعضاء:", error);
-      toast.error("فشل في تحميل قائمة الأعضاء");
-    } finally {
-      setLoading(false);
-    }
-  };
+        setSelectedMembers(assigned);
+      } catch (error) {
+        console.error("حدث خطأ أثناء جلب الأعضاء:", error);
+        toast.error("فشل في تحميل قائمة الأعضاء");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchMembers();
-}, []);
-
+    fetchMembers();
+  }, []);
 
   // جلب الدورات الانتخابية
   useEffect(() => {
@@ -58,7 +58,7 @@ const AssignMembersToElection = () => {
   // عند تغيير الدورة المختارة، نحدد الأعضاء المرتبطين بها
   useEffect(() => {
     if (!selectedCycleId) {
-      setSelectedMembers([]);
+      setSelectedMembers([]); // إذا لم يتم اختيار دورة، نعيد تعيين الأعضاء المحددين
       return;
     }
 
@@ -66,47 +66,62 @@ const AssignMembersToElection = () => {
       .filter((member) => member.cycleId === parseInt(selectedCycleId))
       .map((member) => member.id);
 
-    setSelectedMembers(membersInCycle);
+    // لا نغير التحديدات السابقة إذا كانت الدورة موجودة
+    setSelectedMembers((prevSelected) => [
+      ...new Set([...prevSelected, ...membersInCycle]),
+    ]);
     toast.info("تم تحميل الأعضاء المرتبطين بهذه الدورة.");
   }, [selectedCycleId, members]);
 
-  // تحديث عضوية عضو في دورة
-  const toggleSelectMember = async (memberId) => {
-    const member = members.find((m) => m.id === memberId);
-    if (!member) return;
+  // تحديث العضوية في الدورة عندما يتغير الـ checkbox
+  const toggleSelectMember = (memberId) => {
+    setChanges((prevChanges) => {
+      const isSelected = prevChanges.includes(memberId);
+      if (isSelected) {
+        return prevChanges.filter((id) => id !== memberId);
+      } else {
+        return [...prevChanges, memberId];
+      }
+    });
+  };
 
-    const isSelected = selectedMembers.includes(memberId);
-    const newCycleId = isSelected ? 0 : parseInt(selectedCycleId);
-
-    if (!selectedCycleId && !isSelected) {
+  // حفظ التغييرات
+  const saveChanges = async () => {
+    if (!selectedCycleId) {
       toast.warning("يرجى اختيار دورة انتخابية أولاً.");
       return;
     }
 
     try {
-      const updatedMember = {
-        ...member,
-        cycleId: newCycleId,
-      };
+      for (const memberId of changes) {
+        const member = members.find((m) => m.id === memberId);
+        if (!member) continue;
 
-      await axios.put(`${process.env.REACT_APP_API_URL}members/${memberId}`, updatedMember, {
-        headers: {
-          Accept: "application/json",
-          "Accept-Language": "ar",
-        },
-      });
+        const updatedMember = {
+          ...member,
+          cycleId: parseInt(selectedCycleId),
+        };
 
-      // تحديث الواجهة بعد نجاح العملية
-      setSelectedMembers((prev) =>
-        isSelected ? prev.filter((id) => id !== memberId) : [...prev, memberId]
-      );
+        await axios.put(`${process.env.REACT_APP_API_URL}members/${memberId}`, updatedMember, {
+          headers: {
+            Accept: "application/json",
+            "Accept-Language": "ar",
+          },
+        });
+      }
 
-      toast.success(`تم ${isSelected ? "إزالة" : "إضافة"} العضو من الدورة بنجاح.`);
+      // تحديث الواجهة بعد حفظ التغييرات
+      setSelectedMembers((prev) => [
+        ...prev,
+        ...changes.filter((id) => !prev.includes(id)),
+      ]);
+      setChanges([]); // تفريغ التغييرات
+      toast.success("تم حفظ التغييرات بنجاح.");
       navigate("/assign-members");
-      window.location.reload()
+      window.location.reload();
     } catch (error) {
       console.error("خطأ أثناء التحديث:", error);
-      toast.error("فشل في تحديث بيانات العضو.");
+      toast.error("فشل في تحديث بيانات الأعضاء.");
     }
   };
 
@@ -165,20 +180,28 @@ const AssignMembersToElection = () => {
                     onError={(e) => { e.target.onerror = null; e.target.src = defaultProfileImage; }}
                   />
                 </td>
-            <td className="px-4 py-2 border text-center">
-  <input
-    type="checkbox"
-    checked={member.cycleId !== 0}
-    onChange={() => toggleSelectMember(member.id)}
-    className="w-5 h-5"
-  />
-</td>
-
+                <td className="px-4 py-2 border text-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedMembers.includes(member.id) || changes.includes(member.id)}
+                    onChange={() => toggleSelectMember(member.id)}
+                    className="w-5 h-5"
+                  />
+                </td>
               </tr>
             ))
           )}
         </tbody>
       </table>
+
+      <div className="text-center mt-6 flex">
+        <button
+          onClick={saveChanges}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          حفظ التغييرات
+        </button>
+      </div>
     </div>
   );
 };

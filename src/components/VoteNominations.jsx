@@ -1,25 +1,20 @@
 import { Button } from "./Ui/Button";
 import { Input } from "./Ui/Input";
 
-const VoteNominations = ({
-  options,
-  onOptionChange,
-  onAddOption,
-  onRemoveOption,
-}) => {
+const VoteNominations = ({ options, onOptionChange, onAddOption, onRemoveOption }) => {
   return (
-    <div className="space-y-4 mt-6" style={{direction:"rtl"}}>
+    <div className="space-y-4 mt-6" style={{ direction: "rtl" }}>
       <div className="flex justify-between items-center">
-        <label>خيارات التصويت</label>
-        <Button type="button"  onClick={onAddOption}>
+        <h3 className="text-xl font-semibold">خيارات التصويت</h3>
+        <Button type="button" onClick={onAddOption}>
           إضافة خيار
         </Button>
       </div>
 
       {options.map((option, index) => (
-        <div key={index} className="flex gap-2">
+        <div key={option.id} className="flex gap-2">
           <Input
-            value={option}
+            value={option.voteDscrp}  // التأكد من عرض voteDscrp فقط
             onChange={(e) => onOptionChange(index, e.target.value)}
             placeholder={`الخيار ${index + 1}`}
             className="w-full p-2"

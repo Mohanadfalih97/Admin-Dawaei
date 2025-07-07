@@ -97,9 +97,19 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
 
         const uploadResult = await uploadResponse.json();
 
-        if (!uploadResponse.ok || !uploadResult.data) {
-          throw new Error(uploadResult.msg || "فشل رفع الصورة");
-        }
+     if (!uploadResponse.ok || !uploadResult.data) {
+  if (uploadResult.msg === "FILE_TOO_LARGE") {
+    toast.error("❌ حجم الملف كبير جدًا. الحد الأقصى المسموح به هو 20 ميغابايت.");
+  } else if (uploadResult.msg === "INVALID_FILE_TYPE") {
+    toast.error("❌ نوع الملف غير مدعوم. الصيغ المسموح بها: JPG, JPEG, PNG, PDF, DOCX, XLSX, CSV, TXT.");
+  } else if (uploadResult.msg === "UPLOAD_FILE_FAILED") {
+    toast.error("❌ فشل في رفع الملف. يرجى المحاولة مرة أخرى لاحقًا.");
+  } else {
+    toast.error(uploadResult.msg || "حدث خطأ أثناء رفع الملف.");
+  }
+  throw new Error(uploadResult.msg || "Upload failed");
+}
+
 
         const baseUrl = process.env.REACT_APP_API_URL.replace(/\/api\/?$/, "");
         updatedImgUrl = uploadResult.data.startsWith("http")
@@ -144,35 +154,41 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
     }
   };
 
-  const handleDelete = async () => {
-    if (!member?.id) return;
-    setLoadingDelete(true);
-    const token = localStorage.getItem("token");
+const handleDelete = async () => {
+  if (!member?.id) return;
+  setLoadingDelete(true);
+  const token = localStorage.getItem("token");
 
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}members/${member.id}`, {
-        method: "DELETE",
-        headers: {
-          Accept: "application/json",
-          "Accept-Language": "en",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  try {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}members/${member.id}`, {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        "Accept-Language": "en",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      if (response.ok) {
-        toast.success("تم حذف العضو بنجاح");
-        onOpenChange(false);
-        window.location.reload();
+    if (response.ok) {
+      toast.success("تم حذف العضو بنجاح");
+      onOpenChange(false);
+      window.location.reload();
+    } else {
+      const result = await response.json();
+      if (result?.msg === "Cannot delete this member because they are assigned to an active election cycle.") {
+        toast.error("لا يمكن حذف هذا العضو لأنه مرتبط بدورة انتخابية نشطة.");
       } else {
         toast.error("فشل في حذف العضو");
       }
-    } catch (error) {
-      console.error("Delete error:", error);
-      toast.error("حدث خطأ أثناء الاتصال بالخادم");
-    } finally {
-      setLoadingDelete(false);
     }
-  };
+  } catch (error) {
+    console.error("Delete error:", error);
+    toast.error("حدث خطأ أثناء الاتصال بالخادم");
+  } finally {
+    setLoadingDelete(false);
+  }
+};
+
 
   if (!member) return null;
 

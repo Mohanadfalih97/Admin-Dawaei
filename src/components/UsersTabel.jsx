@@ -148,9 +148,9 @@ useEffect(() => {
           ) : users.length === 0 ? (
             <tr><td colSpan="6" className="text-center text-red-500 py-4">لا توجد نتائج مطابقة.</td></tr>
           ) : (
-            users.map((user) => (
+            users.map((user,index) => (
               <tr key={user.id} className="hover:bg-gray-100">
-                <td className="px-2 md:px-4 py-2 border text-center">{user.id}</td>
+                <td className="px-2 md:px-4 py-2 border text-center">{(currentPage - 1) * pageSize + index + 1}</td>
                 <td className="px-2 md:px-4 py-2 border text-center text-gray-700">{user.name}</td>
                 <td className="px-2 md:px-4 py-2 border text-center text-gray-700">{user.email}</td>
                 <td className="px-2 md:px-4 py-2 border text-center text-gray-700">{user.phoneCountryCode}</td>

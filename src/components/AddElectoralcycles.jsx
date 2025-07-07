@@ -23,41 +23,48 @@ const ElectoralCycleForm = () => {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = async () => {
-    if (!form.dscrp || !form.startDate || !form.finishDate) {
-      toast.error("يرجى ملء جميع الحقول");
-      return;
-    }
+const handleSave = async () => {
+  if (!form.dscrp || !form.startDate || !form.finishDate) {
+    toast.error("يرجى ملء جميع الحقول");
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}elections-cycles`,
-        {
-          dscrp: form.dscrp,
-          startDate: new Date(form.startDate).toISOString(),
-          finishDate: new Date(form.finishDate).toISOString()
-        },
-        {
-          headers: {
-            "Accept-Language": "en",
-            "Content-Type": "application/json"
-          }
+  try {
+    const response = await axios.post(
+      `${process.env.REACT_APP_API_URL}elections-cycles`,
+      {
+        dscrp: form.dscrp,
+        startDate: new Date(form.startDate).toISOString(),
+        finishDate: new Date(form.finishDate).toISOString()
+      },
+      {
+        headers: {
+          "Accept-Language": "en",
+          "Content-Type": "application/json"
         }
-      );
-
-      if (response.status === 200) {
-        toast.success("تم إنشاء الدورة الانتخابية بنجاح!");
-        setTimeout(() => navigate("/Electoralcycles"), 1000);
       }
-    } catch (err) {
-      console.error("Error creating electoral cycle:", err);
-      toast.error("حدث خطأ أثناء إنشاء الدورة!");
-    } finally {
-      setLoading(false);
+    );
+
+    if (response.status === 200) {
+      toast.success("تم إنشاء الدورة الانتخابية بنجاح!");
+      setTimeout(() => navigate("/Electoralcycles"), 1000);
     }
-  };
+  } catch (err) {
+    console.error("Error creating electoral cycle:", err);
+
+    const serverMessage = err.response?.data?.msg;
+    if (serverMessage === "Cannot create a new election cycle while another one is still ongoing.") {
+      toast.error("لا يمكن إنشاء دورة انتخابية جديدة بينما توجد دورة حالية مستمرة.");
+    } else {
+      toast.error("حدث خطأ أثناء إنشاء الدورة!");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="mt-5 p-5 border rounded-lg shadow-md">

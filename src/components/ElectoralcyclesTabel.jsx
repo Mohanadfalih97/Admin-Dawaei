@@ -65,7 +65,13 @@ const deleteElectionCycle = async (id) => {
     }
   } catch (error) {
     console.error("Error deleting election cycle:", error);
-    toast.error("فشل في حذف الدورة");
+
+    const serverMessage = error.response?.data?.msg;
+    if (serverMessage === "Cannot delete this cycle. One or more members are assigned to it.") {
+      toast.error("لا يمكن حذف هذه الدورة، هناك أعضاء مرتبطون بها.");
+    } else {
+      toast.error("فشل في حذف الدورة");
+    }
   } finally {
     setDeletingId(null); // ⬅️ إلغاء التحديد بعد الانتهاء
   }
@@ -108,9 +114,9 @@ const deleteElectionCycle = async (id) => {
               <td colSpan="7" className="text-center text-red-500 py-4">لا توجد نتائج مطابقة.</td>
             </tr>
           ) : (
-            elections.map((e) => (
+            elections.map((e,index) => (
               <tr key={e.id} className="hover:bg-gray-100">
-                <td className="px-4 py-2 border text-center">{e.id}</td>
+                <td className="px-4 py-2 border text-center">{(currentPage - 1) * pageSize + index + 1}</td>
                 <td className="px-4 py-2 border text-center text-gray-700">{e.dscrp || "بدون وصف"}</td>
                 <td className="px-4 py-2 border text-center text-gray-700">{formatDate(e.startDate)}</td>
                 <td className="px-4 py-2 border text-center text-gray-700">{formatDate(e.finishDate)}</td>

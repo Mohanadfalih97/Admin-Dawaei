@@ -16,6 +16,8 @@ const CreateVote = () => {
   const [voteActveStatus, setVoteActveStatus] = useState(0);
   const [options, setOptions] = useState(["", ""]); // خيارات التصويت
   const [loading, setLoading] = useState(false);
+  const [cycleId, setCycleId] = useState("");
+
   const navigate = useNavigate();
 const onAddOption = () => setOptions([...options, ""]);
 const onOptionChange = (index, value) => {
@@ -44,6 +46,7 @@ const handleSubmit = async (e) => {
     docUrl: file ? file.name : "string",
     voteInfo: 0,
     voteActveStatus,
+     cycleId: Number(cycleId), 
   };
 
   try {
@@ -125,6 +128,8 @@ const handleSubmit = async (e) => {
         <VoteOptions
           voteActveStatus={voteActveStatus}
           setVoteActveStatus={setVoteActveStatus}
+           cycleId={cycleId}
+  setCycleId={setCycleId}
         />
 
    <VoteNominations

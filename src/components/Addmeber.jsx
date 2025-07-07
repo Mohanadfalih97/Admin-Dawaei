@@ -85,9 +85,19 @@ const AddMember = () => {
 
         const uploadResult = await uploadResponse.json();
 
-        if (!uploadResponse.ok || !uploadResult.data) {
-          throw new Error(uploadResult.msg || "فشل رفع الصورة");
-        }
+      if (!uploadResponse.ok || !uploadResult.data) {
+  if (uploadResult.msg === "FILE_TOO_LARGE") {
+    toast.error("❌ حجم الملف كبير جدًا. الحد الأقصى المسموح به هو 20 ميغابايت.");
+  } else if (uploadResult.msg === "INVALID_FILE_TYPE") {
+    toast.error("❌ نوع الملف غير مدعوم. الصيغ المسموح بها: JPG, JPEG, PNG, PDF, DOCX, XLSX, CSV, TXT.");
+  } else if (uploadResult.msg === "UPLOAD_FILE_FAILED") {
+    toast.error("❌ فشل في رفع الملف. يرجى المحاولة مرة أخرى لاحقًا.");
+  } else {
+    toast.error(uploadResult.msg || "حدث خطأ أثناء رفع الملف.");
+  }
+  throw new Error(uploadResult.msg || "Upload failed");
+}
+
 
         const baseUrl = process.env.REACT_APP_API_URL.replace(/\/api\/?$/, "");
         uploadedImagePath = uploadResult.data.startsWith("http")
@@ -116,14 +126,20 @@ const AddMember = () => {
         body: JSON.stringify(memberData),
       });
 
-      const memberResult = await memberResponse.json();
 
-      if (memberResponse.ok && memberResult.data) {
-        toast.success("تم حفظ العضو بنجاح");
-        navigate("/members");
-      } else {
-        toast.error(memberResult.msg || "فشل إضافة العضو.");
-      }
+ const memberResult = await memberResponse.json();
+
+if (memberResponse.ok && memberResult.data) {
+  toast.success("تم حفظ العضو بنجاح");
+  navigate("/members");
+} else {
+  if (memberResult.msg === "A member with the same phone or email already exists.") {
+    toast.error("يوجد عضو مسجل بنفس رقم الهاتف أو البريد الإلكتروني.");
+  } else {
+    toast.error(memberResult.msg || "فشل إضافة العضو.");
+  }
+}
+
     } catch (error) {
       console.error("Add member error:", error);
       toast.error("حدث خطأ أثناء الاتصال بالخادم.");

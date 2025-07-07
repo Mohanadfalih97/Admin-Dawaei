@@ -75,9 +75,9 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
           ) : filteredVotes.length === 0 ? (
             <tr><td colSpan="6" className="py-4 text-red-600">لا توجد نتائج مطابقة</td></tr>
           ) : (
-            filteredVotes.map((vote) => (
+            filteredVotes.map((vote,index) => (
               <tr key={vote.id} className="hover:bg-gray-100">
-                <td className="px-4 py-2 border">{vote.id}</td>
+                <td className="px-4 py-2 border">{(currentPage - 1) * pageSize + index + 1}</td>
                 <td className="px-4 py-2 border">{vote.dscrp || "بدون وصف"}</td>
                 <td className="px-4 py-2 border">--</td>
                 <td className="px-4 py-2 border">
@@ -94,7 +94,8 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
   voteInfo: vote.voteInfo,
   minMumbersVoted:vote.minMumbersVoted,
   votecompletestatus: vote.votecompletestatus,               // ✅ مضاف حديثًا
-  voteActveStatus: vote.voteActveStatus,     // ✅ مضاف حديثًا
+  voteActveStatus: vote.voteActveStatus,   
+  cycleId: vote.cycleId, // ✅ أضف هذا  // ✅ مضاف حديثًا
 }}>
 
                     <button className="bg-blue-500 text-white text-xs font-bold p-3 rounded-full">تعديل</button>

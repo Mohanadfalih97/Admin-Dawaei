@@ -70,10 +70,11 @@ const MemberTable = ({ searchTerm }) => {
     setOpen(true);
   };
 
-  const filteredMembers = members.filter((member) => {
-    const search = searchTerm.trim();
-    return member.memberId?.toString().includes(search);
-  });
+const filteredMembers = members.filter((member) => {
+  const search = searchTerm.trim().toLowerCase();
+  return member.fullName?.toLowerCase().includes(search);
+});
+
 
   const goToPage = (page) => {
     if (page >= 1 && page <= totalPages) setCurrentPage(page);

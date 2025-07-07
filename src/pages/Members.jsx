@@ -32,7 +32,7 @@ const Members = () => {
         <input
           type="text"
           className="w-full py-2 px-4 border rounded-lg text-right"
-          placeholder="بحث عن عضو..."
+          placeholder="بحث عن اسم العضو..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
         />

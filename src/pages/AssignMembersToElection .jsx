@@ -70,7 +70,6 @@ const AssignMembersToElection = () => {
     setSelectedMembers((prevSelected) => [
       ...new Set([...prevSelected, ...membersInCycle]),
     ]);
-    toast.info("تم تحميل الأعضاء المرتبطين بهذه الدورة.");
   }, [selectedCycleId, members]);
 
   // تحديث العضوية في الدورة عندما يتغير الـ checkbox

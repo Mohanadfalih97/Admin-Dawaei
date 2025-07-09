@@ -1,13 +1,13 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Calendar, ChartBar, UserRound } from "lucide-react";
-import  { useEffect, useState } from "react";
-
 import BoxCard from "./BoxCard";
 
-
 const Cards = () => {
-    const [membersCount, setMembersCount] = useState(0);
+  const [membersCount, setMembersCount] = useState(0);
+  const [voteStats, setVoteStats] = useState({ completed: 0, active: 0 });
+  const [allVotes, setAllVotes] = useState([]);
 
+  // جلب عدد الأعضاء
   useEffect(() => {
     const fetchMembers = async () => {
       try {
@@ -34,35 +34,81 @@ const Cards = () => {
 
     fetchMembers();
   }, []);
-  const activeVotes = [
-    {
-      id: "1",
-      title: "التصويت على ميزانية المشاريع لعام 2025",
-      description:
-        "التصويت على الميزانية المقترحة للمشاريع التطويرية للعام القادم",
-      startDate: new Date(2025, 3, 25, 10, 0),
-      endDate: new Date(2025, 3, 25, 18, 0),
-      status: "نشط",
-    },
-    {
-      id: "2",
-      title: "انتخاب أعضاء اللجنة التنفيذية",
-      description: "انتخاب أعضاء اللجنة التنفيذية للدورة الجديدة",
-      startDate: new Date(2025, 3, 23, 9, 0),
-      endDate: new Date(2025, 3, 28, 17, 0),
-      status: "نشط",
-    },
-    {
-      id: "3",
-      title: "انتخاب أعضاء اللجنة التنفيذية",
-      description: "انتخاب أعضاء اللجنة التنفيذية للدورة الجديدة",
-      startDate: new Date(2025, 3, 23, 9, 0),
-      endDate: new Date(2025, 3, 28, 17, 0),
-      status: "غير مكتمل",
-    },
-  ];
 
-  // Stats for the dashboard
+  // جلب إحصائيات التصويتات (المكتملة والنشطة)
+  useEffect(() => {
+    const fetchVoteStats = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}vote/status-counts`, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Accept-Language": "ar",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.data) {
+          setVoteStats({
+            completed: result.data.completedVotesCount || 0,
+            active: result.data.activeVotesCount || 0,
+          });
+        } else {
+          console.error("فشل في جلب بيانات التصويت", result);
+        }
+      } catch (error) {
+        console.error("خطأ في جلب التصويت:", error);
+      }
+    };
+
+    fetchVoteStats();
+  }, []);
+
+  // جلب جميع التصويتات بدون فلترة
+  useEffect(() => {
+    const fetchAllVotes = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}vote`, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Accept-Language": "ar",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.data?.items) {
+          const mappedVotes = result.data.items.map((vote) => ({
+            id: vote.id,
+            title: vote.voteTitle,
+            description: vote.dscrp,
+            startDate: new Date(vote.startDate),
+            endDate: new Date(vote.finishDate),
+            status:
+              vote.voteActveStatus === 1
+      ? "نشط"
+      : vote.voteActveStatus === 0
+      ? "غير نشط"
+      : vote.votecompletestatus === 1
+      ? "مكتمل"
+      : "غير مكتمل",
+          }));
+          setAllVotes(mappedVotes);
+        } else {
+          console.error("فشل في جلب جميع التصويتات", result);
+        }
+      } catch (error) {
+        console.error("خطأ في جلب التصويتات:", error);
+      }
+    };
+
+    fetchAllVotes();
+  }, []);
+
   const stats = [
     {
       name: "عدد الأعضاء",
@@ -71,12 +117,12 @@ const Cards = () => {
     },
     {
       name: "التصويتات المكتملة",
-      value: "8",
+      value: voteStats.completed,
       icon: <ChartBar className="h-8 w-8 text-green-600" />,
     },
     {
       name: "التصويتات النشطة",
-      value: "2",
+      value: voteStats.active,
       icon: <Calendar className="h-8 w-8 text-cyan-800" />,
     },
   ];
@@ -96,16 +142,19 @@ const Cards = () => {
           </div>
         ))}
       </div>
-      <div className="mt-5 p-5 box-border border rounded-lg" style={{direction:"ltr"}}>
+
+      <div className="mt-5 p-5 box-border border rounded-lg" style={{ direction: "ltr" }}>
         <div className="flex flex-col items-end justify-end gap-2">
-          <h2 className="text-2xl font-semibold ">التصويتات النشطة</h2>
+          <h2 className="text-2xl font-semibold">كل التصويتات</h2>
           <p className="text-sm text-gray-400 font-normal">
-            التصويتات المتاحة حالياً للمشاركة
+            جميع التصويتات سواء النشطة أو المكتملة أو غير المكتملة
           </p>
         </div>
-        <BoxCard votes={activeVotes} />
+        <div style={{ direction: "rtl"}}>
+            <BoxCard  votes={allVotes}  />
+        </div>
+      
       </div>
-     
     </section>
   );
 };

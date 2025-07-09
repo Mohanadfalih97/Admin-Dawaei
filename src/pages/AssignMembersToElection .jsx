@@ -117,8 +117,8 @@ const AssignMembersToElection = () => {
       setChanges([]); // تفريغ التغييرات
       toast.success("تم حفظ التغييرات بنجاح.");
       navigate("/assign-members");
-      window.location.reload();
-    } catch (error) {
+/*       window.location.reload();
+ */    } catch (error) {
       console.error("خطأ أثناء التحديث:", error);
       toast.error("فشل في تحديث بيانات الأعضاء.");
     }

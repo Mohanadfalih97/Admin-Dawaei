@@ -46,7 +46,7 @@ const handleSubmit = async (e) => {
     docUrl: file ? file.name : "string",
     voteInfo: 0,
     voteActveStatus,
-     cycleId: Number(cycleId), 
+    cycleId: Number(cycleId),
   };
 
   try {
@@ -61,13 +61,13 @@ const handleSubmit = async (e) => {
     });
 
     const result = await response.json();
+
     if (response.ok) {
       toast.success("تم إنشاء التصويت بنجاح");
 
-      // إرسال خيارات التصويت باستخدام `voteId`
-      const voteId = result.data?.id; // استلام الـ voteId
+      // إرسال خيارات التصويت باستخدام voteId
+      const voteId = result.data?.id;
       if (voteId) {
-        // إرسال خيارات التصويت
         await Promise.all(
           options.map((option) =>
             fetch(`${process.env.REACT_APP_API_URL}vote-options`, {
@@ -79,7 +79,7 @@ const handleSubmit = async (e) => {
               },
               body: JSON.stringify({
                 voteId,
-                voteDscrp: option, // إرسال كل خيار كـ voteDscrp
+                voteDscrp: option,
               }),
             })
           )
@@ -89,7 +89,13 @@ const handleSubmit = async (e) => {
 
       navigate("/VotePageMain");
     } else {
-      toast.error(result.msg || "حدث خطأ أثناء إنشاء التصويت");
+      // 🔴 عرض كل رسالة خطأ على حدة
+      if (result.msg) {
+        const messages = result.msg.split(" | ");
+        messages.forEach((m) => toast.error(m));
+      } else {
+        toast.error("حدث خطأ أثناء إنشاء التصويت");
+      }
     }
   } catch (error) {
     toast.error("فشل الاتصال بالخادم");
@@ -97,6 +103,7 @@ const handleSubmit = async (e) => {
     setLoading(false);
   }
 };
+
 
 
   return (

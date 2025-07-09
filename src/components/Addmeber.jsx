@@ -18,9 +18,14 @@ const AddMember = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const [errors, setErrors] = useState({
+    fullName: "",
+    phone1: "",
+    email: "",
+  });
+
   const navigate = useNavigate();
 
-  // جلب الأقسام من السيرفر
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
@@ -65,6 +70,7 @@ const AddMember = () => {
       return;
     }
 
+    setErrors({});
     setLoading(true);
 
     try {
@@ -85,19 +91,16 @@ const AddMember = () => {
 
         const uploadResult = await uploadResponse.json();
 
-      if (!uploadResponse.ok || !uploadResult.data) {
-  if (uploadResult.msg === "FILE_TOO_LARGE") {
-    toast.error("❌ حجم الملف كبير جدًا. الحد الأقصى المسموح به هو 20 ميغابايت.");
-  } else if (uploadResult.msg === "INVALID_FILE_TYPE") {
-    toast.error("❌ نوع الملف غير مدعوم. الصيغ المسموح بها: JPG, JPEG, PNG, PDF, DOCX, XLSX, CSV, TXT.");
-  } else if (uploadResult.msg === "UPLOAD_FILE_FAILED") {
-    toast.error("❌ فشل في رفع الملف. يرجى المحاولة مرة أخرى لاحقًا.");
-  } else {
-    toast.error(uploadResult.msg || "حدث خطأ أثناء رفع الملف.");
-  }
-  throw new Error(uploadResult.msg || "Upload failed");
-}
-
+        if (!uploadResponse.ok || !uploadResult.data) {
+          if (uploadResult.msg === "FILE_TOO_LARGE") {
+            toast.error("❌ حجم الملف كبير جدًا. الحد الأقصى المسموح به هو 20 ميغابايت.");
+          } else if (uploadResult.msg === "INVALID_FILE_TYPE") {
+            toast.error("❌ نوع الملف غير مدعوم.");
+          } else {
+            toast.error(uploadResult.msg || "حدث خطأ أثناء رفع الملف.");
+          }
+          throw new Error(uploadResult.msg || "Upload failed");
+        }
 
         const baseUrl = process.env.REACT_APP_API_URL.replace(/\/api\/?$/, "");
         uploadedImagePath = uploadResult.data.startsWith("http")
@@ -126,19 +129,27 @@ const AddMember = () => {
         body: JSON.stringify(memberData),
       });
 
+      const memberResult = await memberResponse.json();
 
- const memberResult = await memberResponse.json();
-
-if (memberResponse.ok && memberResult.data) {
-  toast.success("تم حفظ العضو بنجاح");
-  navigate("/members");
-} else {
-  if (memberResult.msg === "A member with the same phone or email already exists.") {
-    toast.error("يوجد عضو مسجل بنفس رقم الهاتف أو البريد الإلكتروني.");
-  } else {
-    toast.error(memberResult.msg || "فشل إضافة العضو.");
-  }
-}
+      if (memberResponse.ok && memberResult.data) {
+        toast.success("تم حفظ العضو بنجاح");
+        navigate("/members");
+      } else {
+        if (
+          memberResult.msg?.includes("same phone number") ||
+          memberResult.msg?.includes("same email") ||
+          memberResult.msg?.includes("same full name")
+        ) {
+          const newErrors = {
+            fullName: memberResult.msg.includes("same full name") ? "الاسم الكامل مستخدم مسبقًا." : "",
+            phone1: memberResult.msg.includes("same phone number") ? "رقم الهاتف مستخدم مسبقًا." : "",
+            email: memberResult.msg.includes("same email") ? "البريد الإلكتروني مستخدم مسبقًا." : "",
+          };
+          setErrors(newErrors);
+        } else {
+          toast.error(memberResult.msg || "فشل إضافة العضو.");
+        }
+      }
 
     } catch (error) {
       console.error("Add member error:", error);
@@ -163,7 +174,6 @@ if (memberResponse.ok && memberResult.data) {
           <p className="text-sm text-gray-500 mb-6">أدخل البيانات الخاصة بالعضو الجديد</p>
         </div>
 
-        {/* صورة العضو */}
         <div className="relative w-36 h-36 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white shadow-md group">
           <img
             src={imagePreview || defaultProfileImage}
@@ -186,13 +196,12 @@ if (memberResponse.ok && memberResult.data) {
         </div>
 
         <form className="space-y-4" onSubmit={handleRegister}>
-          <InputField label="الاسم الكامل" value={fullName} onChange={setFullName} requiredLabel />
-          <InputField label="رقم الهاتف الأول" value={phone1} onChange={setPhone1} type="number" requiredLabel />
+          <InputField label="الاسم الكامل" value={fullName} onChange={setFullName} requiredLabel error={errors.fullName} />
+          <InputField label="رقم الهاتف الأول" value={phone1} onChange={setPhone1} type="number" requiredLabel error={errors.phone1} />
           <InputField label="رقم الهاتف الثاني" value={phone2} onChange={setPhone2} type="number" />
-          <InputField label="البريد الإلكتروني" value={email} onChange={setEmail} type="email" requiredLabel />
+          <InputField label="البريد الإلكتروني" value={email} onChange={setEmail} type="email" requiredLabel error={errors.email} />
           <InputField label="رقم الواتساب" value={watsApp} onChange={setWatsApp} type="number" />
 
-          {/* قائمة الأقسام */}
           <div className="text-right">
             <label className="block mb-1 text-sm font-semibold text-gray-700">
               القسم <span className="text-red-600">*</span>
@@ -229,7 +238,7 @@ if (memberResponse.ok && memberResult.data) {
   );
 };
 
-const InputField = ({ label, value, onChange, type = "text", requiredLabel = false }) => (
+const InputField = ({ label, value, onChange, type = "text", requiredLabel = false, error = "" }) => (
   <div className="text-right">
     <label className="block mb-1 text-sm font-semibold text-gray-700">
       {label}
@@ -239,9 +248,12 @@ const InputField = ({ label, value, onChange, type = "text", requiredLabel = fal
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+        error ? "border-red-500" : "border-gray-300"
+      }`}
       required={requiredLabel}
     />
+    {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
   </div>
 );
 

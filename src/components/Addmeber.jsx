@@ -62,102 +62,137 @@ const AddMember = () => {
     }
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.error("الرجاء تسجيل الدخول أولاً.");
-      return;
+ const handleRegister = async (e) => {
+  e.preventDefault();
+  const token = localStorage.getItem("token");
+  if (!token) {
+    toast.error("الرجاء تسجيل الدخول أولاً.");
+    return;
+  }
+
+  setErrors({});
+  setLoading(true);
+
+  try {
+    let uploadedImagePath = null;
+
+    // رفع الصورة إن وُجدت
+    if (imageFile) {
+      const imageForm = new FormData();
+      imageForm.append("file", imageFile);
+
+      const uploadResponse = await fetch(`${process.env.REACT_APP_API_URL}attachments`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Accept-Language": "en",
+        },
+        body: imageForm,
+      });
+
+      const uploadResult = await uploadResponse.json();
+
+      if (!uploadResponse.ok || !uploadResult.data) {
+        if (uploadResult.msg === "FILE_TOO_LARGE") {
+          toast.error("❌ حجم الملف كبير جدًا. الحد الأقصى المسموح به هو 20 ميغابايت.");
+        } else if (uploadResult.msg === "INVALID_FILE_TYPE") {
+          toast.error("❌ نوع الملف غير مدعوم.");
+        } else {
+          toast.error(uploadResult.msg || "حدث خطأ أثناء رفع الملف.");
+        }
+        throw new Error(uploadResult.msg || "Upload failed");
+      }
+
+      const baseUrl = process.env.REACT_APP_API_URL.replace(/\/api\/?$/, "");
+      uploadedImagePath = uploadResult.data.startsWith("http")
+        ? uploadResult.data
+        : `${baseUrl}/uploads/${uploadResult.data}`;
     }
 
-    setErrors({});
-    setLoading(true);
+    // بيانات العضو
+    const memberData = {
+      fullName,
+      phone1,
+      phone2,
+      eMail: email,
+      watsApp,
+      department,
+      position,
+      role: 0,
+      imgUrl: uploadedImagePath,
+    };
 
-    try {
-      let uploadedImagePath = null;
+    // إرسال بيانات العضو
+    const memberResponse = await fetch(`${process.env.REACT_APP_API_URL}members`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(memberData),
+    });
 
-      if (imageFile) {
-        const imageForm = new FormData();
-        imageForm.append("file", imageFile);
+    const memberResult = await memberResponse.json();
 
-        const uploadResponse = await fetch(`${process.env.REACT_APP_API_URL}attachments`, {
+    // نجاح التسجيل
+    if (memberResponse.ok && memberResult.data) {
+      toast.success("تم حفظ العضو بنجاح");
+
+      const memberId = memberResult.data.memberId;
+      const memberEmail = memberResult.data.eMail;
+
+      // إرسال OTP إلى البريد
+      try {
+        const otpResponse = await fetch(`${process.env.REACT_APP_API_URL}otp/member-id`, {
           method: "POST",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
             "Accept-Language": "en",
           },
-          body: imageForm,
+          body: JSON.stringify({
+            email: memberEmail,
+            memberId: memberId,
+          }),
         });
 
-        const uploadResult = await uploadResponse.json();
-
-        if (!uploadResponse.ok || !uploadResult.data) {
-          if (uploadResult.msg === "FILE_TOO_LARGE") {
-            toast.error("❌ حجم الملف كبير جدًا. الحد الأقصى المسموح به هو 20 ميغابايت.");
-          } else if (uploadResult.msg === "INVALID_FILE_TYPE") {
-            toast.error("❌ نوع الملف غير مدعوم.");
-          } else {
-            toast.error(uploadResult.msg || "حدث خطأ أثناء رفع الملف.");
-          }
-          throw new Error(uploadResult.msg || "Upload failed");
-        }
-
-        const baseUrl = process.env.REACT_APP_API_URL.replace(/\/api\/?$/, "");
-        uploadedImagePath = uploadResult.data.startsWith("http")
-          ? uploadResult.data
-          : `${baseUrl}/uploads/${uploadResult.data}`;
-      }
-
-      const memberData = {
-        fullName,
-        phone1,
-        phone2,
-        eMail: email,
-        watsApp,
-        department,
-        position,
-        role: 0,
-        imgUrl: uploadedImagePath,
-      };
-
-      const memberResponse = await fetch(`${process.env.REACT_APP_API_URL}members`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(memberData),
-      });
-
-      const memberResult = await memberResponse.json();
-
-      if (memberResponse.ok && memberResult.data) {
-        toast.success("تم حفظ العضو بنجاح");
-        navigate("/members");
-      } else {
-        if (
-          memberResult.msg?.includes("same phone number") ||
-          memberResult.msg?.includes("same email") ||
-          memberResult.msg?.includes("same full name")
-        ) {
-          const newErrors = {
-            fullName: memberResult.msg.includes("same full name") ? "الاسم الكامل مستخدم مسبقًا." : "",
-            phone1: memberResult.msg.includes("same phone number") ? "رقم الهاتف مستخدم مسبقًا." : "",
-            email: memberResult.msg.includes("same email") ? "البريد الإلكتروني مستخدم مسبقًا." : "",
-          };
-          setErrors(newErrors);
+        if (otpResponse.ok) {
         } else {
-          toast.error(memberResult.msg || "فشل إضافة العضو.");
+          toast.error("⚠️ فشل في إرسال رمز التحقق.");
         }
+      } catch (otpErr) {
+        console.error("OTP send error:", otpErr);
+        toast.error("⚠️ حدث خطأ أثناء إرسال رمز التحقق.");
       }
 
-    } catch (error) {
-      console.error("Add member error:", error);
-      toast.error("حدث خطأ أثناء الاتصال بالخادم.");
-    } finally {
-      setLoading(false);
+      navigate("/members");
+
+    } else {
+      // معالجة الأخطاء المرتبطة بالحقول
+      if (
+        memberResult.msg?.includes("same phone number") ||
+        memberResult.msg?.includes("same email") ||
+        memberResult.msg?.includes("same full name")
+      ) {
+        const newErrors = {
+          fullName: memberResult.msg.includes("same full name") ? "الاسم الكامل مستخدم مسبقًا." : "",
+          phone1: memberResult.msg.includes("same phone number") ? "رقم الهاتف مستخدم مسبقًا." : "",
+          email: memberResult.msg.includes("same email") ? "البريد الإلكتروني مستخدم مسبقًا." : "",
+        };
+        setErrors(newErrors);
+      } else {
+        toast.error(memberResult.msg || "فشل إضافة العضو.");
+      }
     }
-  };
+
+  } catch (error) {
+    console.error("Add member error:", error);
+    toast.error("حدث خطأ أثناء الاتصال بالخادم.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-600 to-blue-800" dir="rtl">

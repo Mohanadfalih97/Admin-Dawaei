@@ -89,10 +89,10 @@ const Cards = () => {
             startDate: new Date(vote.startDate),
             endDate: new Date(vote.finishDate),
             status:
-              vote.voteActveStatus === 1
-      ? "نشط"
-      : vote.voteActveStatus === 0
+              vote.voteActveStatus === 0
       ? "غير نشط"
+      : vote.voteActveStatus === 1
+      ? "نشط"
       : vote.votecompletestatus === 1
       ? "مكتمل"
       : "غير مكتمل",

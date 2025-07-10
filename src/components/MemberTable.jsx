@@ -200,15 +200,24 @@ const filteredMembers = members.filter((member) => {
         </div>
       )}
 
-      <MembersDilog
-        open={open}
-        onOpenChange={setOpen}
-        member={selectedReport}
-        memberId={selectedReport?.id}
-        department={selectedReport?.department}
-        position={selectedReport?.position}
-        imgUrl={selectedReport?.imgUrl}
-      />
+   <MembersDilog
+  open={open}
+  onOpenChange={setOpen}
+  member={selectedReport}
+  memberId={selectedReport?.memberId}
+  fullName={selectedReport?.fullName}
+  department={selectedReport?.department}
+  position={selectedReport?.position}
+  imgUrl={selectedReport?.imgUrl}
+  phone1={selectedReport?.phone1}
+  phone2={selectedReport?.phone2}
+  watsApp={selectedReport?.watsApp}
+  eMail={selectedReport?.eMail}
+  cycleId={selectedReport?.cycleId}
+  createdAt={selectedReport?.createdAt}
+  updatedAt={selectedReport?.updatedAt}
+/>
+
     </div>
   );
 };

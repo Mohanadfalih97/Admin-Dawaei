@@ -84,7 +84,6 @@ const handleSubmit = async (e) => {
             })
           )
         );
-        toast.success("تم إضافة الخيارات بنجاح");
       }
 
       navigate("/VotePageMain");

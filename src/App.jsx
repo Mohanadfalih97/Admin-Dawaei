@@ -24,6 +24,7 @@ import AssignMembersToElection  from "./pages/AssignMembersToElection ";
 
 import LoginAsMember from "./pages/loginAsMember";
 import RestAccesscode from "./pages/RestAccesscode";
+import OtpPassowrdAdmin from "./pages/OtpPassowrdAdmin";
 import RestAccesscodeByAdmin from "./pages/RestAccesscodeByAdmin";
 import ResetPassword from "./pages/ResetPassword";
 import AddMember from "./pages/AddmemberPage";
@@ -83,7 +84,8 @@ const App = () => {
           <Route path="/Registration" element={<Registration />} />
           <Route path="/AddMember" element={<AddMember />} />
           <Route path="/VoteUsers" element={<VoteUsers />} />
-           <Route path="/RestAccesscode" element={<RestAccesscode />} />
+          <Route path="/Otp-password" element={<OtpPassowrdAdmin />} />
+          <Route path="/RestAccesscode" element={<RestAccesscode />} />
 <Route path="RestAccesscodeByAdmin/:id" element={<RestAccesscodeByAdmin />} />
 
 

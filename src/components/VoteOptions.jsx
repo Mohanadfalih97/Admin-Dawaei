@@ -52,8 +52,8 @@ const VoteOptions = ({ voteActveStatus, setVoteActveStatus, cycleId, setCycleId 
             value={voteActveStatus}
             onChange={(e) => setVoteActveStatus(Number(e.target.value))}
           >
-            <option value="0">نشط</option>
-            <option value="1">غير نشط</option>
+            <option value="1">نشط</option>
+            <option value="0">غير نشط</option>
           </select>
         </div>
       </div>

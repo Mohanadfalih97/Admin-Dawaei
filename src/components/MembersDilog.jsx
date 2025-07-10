@@ -28,9 +28,12 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
   const [imagePreview, setImagePreview] = useState(null);
   const [loadingUpdate, setLoadingUpdate] = useState(false);
   const [loadingDelete, setLoadingDelete] = useState(false);
+  const [phone1, setPhone1] = useState("");
+  const [phone2, setPhone2] = useState("");
+  const [watsApp, setWatsApp] = useState("");
+  const [eMail, setEMail] = useState("");
   const navigate = useNavigate();
 
-  // جلب الأقسام
   useEffect(() => {
     const fetchDepartments = async () => {
       const token = localStorage.getItem("token");
@@ -48,7 +51,6 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
           toast.error("فشل في تحميل الأقسام");
         }
       } catch (error) {
-        console.error("فشل في جلب الأقسام:", error);
         toast.error("خطأ في الاتصال بالخادم");
       }
     };
@@ -56,13 +58,16 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
     fetchDepartments();
   }, []);
 
-  // تعبئة بيانات العضو عند فتح الحوار
   useEffect(() => {
     if (member) {
       setName(member.fullName || "");
       setPosition(member.position || "");
       setDepartment(member.department || "");
       setImagePreview(member.imgUrl || defaultProfileImage);
+      setPhone1(member.phone1 || "");
+      setPhone2(member.phone2 || "");
+      setWatsApp(member.watsApp || "");
+      setEMail(member.eMail || "");
     }
   }, [member]);
 
@@ -81,7 +86,6 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
     let updatedImgUrl = member.imgUrl;
 
     try {
-      // رفع الصورة إن وجدت
       if (imageFile) {
         const imageForm = new FormData();
         imageForm.append("file", imageFile);
@@ -96,20 +100,9 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
         });
 
         const uploadResult = await uploadResponse.json();
-
-     if (!uploadResponse.ok || !uploadResult.data) {
-  if (uploadResult.msg === "FILE_TOO_LARGE") {
-    toast.error("❌ حجم الملف كبير جدًا. الحد الأقصى المسموح به هو 20 ميغابايت.");
-  } else if (uploadResult.msg === "INVALID_FILE_TYPE") {
-    toast.error("❌ نوع الملف غير مدعوم. الصيغ المسموح بها: JPG, JPEG, PNG, PDF, DOCX, XLSX, CSV, TXT.");
-  } else if (uploadResult.msg === "UPLOAD_FILE_FAILED") {
-    toast.error("❌ فشل في رفع الملف. يرجى المحاولة مرة أخرى لاحقًا.");
-  } else {
-    toast.error(uploadResult.msg || "حدث خطأ أثناء رفع الملف.");
-  }
-  throw new Error(uploadResult.msg || "Upload failed");
-}
-
+        if (!uploadResponse.ok || !uploadResult.data) {
+          throw new Error(uploadResult.msg || "فشل رفع الصورة");
+        }
 
         const baseUrl = process.env.REACT_APP_API_URL.replace(/\/api\/?$/, "");
         updatedImgUrl = uploadResult.data.startsWith("http")
@@ -120,13 +113,14 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
       const updatedData = {
         memberId: member.memberId,
         fullName: name,
-        phone1: member.phone1 || "",
-        phone2: member.phone2 || "",
-        eMail: member.eMail || "",
-        watsApp: member.watsApp || "",
+        phone1,
+        phone2,
+        watsApp,
+        eMail,
         department,
         position,
         role: member.role || 0,
+        cycleId: member.cycleId || 0,
         imgUrl: updatedImgUrl,
       };
 
@@ -147,54 +141,46 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
         toast.error("فشل في تحديث البيانات");
       }
     } catch (error) {
-      console.error(error);
       toast.error("حدث خطأ أثناء الاتصال بالخادم");
     } finally {
       setLoadingUpdate(false);
     }
   };
 
-const handleDelete = async () => {
-  if (!member?.id) return;
-  setLoadingDelete(true);
-  const token = localStorage.getItem("token");
+  const handleDelete = async () => {
+    if (!member?.id) return;
+    setLoadingDelete(true);
+    const token = localStorage.getItem("token");
 
-  try {
-    const response = await fetch(`${process.env.REACT_APP_API_URL}members/${member.id}`, {
-      method: "DELETE",
-      headers: {
-        Accept: "application/json",
-        "Accept-Language": "en",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}members/${member.id}`, {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+          "Accept-Language": "en",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (response.ok) {
-      toast.success("تم حذف العضو بنجاح");
-      onOpenChange(false);
-      window.location.reload();
-    } else {
-      const result = await response.json();
-      if (result?.msg === "Cannot delete this member because they are assigned to an active election cycle.") {
-        toast.error("لا يمكن حذف هذا العضو لأنه مرتبط بدورة انتخابية نشطة.");
+      if (response.ok) {
+        toast.success("تم حذف العضو بنجاح");
+        onOpenChange(false);
+        window.location.reload();
       } else {
         toast.error("فشل في حذف العضو");
       }
+    } catch (error) {
+      toast.error("حدث خطأ أثناء الاتصال بالخادم");
+    } finally {
+      setLoadingDelete(false);
     }
-  } catch (error) {
-    console.error("Delete error:", error);
-    toast.error("حدث خطأ أثناء الاتصال بالخادم");
-  } finally {
-    setLoadingDelete(false);
-  }
-};
-
+  };
 
   if (!member) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl bg-white print:bg-white">
+      <DialogContent className="max-w-3xl w-full max-h-[90vh] overflow-y-auto bg-white print:bg-white p-4 sm:p-6">
         <DialogHeader dir="rtl">
           <DialogTitle className="flex items-center gap-2 text-xl mt-4">
             <FileChartLine className="h-6 w-6" />
@@ -213,64 +199,121 @@ const handleDelete = async () => {
           <small className="text-gray-500">اضغط على الصورة لتغييرها</small>
         </div>
 
-        <div className="mt-4 space-y-3" style={{ direction: "rtl" }}>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[200px]">البيان</TableHead>
-                <TableHead>المعلومات</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell className="font-medium">الاسم</TableCell>
-                <TableCell>
-                  <input type="text" className="border px-3 py-2 rounded w-full text-center" value={name} onChange={(e) => setName(e.target.value)} />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">المنصب</TableCell>
-                <TableCell>
-                  <input type="text" className="border px-3 py-2 rounded w-full text-center" value={position} onChange={(e) => setPosition(e.target.value)} />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">القسم</TableCell>
-                <TableCell>
-                  <select
-                    className="border px-3 py-2 rounded w-full text-center"
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                  >
-                    <option value="">اختر القسم</option>
-                    {departments.map((dep) => (
-                      <option key={dep.id} value={dep.departmentName}>
-                        {dep.departmentName}
-                      </option>
-                    ))}
-                  </select>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+        {/* عرض عمودي للهواتف */}
+        <div className="block sm:hidden space-y-4 text-sm">
+          {[
+            { label: "الاسم", value: name, set: setName, type: "text" },
+            { label: "المنصب", value: position, set: setPosition, type: "text" },
+            { label: "رقم الهاتف 1", value: phone1, set: setPhone1, type: "text" },
+            { label: "رقم الهاتف 2", value: phone2, set: setPhone2, type: "text" },
+            { label: "رقم WhatsApp", value: watsApp, set: setWatsApp, type: "text" },
+            { label: "البريد الإلكتروني", value: eMail, set: setEMail, type: "email" },
+          ].map((item, i) => (
+            <div key={i} className="border rounded p-3">
+              <label className="font-semibold">{item.label}</label>
+              <input
+                type={item.type}
+                className="border w-full rounded px-3 py-2 mt-1"
+                value={item.value}
+                onChange={(e) => item.set(e.target.value)}
+              />
+            </div>
+          ))}
 
-          <div className="flex justify-between mt-6">
-            <Button
-              onClick={handleUpdate}
-              disabled={loadingUpdate}
-              className={`text-white ${loadingUpdate ? 'bg-green-400' : 'bg-green-600 hover:bg-green-700'}`}
+          <div className="border rounded p-3">
+            <label className="font-semibold">القسم</label>
+            <select
+              className="border w-full rounded px-3 py-2 mt-1"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
             >
-              {loadingUpdate ? "جاري التعديل..." : "تعديل البيانات"}
-            </Button>
-
-            <Button
-              onClick={handleDelete}
-              disabled={loadingDelete}
-              className={`text-white ${loadingDelete ? 'bg-red-400' : 'bg-red-600 hover:bg-red-700'}`}
-            >
-              {loadingDelete ? "جاري الحذف..." : "حذف العضو"}
-            </Button>
+              <option value="">اختر القسم</option>
+              {departments.map((dep) => (
+                <option key={dep.id} value={dep.departmentName}>
+                  {dep.departmentName}
+                </option>
+              ))}
+            </select>
           </div>
+        </div>
+
+        {/* جدول لأجهزة أكبر من sm */}
+        <Table className="hidden sm:table" style={{direction:"rtl"}}>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[200px]">البيان</TableHead>
+              <TableHead>المعلومات</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell className="font-medium">الاسم</TableCell>
+              <TableCell>
+                <input type="text" className="border px-3 py-2 rounded w-full text-center" value={name} onChange={(e) => setName(e.target.value)} />
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">المنصب</TableCell>
+              <TableCell>
+                <input type="text" className="border px-3 py-2 rounded w-full text-center" value={position} onChange={(e) => setPosition(e.target.value)} />
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">القسم</TableCell>
+              <TableCell>
+                <select className="border px-3 py-2 rounded w-full text-center" value={department} onChange={(e) => setDepartment(e.target.value)}>
+                  <option value="">اختر القسم</option>
+                  {departments.map((dep) => (
+                    <option key={dep.id} value={dep.departmentName}>
+                      {dep.departmentName}
+                    </option>
+                  ))}
+                </select>
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">رقم الهاتف 1</TableCell>
+              <TableCell>
+                <input type="text" className="border px-3 py-2 rounded w-full text-center" value={phone1} onChange={(e) => setPhone1(e.target.value)} />
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">رقم الهاتف 2</TableCell>
+              <TableCell>
+                <input type="text" className="border px-3 py-2 rounded w-full text-center" value={phone2} onChange={(e) => setPhone2(e.target.value)} />
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">رقم WhatsApp</TableCell>
+              <TableCell>
+                <input type="text" className="border px-3 py-2 rounded w-full text-center" value={watsApp} onChange={(e) => setWatsApp(e.target.value)} />
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">البريد الإلكتروني</TableCell>
+              <TableCell>
+                <input type="email" className="border px-3 py-2 rounded w-full text-center" value={eMail} onChange={(e) => setEMail(e.target.value)} />
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+
+        <div className="flex flex-col sm:flex-row justify-between mt-6 gap-2" style={{direction:"rtl"}}>
+          <Button
+            onClick={handleUpdate}
+            disabled={loadingUpdate}
+            className={`text-white w-full sm:w-auto ${loadingUpdate ? 'bg-green-400' : 'bg-green-600 hover:bg-green-700'}`}
+          >
+            {loadingUpdate ? "جاري التعديل..." : "تعديل البيانات"}
+          </Button>
+
+          <Button
+            onClick={handleDelete}
+            disabled={loadingDelete}
+            className={`text-white w-full sm:w-auto ${loadingDelete ? 'bg-red-400' : 'bg-red-600 hover:bg-red-700'}`}
+          >
+            {loadingDelete ? "جاري الحذف..." : "حذف العضو"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

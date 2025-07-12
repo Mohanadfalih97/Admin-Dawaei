@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import MembersDilog from "../components/MembersDilog";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { FileText } from "lucide-react";
+
 
 
 const MemberTable = ({ searchTerm }) => {
@@ -117,12 +119,13 @@ const filteredMembers = members.filter((member) => {
               <tr key={member.id} className="hover:bg-gray-100">
                 <td className="px-2 md:px-6 py-4 border-b text-center">
                   <div className="flex flex-row gap-4 py-3">
-                      <button
-                    className="bg-blue-500 text-white text-xs font-bold p-3 rounded-full"
-                    onClick={() => openDialog(member)}
-                  >
-                    عرض التقرير
-                  </button>
+                <button
+  onClick={() => openDialog(member)}
+  className="text-blue-600 hover:text-blue-800"
+  title="عرض التقرير"
+>
+  <FileText size={18} />
+</button>
 
 
                    

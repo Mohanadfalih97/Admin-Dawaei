@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { toast } from 'react-toastify';
+import { Pencil,  } from "lucide-react";
+
 
 const VoteTable = ({ searchTerm, filterStatus }) => {
   const [votes, setVotes] = useState([]);
@@ -141,7 +143,9 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
                     voteActveStatus: vote.voteActveStatus,
                     cycleId: vote.cycleId,
                   }}>
-                    <button className="bg-blue-500 text-white text-xs font-bold p-3 rounded-full">تعديل</button>
+                   <button className="text-blue-600 hover:text-blue-800">
+      <Pencil size={18} />
+    </button>
                   </Link>
                 </td>
               </tr>

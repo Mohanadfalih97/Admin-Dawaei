@@ -217,6 +217,18 @@ const Topbar = () => {
 >
   <Building2 /> القطاعات
 </NavLink>
+<NavLink
+  to="/InstitutionDetails"
+  className={({ isActive }) =>
+    `w-full flex items-center gap-2 p-3 rounded-lg text-lg transition-all duration-300  ${
+      isActive
+        ? "bg-priamy text-white shadow-lg"
+        : "text-gray-600 hover:bg-gray-100 hover:text-primary"
+    }`
+  }
+>
+  <Building2 /> تفاصيل المؤسسة
+</NavLink>
 
           </div>
         )}

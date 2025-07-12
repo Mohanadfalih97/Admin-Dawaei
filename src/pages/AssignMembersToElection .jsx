@@ -11,10 +11,9 @@ const AssignMembersToElection = () => {
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [electionCycles, setElectionCycles] = useState([]);
   const [selectedCycleId, setSelectedCycleId] = useState("");
-  const [changes, setChanges] = useState([]); // لتخزين التغييرات
+  const [changes, setChanges] = useState([]);
   const navigate = useNavigate();
 
-  // جلب الأعضاء
   useEffect(() => {
     const fetchMembers = async () => {
       try {
@@ -23,7 +22,6 @@ const AssignMembersToElection = () => {
         const items = response.data.data.items || [];
         setMembers(items);
 
-        // استخراج الأعضاء الذين لديهم دورة انتخابية
         const assigned = items
           .filter((member) => member.cycleId && member.cycleId !== 0)
           .map((member) => member.id);
@@ -40,7 +38,6 @@ const AssignMembersToElection = () => {
     fetchMembers();
   }, []);
 
-  // جلب الدورات الانتخابية
   useEffect(() => {
     const fetchCycles = async () => {
       try {
@@ -55,10 +52,10 @@ const AssignMembersToElection = () => {
     fetchCycles();
   }, []);
 
-  // عند تغيير الدورة المختارة، نحدد الأعضاء المرتبطين بها
   useEffect(() => {
     if (!selectedCycleId) {
-      setSelectedMembers([]); // إذا لم يتم اختيار دورة، نعيد تعيين الأعضاء المحددين
+      setSelectedMembers([]);
+      setChanges([]);
       return;
     }
 
@@ -66,13 +63,10 @@ const AssignMembersToElection = () => {
       .filter((member) => member.cycleId === parseInt(selectedCycleId))
       .map((member) => member.id);
 
-    // لا نغير التحديدات السابقة إذا كانت الدورة موجودة
-    setSelectedMembers((prevSelected) => [
-      ...new Set([...prevSelected, ...membersInCycle]),
-    ]);
+    setSelectedMembers(membersInCycle);
+    setChanges([]); // لتفريغ التغييرات عند تغيير الدورة
   }, [selectedCycleId, members]);
 
-  // تحديث العضوية في الدورة عندما يتغير الـ checkbox
   const toggleSelectMember = (memberId) => {
     setChanges((prevChanges) => {
       const isSelected = prevChanges.includes(memberId);
@@ -82,9 +76,16 @@ const AssignMembersToElection = () => {
         return [...prevChanges, memberId];
       }
     });
+
+    setSelectedMembers((prevSelected) => {
+      if (prevSelected.includes(memberId)) {
+        return prevSelected.filter((id) => id !== memberId);
+      } else {
+        return [...prevSelected, memberId];
+      }
+    });
   };
 
-  // حفظ التغييرات
   const saveChanges = async () => {
     if (!selectedCycleId) {
       toast.warning("يرجى اختيار دورة انتخابية أولاً.");
@@ -109,16 +110,10 @@ const AssignMembersToElection = () => {
         });
       }
 
-      // تحديث الواجهة بعد حفظ التغييرات
-      setSelectedMembers((prev) => [
-        ...prev,
-        ...changes.filter((id) => !prev.includes(id)),
-      ]);
-      setChanges([]); // تفريغ التغييرات
       toast.success("تم حفظ التغييرات بنجاح.");
+      setChanges([]);
       navigate("/assign-members");
-/*       window.location.reload();
- */    } catch (error) {
+    } catch (error) {
       console.error("خطأ أثناء التحديث:", error);
       toast.error("فشل في تحديث بيانات الأعضاء.");
     }
@@ -130,7 +125,6 @@ const AssignMembersToElection = () => {
         إسناد الأعضاء للدورة الانتخابية
       </h1>
 
-      {/* قائمة الدورات الانتخابية */}
       <div className="mb-6 text-right">
         <label htmlFor="cycleSelect" className="block mb-2 font-semibold">
           اختر الدورة الانتخابية:
@@ -182,7 +176,7 @@ const AssignMembersToElection = () => {
                 <td className="px-4 py-2 border text-center">
                   <input
                     type="checkbox"
-                    checked={selectedMembers.includes(member.id) || changes.includes(member.id)}
+                    checked={selectedMembers.includes(member.id)}
                     onChange={() => toggleSelectMember(member.id)}
                     className="w-5 h-5"
                   />

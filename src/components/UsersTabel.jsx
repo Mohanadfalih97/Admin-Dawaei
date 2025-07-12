@@ -4,6 +4,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Alert, AlertTitle, AlertDescription } from "../components/Ui/Alert"; // المسار حسب مجلدك
+import { Pencil, Trash2 } from "lucide-react";
+
 
 
 
@@ -155,22 +157,21 @@ useEffect(() => {
                 <td className="px-2 md:px-4 py-2 border text-center text-gray-700">{user.email}</td>
                 <td className="px-2 md:px-4 py-2 border text-center text-gray-700">{user.phoneCountryCode}</td>
                 <td className="px-2 md:px-4 py-2 border text-center">
-                  <button
-                    type="button"
-                    className="bg-blue-500 text-white text-xs font-bold p-3 rounded-full"
-                    onClick={() => openDialog(user)}
-                  >
-                    تعديل
-                  </button>
+                
+                   <button className="text-blue-600 hover:text-blue-800"
+                     onClick={() => openDialog(user)}  >
+      <Pencil size={18} />
+    </button>
                 </td>
                 <td className="px-2 md:px-4 py-2 border text-center">
-                <button
-  className="bg-red-500 text-white text-xs font-bold p-3 rounded-full disabled:opacity-50"
-  onClick={() => deleteUser(user)}
+   
+  <button
+    onClick={() => deleteUser(user)}
   disabled={deletingUserId === user.id}
->
-  {deletingUserId === user.id ? "جارٍ الحذف..." : "حذف"}
-</button>
+    className="text-red-600 hover:text-red-800"
+  >
+    <Trash2 size={18} />
+  </button>
 
                 </td>
               </tr>

@@ -14,6 +14,7 @@ import {
 
 const Sidbar = () => {
   return (
+  
     <div className="flex flex-col bg-white shadow-lg h-full w-[300px] py-10 px-4 gap-4 rounded-lg">
 
       <NavLink
@@ -133,6 +134,18 @@ const Sidbar = () => {
         }
       >
         <ClipboardList /> إسناد الأعضاء
+      </NavLink>
+          <NavLink
+        to="/InstitutionDetails"
+        className={({ isActive }) =>
+          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
+            isActive
+              ? "bg-primary text-white shadow-lg"
+              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
+          }`
+        }
+      >
+        <Building2 />  تفاصيل المؤسسة
       </NavLink>
 
     </div>

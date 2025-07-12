@@ -103,7 +103,7 @@ const EditDepartment = () => {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="border px-4 py-2 rounded w-full"
+                    className="border px-4 py-2 rounded w-full text-center"
                     disabled={isSubmitting}
                   />
                 </TableCell>

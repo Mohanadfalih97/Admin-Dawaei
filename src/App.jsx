@@ -19,6 +19,7 @@ import VotePageMain from "./pages/VotePageMain";
 import EditVote from "./pages/EditVote";
 import VoteUsers from "./pages/VoteUsers";
 import Department from "./pages/Department";
+import InstitutionDetails from "./pages/InstitutionDetails";
 import AssignMembersToElection  from "./pages/AssignMembersToElection ";
 
 
@@ -67,6 +68,7 @@ const App = () => {
             <Route path="Candidates" element={<Candidates />} />
             <Route path="ElectionCycleDetails" element={<ElectionCycleDetails />} />
             <Route path="Department" element={<Department />} />
+            <Route path="InstitutionDetails" element={<InstitutionDetails />} />
 <Route path="/assign-members" element={<AssignMembersToElection />} />
                    <Route path="EditDepartment/:id" element={<EditDepartment />} />
 <Route path="Add-Department" element={<AddDepartment />} />

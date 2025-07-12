@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Pencil, Trash2 } from "lucide-react";
 
 const DepartmentTable = () => {
   const [departments, setDepartments] = useState([]);
@@ -122,24 +123,28 @@ const DepartmentTable = () => {
                 <td className="px-2 py-2 border text-center">
                   {dep.departmentName}
                 </td>
-                <td className="px-2 py-2 border text-center space-x-2 space-x-reverse">
-                  <Link
-                    to={`/EditDepartment/${dep.id}`}
-                    className="bg-blue-500 text-white px-3 py-2 rounded-full text-sm"
-                  >
-                    تعديل
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(dep.id)}
-                    disabled={deletingId === dep.id}
-                    className={`px-3 py-2 rounded-full text-sm text-white ${
-                      deletingId === dep.id
-                        ? "bg-red-400 cursor-not-allowed"
-                        : "bg-red-600 hover:bg-red-700"
-                    }`}
-                  >
-                    {deletingId === dep.id ? "جارٍ الحذف..." : "حذف"}
-                  </button>
+                <td className="px-2 py-2 border text-center">
+                  <div className="">
+                    <Link to={`/EditDepartment/${dep.id}`}>
+                      <button className="text-blue-600 hover:text-blue-800" title="تعديل">
+                        <Pencil size={18} />
+                      </button>
+                    </Link>
+
+                    <button
+                      onClick={() => handleDelete(dep.id)}
+                      disabled={deletingId === dep.id}
+                      className={`text-red-600 hover:text-red-800 mr-5${
+                        deletingId === dep.id ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                      title="حذف"
+                    >
+                   
+                  
+                        <Trash2 size={18} />
+                    
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))

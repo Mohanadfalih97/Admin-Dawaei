@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
+import { Pencil, Trash2 } from "lucide-react";
 
 const ElectionCyclesTable = ({ searchTerm }) => {
   const [elections, setElections] = useState([]);
@@ -122,21 +123,22 @@ const deleteElectionCycle = async (id) => {
                 <td className="px-4 py-2 border text-center text-gray-700">{formatDate(e.finishDate)}</td>
                 <td className="px-4 py-2 border text-center text-gray-700">{formatDate(e.createdAt)}</td>
                 <td className="px-4 py-2 border text-center">
-                  <button
-                    className="bg-blue-500 text-white text-xs font-bold p-2 rounded-full"
-                    onClick={() => navigate(`/EditElectoralcycles/${e.id}`, { state: { election: e } })}
-                  >
-                    تعديل
-                  </button>
-                </td>
+                
+                    <button className="text-blue-600 hover:text-blue-800"
+                     onClick={() => navigate(`/EditElectoralcycles/${e.id}`, { state: { election: e } })}>
+      <Pencil size={18} />
+    </button>
+                                  </td>
                 <td className="px-4 py-2 border text-center">
-             <button
-  className="bg-red-500 text-white text-xs font-bold p-2 rounded-full disabled:opacity-50"
-  onClick={() => deleteElectionCycle(e.id)}
+   
+  <button
+ onClick={() => deleteElectionCycle(e.id)}
   disabled={deletingId === e.id}
->
-  {deletingId === e.id ? "جارٍ الحذف..." : "حذف"}
-</button>
+      className="text-red-600 hover:text-red-800"
+  >
+
+    <Trash2 size={18} />
+  </button>
 
                 </td>
               </tr>

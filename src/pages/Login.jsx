@@ -134,7 +134,13 @@ if (response.ok && result.data?.token) {
               <input type="checkbox" className="form-checkbox" />
               تذكرني
             </label>
-          <Link to="/ResetPassword" className="text-sm text-blue-600 hover:underline">
+          <Link to="/ResetPassword" className="text-sm text-blue-600 hover:underline" 
+            onClick={() => {
+    if (email.trim()) {
+      localStorage.setItem("userEmail", email);
+    }
+  }}
+>
   نسيت كلمة المرور؟
         </Link>
           </div>

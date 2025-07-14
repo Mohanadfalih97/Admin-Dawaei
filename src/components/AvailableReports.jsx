@@ -1,28 +1,86 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import VoteReportDialog from "../components/ReportDilog";
 import { FileText } from "lucide-react";
+import axios from "axios";
 
 const AvailableReports = () => {
-  const activeVotes = [
-    {
-      id: "1",
-      title: "التصويت على ميزانية المشاريع لعام 2025",
-      description: "التصويت على الميزانية المقترحة للمشاريع التطويرية للعام القادم",
-      date: new Date("2024-03-15"),
-      votesTotle: 20, // عدد الأعضاء
-      votesCount: 7,  // عدد المصوتين
-      status: "completed",
-      results: [
-        { option: "نعم", votes: 3, percentage: 42.9 },
-        { option: "كلا", votes: 4, percentage: 57.1 },
-      ],
-    },
-    // يمكنك إضافة المزيد لاحقاً...
-  ];
-
-  const [selectedReport, setSelectedReport] = useState(null);
+  const [votes, setVotes] = useState([]);
   const [open, setOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const token = localStorage.getItem("token");
+
+  const fetchVotes = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}vote`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Accept-Language": "ar",
+        },
+      });
+
+      const fetchedVotes = res.data.data.items || [];
+
+      // جلب الخيارات والتنفيذات لكل تصويت
+      const enrichedVotes = await Promise.all(
+        fetchedVotes.map(async (vote) => {
+          const [optionsRes, execRes] = await Promise.all([
+            axios.get(`${process.env.REACT_APP_API_URL}vote-options?voteId=${vote.id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get(`${process.env.REACT_APP_API_URL}vote-excution?voteId=${vote.id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
+
+          const voteOptions = optionsRes.data.data.items;
+          const voteExecutions = execRes.data.data.items;
+
+          const results = countVoteResults(voteExecutions, voteOptions);
+
+          return {
+            ...vote,
+            voteTotle: vote.minMumbersVoted,
+            voteCount: voteExecutions.length,
+            results,
+          };
+        })
+      );
+
+      setVotes(enrichedVotes);
+    } catch (error) {
+      console.error("Error fetching votes:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVotes();
+  }, []);
+
+  const countVoteResults = (executions, options) => {
+    const optionMap = {};
+    options.forEach((opt) => {
+      optionMap[opt.id] = opt.voteDscrp;
+    });
+
+    const counts = {};
+    executions.forEach((exec) => {
+      const desc = optionMap[exec.voteResultId];
+      if (!desc) return;
+      counts[desc] = (counts[desc] || 0) + 1;
+    });
+
+    const total = executions.length;
+    return Object.entries(counts).map(([option, votes]) => ({
+      option,
+      votes,
+      percentage: ((votes / total) * 100).toFixed(1),
+    }));
+  };
 
   const openDialog = (report) => {
     setSelectedReport(report);
@@ -31,68 +89,66 @@ const AvailableReports = () => {
 
   return (
     <section className="flex flex-col" style={{ direction: "ltr" }}>
-      <div className="flex flex-col items-end justify-end gap-1">
+      <div className="flex flex-col items-end gap-1">
         <h1 className="text-3xl text-primary font-semibold">تقارير التصويت</h1>
-        <p className="text-lg font-normal text-gray-500">
-          عرض نتائج وتقارير التصويتات السابقة
-        </p>
+        <p className="text-lg font-normal text-gray-500">عرض نتائج وتقارير التصويتات السابقة</p>
       </div>
 
-      <div className="mt-5 p-5 box-border border rounded-lg">
-        <div className="flex flex-col items-end justify-end gap-1 mb-4">
+      <div className="mt-5 p-5 border rounded-lg">
+        <div className="flex flex-col items-end gap-1 mb-4">
           <h1 className="text-2xl font-semibold">التقارير المتاحة</h1>
-          <p className="text-lg font-normal text-gray-500">
-            اطلع على نتائج وتفاصيل التصويتات السابقة
-          </p>
+          <p className="text-lg font-normal text-gray-500">اطلع على نتائج وتفاصيل التصويتات السابقة</p>
         </div>
 
-        <div className="overflow-x-auto" style={{ direction: "rtl" }}>
-          <table className="min-w-full text-center border">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-3 border">#</th>
-                <th className="p-3 border">عنوان التصويت</th>
-                <th className="p-3 border">الوصف</th>
-                <th className="p-3 border">تاريخ التصويت</th>
-                <th className="p-3 border">عدد الأعضاء</th>
-                <th className="p-3 border">عدد المصوتين</th>
-                <th className="p-3 border">خيارات التصويت</th>
-                <th className="p-3 border">الإجراء</th>
-              </tr>
-            </thead>
-            <tbody>
-              {activeVotes.map((vote, index) => (
-                <tr key={vote.id} className="hover:bg-gray-50">
-                  <td className="p-3 border">{index + 1}</td>
-                  <td className="p-3 border">{vote.title}</td>
-                  <td className="p-3 border">{vote.description}</td>
-                  <td className="p-3 border">{vote.date.toLocaleDateString("ar-EG")}</td>
-                  <td className="p-3 border">{vote.votesTotle}</td>
-                  <td className="p-3 border">{vote.votesCount}</td>
-                  <td className="p-3 border text-right">
-                    {vote.results.map((result, i) => (
-                      <div key={i} className="flex justify-between text-sm mb-1">
-                        <span className="font-semibold">{result.option}</span>
-                        <span>{result.votes} صوت</span>
-                      </div>
-                    ))}
-                  </td>
-                  <td className="p-3 border text-center">
-                    <button
-                      onClick={() => openDialog(vote)}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="عرض التقرير"
-                    >
-                      <FileText size={18} />
-                    </button>
-                  </td>
+        {loading ? (
+          <p className="text-center">جاري التحميل...</p>
+        ) : (
+          <div className="overflow-x-auto" style={{ direction: "rtl" }}>
+            <table className="min-w-full text-center border">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-3 border">#</th>
+                  <th className="p-3 border">عنوان التصويت</th>
+                  <th className="p-3 border">الوصف</th>
+                  <th className="p-3 border">تاريخ التصويت</th>
+                  <th className="p-3 border">عدد الأعضاء</th>
+                  <th className="p-3 border">عدد المصوتين</th>
+                  <th className="p-3 border">خيارات التصويت</th>
+                  <th className="p-3 border">الإجراء</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {votes.map((vote, index) => (
+                  <tr key={vote.id} className="hover:bg-gray-50">
+                    <td className="p-3 border">{index + 1}</td>
+                    <td className="p-3 border">{vote.voteTitle}</td>
+                    <td className="p-3 border">{vote.dscrp}</td>
+                    <td className="p-3 border">{new Date(vote.startDate).toLocaleDateString("ar-EG")}</td>
+                    <td className="p-3 border">{vote.voteTotle}</td>
+                    <td className="p-3 border">{vote.voteCount}</td>
+                    <td className="p-3 border text-right">
+                      {vote.results.map((result, i) => (
+                        <div key={i} className="flex justify-between text-sm mb-1">
+                          <span className="font-semibold">{result.option}</span>
+                          <span>{result.votes} صوت ({result.percentage}%)</span>
+                        </div>
+                      ))}
+                    </td>
+                    <td className="p-3 border text-center">
+                      <button
+                        onClick={() => openDialog(vote)}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <FileText size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-        {/* مكون Radix Dialog */}
         <Dialog.Root
           open={open}
           onOpenChange={(isOpen) => {

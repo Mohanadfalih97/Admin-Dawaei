@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User, Home } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { PasswordInput } from "../components/Ui/password-input";
 import { Alert, AlertTitle, AlertDescription } from "../components/Ui/Alert";
+import { toast } from "react-toastify";
 
 const ResetPassword = () => {
   const [oldPassword, setOldPassword] = useState("");
@@ -10,11 +11,47 @@ const ResetPassword = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
 
+  // ✅ إرسال OTP تلقائيًا عند تحميل الصفحة
+  useEffect(() => {
+    const email = localStorage.getItem("userEmail");
+
+    if (!email) {
+      toast.error("لم يتم العثور على بريد إلكتروني لإرسال الرمز.");
+      return;
+    }
+
+    const sendOtp = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}api/otp/send`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            "Accept-Language": "en",
+          },
+          body: JSON.stringify({ email }),
+        });
+
+        if (response.ok) {
+          toast.success("تم إرسال رمز التحقق إلى بريدك الإلكتروني.");
+        } else {
+          const error = await response.json();
+          toast.error(error.detail || "فشل إرسال رمز التحقق.");
+        }
+      } catch (error) {
+        console.error("OTP send error:", error);
+        toast.error("حدث خطأ أثناء إرسال رمز التحقق.");
+      }
+    };
+
+    sendOtp();
+  }, []);
+
   const handleReset = async (e) => {
     e.preventDefault();
 
     const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId"); // تأكد أنك خزّنت userId عند تسجيل الدخول
+    const userId = localStorage.getItem("userId");
 
     if (!token || !userId) {
       setErrorMsg("الرجاء تسجيل الدخول أولاً.");
@@ -39,6 +76,7 @@ const ResetPassword = () => {
       const result = await response.json();
 
       if (response.ok && result.statusCode === 200) {
+        toast.success("تم تغيير كلمة المرور بنجاح.");
         navigate("/login");
       } else {
         setErrorMsg(result.msg || "فشل في تغيير كلمة المرور.");
@@ -54,7 +92,7 @@ const ResetPassword = () => {
       className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-600 to-blue-800"
       style={{ direction: "rtl" }}
     >
-      <div className="w-1/2  bg-white rounded-xl shadow-md p-8 text-center">
+      <div className="w-1/2 bg-white rounded-xl shadow-md p-8 text-center">
         <div className="text-blue-700 mb-4 text-3xl font-bold">
           <Link to="/login" className="hover:text-blue-900 transition">
             <Home />
@@ -69,16 +107,16 @@ const ResetPassword = () => {
           </p>
         </div>
 
-      {errorMsg && (
-  <Alert variant="destructive" className="text-right">
-    <AlertTitle>خطأ</AlertTitle>
-    <AlertDescription>{errorMsg}</AlertDescription>
-  </Alert>
-)}
+        {errorMsg && (
+          <Alert variant="destructive" className="text-right">
+            <AlertTitle>خطأ</AlertTitle>
+            <AlertDescription>{errorMsg}</AlertDescription>
+          </Alert>
+        )}
 
         <form className="space-y-4" onSubmit={handleReset}>
           <div className="text-right">
-            <label className="block mb-1 text-sm font-semibol  ْ ~ْ text-gray-700">
+            <label className="block mb-1 text-sm font-semibold text-gray-700">
               كلمة المرور الحالية
             </label>
             <PasswordInput

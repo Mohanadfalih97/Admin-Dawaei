@@ -39,7 +39,9 @@ import EditCandidates from "./components/EditCandidates";
 import ElectionCycleDetails from "./components/ElectionCycleDetails";
 import AddDepartment from "./components/AddDepartment";
 import EditDepartment from "./components/EditDepartment";
-
+import Addinstitution from "./components/Addinstitution";
+ import Editinstitution from "./components/Editinstitution";
+ 
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -69,9 +71,13 @@ const App = () => {
             <Route path="ElectionCycleDetails" element={<ElectionCycleDetails />} />
             <Route path="Department" element={<Department />} />
             <Route path="InstitutionDetails" element={<InstitutionDetails />} />
-<Route path="/assign-members" element={<AssignMembersToElection />} />
-                   <Route path="EditDepartment/:id" element={<EditDepartment />} />
-<Route path="Add-Department" element={<AddDepartment />} />
+            <Route path="/assign-members" element={<AssignMembersToElection />} />
+            <Route path="EditDepartment/:id" element={<EditDepartment />} />
+            <Route path="/Editinstitution/:id" element={<Editinstitution />} />
+ 
+            <Route path="Add-Department" element={<AddDepartment />} />
+            <Route path="Add-institution" element={<Addinstitution/>} />
+
 
 
 

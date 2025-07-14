@@ -1,60 +1,59 @@
 import React, { useState } from "react";
 import { User, Home } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
-import { PasswordInput } from "../components/Ui/password-input";
 import { Alert, AlertTitle, AlertDescription } from "../components/Ui/Alert";
+import { toast } from "react-toastify";
+import OtpInput from "react-otp-input"; // ✅ استيراد
 
-const ResetPassword = () => {
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+
+const OtpVerification = () => {
+  const [otpCode, setOtpCode] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
 
-  const handleReset = async (e) => {
+  const email = localStorage.getItem("userEmail");
+  const token = localStorage.getItem("token");
+
+  const handleVerifyOtp = async (e) => {
     e.preventDefault();
 
-    const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId"); // تأكد أنك خزّنت userId عند تسجيل الدخول
-
-    if (!token || !userId) {
-      setErrorMsg("الرجاء تسجيل الدخول أولاً.");
+    if (!email || !token) {
+      setErrorMsg("المعلومات غير مكتملة. الرجاء تسجيل الدخول أولاً.");
       return;
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}auth/reset-password/${userId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}api/otp/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
           "Accept-Language": "en",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // ✅ مطلوب
         },
         body: JSON.stringify({
-          oldPassword,
-          newPassword,
+          email,
+          otpCode, // ✅ يجب أن يكون المفتاح اسمه otpCode وليس otp فقط
         }),
       });
 
       const result = await response.json();
 
-      if (response.ok && result.statusCode === 200) {
-        navigate("/login");
+      if (response.ok) {
+        toast.success(result.message || "تم التحقق بنجاح.");
+        navigate("/ResetPassword");
       } else {
-        setErrorMsg(result.msg || "فشل في تغيير كلمة المرور.");
+        setErrorMsg(result.message || "رمز التحقق غير صحيح أو منتهي الصلاحية.");
       }
     } catch (error) {
-      console.error("Reset password error:", error);
-      setErrorMsg("حدث خطأ أثناء الاتصال بالخادم.");
+      console.error("OTP verification error:", error);
+      setErrorMsg("حدث خطأ أثناء التحقق من الرمز.");
     }
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-600 to-blue-800"
-      style={{ direction: "rtl" }}
-    >
-      <div className="w-1/2  bg-white rounded-xl shadow-md p-8 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-600 to-blue-800" style={{ direction: "rtl" }}>
+      <div className="w-1/2 bg-white rounded-xl shadow-md p-8 text-center">
         <div className="text-blue-700 mb-4 text-3xl font-bold">
           <Link to="/login" className="hover:text-blue-900 transition">
             <Home />
@@ -63,39 +62,36 @@ const ResetPassword = () => {
 
         <div className="flex flex-col items-center justify-center gap-2">
           <User />
-          <h2 className="text-xl font-bold text-gray-800 mb-2">إعادة تعيين كلمة المرور</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">رمز التحقق</h2>
           <p className="text-sm text-gray-500 mb-6">
-            قم بإدخال كلمة المرور الحالية والجديدة
+            أدخل رمز التحقق المرسل إلى بريدك الإلكتروني
           </p>
         </div>
 
-      {errorMsg && (
-  <Alert variant="destructive" className="text-right">
-    <AlertTitle>خطأ</AlertTitle>
-    <AlertDescription>{errorMsg}</AlertDescription>
-  </Alert>
-)}
+        {errorMsg && (
+          <Alert variant="destructive" className="text-right">
+            <AlertTitle>خطأ</AlertTitle>
+            <AlertDescription>{errorMsg}</AlertDescription>
+          </Alert>
+        )}
 
-        <form className="space-y-4" onSubmit={handleReset}>
-          <div className="text-right">
-            <label className="block mb-1 text-sm font-semibol  ْ ~ْ text-gray-700">
-              كلمة المرور الحالية
-            </label>
-            <PasswordInput
-              value={oldPassword}
-              onChange={(e) => setOldPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="text-right">
-            <label className="block mb-1 text-sm font-semibold text-gray-700">
-              كلمة المرور الجديدة
-            </label>
-            <PasswordInput
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
+        <form className="space-y-4" onSubmit={handleVerifyOtp}>
+        <div className="flex justify-center">
+            <OtpInput
+              value={otpCode}
+              onChange={setOtpCode}
+              numInputs={6}
+              isInputNum
+              shouldAutoFocus
+              containerStyle={{ direction: "ltr", gap: "0.5rem" }}
+              inputStyle={{
+                width: "3rem",
+                height: "3rem",
+                fontSize: "1.5rem",
+                borderRadius: "0.375rem",
+                border: "1px solid #cbd5e0",
+                textAlign: "center",
+              }}
             />
           </div>
 
@@ -103,7 +99,7 @@ const ResetPassword = () => {
             type="submit"
             className="block w-full text-center bg-blue-800 text-white py-2 rounded-md hover:bg-blue-900 transition"
           >
-            حفظ كلمة المرور الجديدة
+            تحقق من الرمز
           </button>
         </form>
       </div>
@@ -115,4 +111,4 @@ const ResetPassword = () => {
   );
 };
 
-export default ResetPassword;
+export default OtpVerification;

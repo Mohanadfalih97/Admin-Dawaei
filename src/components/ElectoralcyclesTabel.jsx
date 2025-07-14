@@ -14,70 +14,99 @@ const ElectionCyclesTable = ({ searchTerm }) => {
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState(null);
 
-  
-useEffect(() => {
-  const fetchElectionCycles = async () => {
+  useEffect(() => {
+    const fetchElectionCycles = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}elections-cycles`, {
+          params: {
+            Dscrp: searchTerm || "",
+            PageNumber: currentPage,
+            PageSize: pageSize,
+          },
+          headers: {
+            Accept: "application/json",
+            "Accept-Language": "en",
+          },
+        });
+
+        const data = res.data.data;
+        setElections(data.items || []);
+        setTotalPages(data.totalPages || 1);
+        setPageSize(data.pageSize || 10);
+      } catch (error) {
+        console.error("Error fetching election cycles:", error);
+        toast.error("فشل في تحميل بيانات الدورات الانتخابية");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchElectionCycles();
+  }, [searchTerm, currentPage, pageSize]);
+
+  const deleteElectionCycle = async (id) => {
+    setDeletingId(id);
     try {
-      setLoading(true);
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}elections-cycles`, {
-        params: {
-          Dscrp: searchTerm || "",
-          PageNumber: currentPage,
-          PageSize: pageSize,
-        },
+      const res = await axios.delete(`${process.env.REACT_APP_API_URL}elections-cycles/${id}`, {
         headers: {
           Accept: "application/json",
           "Accept-Language": "en",
         },
       });
 
-      const data = res.data.data;
-      setElections(data.items || []);
-      setTotalPages(data.totalPages || 1);
-      setPageSize(data.pageSize || 10);
+      if (res.status === 204) {
+        toast.success("تم حذف الدورة الانتخابية بنجاح");
+        setElections((prev) => prev.filter((e) => e.id !== id));
+      } else {
+        toast.error("لم يتم الحذف، حدث خطأ غير متوقع.");
+      }
     } catch (error) {
-      console.error("Error fetching election cycles:", error);
-      toast.error("فشل في تحميل بيانات الدورات الانتخابية");
+      console.error("Error deleting election cycle:", error);
+      const serverMessage = error.response?.data?.msg;
+      if (serverMessage === "Cannot delete this cycle. One or more members are assigned to it.") {
+        toast.error("لا يمكن حذف هذه الدورة، هناك أعضاء مرتبطون بها.");
+      } else {
+        toast.error("فشل في حذف الدورة");
+      }
     } finally {
-      setLoading(false);
+      setDeletingId(null);
     }
   };
 
-  fetchElectionCycles();
-}, [searchTerm, currentPage, pageSize]); // ✅ كل التبعيات المطلوبة
+  const updateVoteStatus = async (cycle, field, value) => {
+    try {
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}elections-cycles/${cycle.id}`,
+        {
+          dscrp: cycle.dscrp,
+          startDate: cycle.startDate,
+          finishDate: cycle.finishDate,
+          [field]: value,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Accept: "application/json",
+            "Accept-Language": "en",
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
+      toast.success("✅ تم تحديث حالة الدورة بنجاح");
 
-const deleteElectionCycle = async (id) => {
-  setDeletingId(id); // ⬅️ نحدد الدورة التي يتم حذفها الآن
-
-  try {
-    const res = await axios.delete(`${process.env.REACT_APP_API_URL}elections-cycles/${id}`, {
-      headers: {
-        Accept: "application/json",
-        "Accept-Language": "en",
-      },
-    });
-
-    if (res.status === 204) {
-      toast.success("تم حذف الدورة الانتخابية بنجاح");
-      setElections((prev) => prev.filter((e) => e.id !== id));
-    } else {
-      toast.error("لم يتم الحذف، حدث خطأ غير متوقع.");
+      // تحديث القيمة محليًا
+      setElections((prev) =>
+        prev.map((item) =>
+          item.id === cycle.id ? { ...item, [field]: value } : item
+        )
+      );
+    } catch (error) {
+      console.error("فشل في تحديث حالة الدورة:", error);
+      toast.error("❌ فشل في تحديث حالة الدورة");
     }
-  } catch (error) {
-    console.error("Error deleting election cycle:", error);
-
-    const serverMessage = error.response?.data?.msg;
-    if (serverMessage === "Cannot delete this cycle. One or more members are assigned to it.") {
-      toast.error("لا يمكن حذف هذه الدورة، هناك أعضاء مرتبطون بها.");
-    } else {
-      toast.error("فشل في حذف الدورة");
-    }
-  } finally {
-    setDeletingId(null); // ⬅️ إلغاء التحديد بعد الانتهاء
-  }
-};
-
+  };
 
   const formatDate = (date) => {
     return new Date(date).toLocaleString("ar-IQ", {
@@ -101,6 +130,7 @@ const deleteElectionCycle = async (id) => {
             <th className="px-4 py-2 border text-center">تاريخ البدء</th>
             <th className="px-4 py-2 border text-center">تاريخ الانتهاء</th>
             <th className="px-4 py-2 border text-center">تاريخ الإنشاء</th>
+            <th className="px-4 py-2 border text-center">الحاله</th>
             <th className="px-4 py-2 border text-center">تعديل</th>
             <th className="px-4 py-2 border text-center">حذف</th>
           </tr>
@@ -108,38 +138,48 @@ const deleteElectionCycle = async (id) => {
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan="7" className="text-center py-4">جاري التحميل...</td>
+              <td colSpan="8" className="text-center py-4">جاري التحميل...</td>
             </tr>
           ) : elections.length === 0 ? (
             <tr>
-              <td colSpan="7" className="text-center text-red-500 py-4">لا توجد نتائج مطابقة.</td>
+              <td colSpan="8" className="text-center text-red-500 py-4">لا توجد نتائج مطابقة.</td>
             </tr>
           ) : (
-            elections.map((e,index) => (
+            elections.map((e, index) => (
               <tr key={e.id} className="hover:bg-gray-100">
                 <td className="px-4 py-2 border text-center">{(currentPage - 1) * pageSize + index + 1}</td>
                 <td className="px-4 py-2 border text-center text-gray-700">{e.dscrp || "بدون وصف"}</td>
                 <td className="px-4 py-2 border text-center text-gray-700">{formatDate(e.startDate)}</td>
                 <td className="px-4 py-2 border text-center text-gray-700">{formatDate(e.finishDate)}</td>
                 <td className="px-4 py-2 border text-center text-gray-700">{formatDate(e.createdAt)}</td>
+                <td className="px-4 py-2 border text-center text-gray-700">
+                  <label className="flex items-center gap-2 justify-center">
+                    <input
+                      type="checkbox"
+                      checked={e.voteActveStatus === 1}
+                      onChange={(event) =>
+                        updateVoteStatus(e, "voteActveStatus", event.target.checked ? 1 : 0)
+                      }
+                    />
+                    تنشيط الدورة
+                  </label>
+                </td>
                 <td className="px-4 py-2 border text-center">
-                
-                    <button className="text-blue-600 hover:text-blue-800"
-                     onClick={() => navigate(`/EditElectoralcycles/${e.id}`, { state: { election: e } })}>
-      <Pencil size={18} />
-    </button>
-                                  </td>
+                  <button
+                    className="text-blue-600 hover:text-blue-800"
+                    onClick={() => navigate(`/EditElectoralcycles/${e.id}`, { state: { election: e } })}
+                  >
+                    <Pencil size={18} />
+                  </button>
+                </td>
                 <td className="px-4 py-2 border text-center">
-   
-  <button
- onClick={() => deleteElectionCycle(e.id)}
-  disabled={deletingId === e.id}
-      className="text-red-600 hover:text-red-800"
-  >
-
-    <Trash2 size={18} />
-  </button>
-
+                  <button
+                    onClick={() => deleteElectionCycle(e.id)}
+                    disabled={deletingId === e.id}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </td>
               </tr>
             ))
@@ -147,7 +187,7 @@ const deleteElectionCycle = async (id) => {
         </tbody>
       </table>
 
-      {/* ✅ الباجنيشن - عرض 5 صفحات فقط في كل مجموعة */}
+      {/* ✅ Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center mt-6 gap-2 flex-wrap">
           <button

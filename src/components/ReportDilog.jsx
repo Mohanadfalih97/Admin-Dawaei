@@ -19,54 +19,77 @@ import {
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 
-const TOTAL_MEMBERS = 26; // Total number of members from Members.tsx
+const TOTAL_MEMBERS = 26;
 
 const VoteReportDialog = ({ open, onOpenChange, report }) => {
   if (!report) return null;
 
   const formatDate = (date) => {
-    return format(date, "EEEE d MMMM yyyy", { locale: ar });
+    return format(new Date(date), "EEEE d MMMM yyyy", { locale: ar });
   };
 
   const handlePrint = () => {
-    window.print();
+    const printContent = document.getElementById("print-section").innerHTML;
+    const printWindow = window.open("", "_blank");
+    printWindow.document.open();
+    printWindow.document.write(`
+      <html dir="rtl" lang="ar">
+        <head>
+          <title>تقرير التصويت</title>
+          <style>
+            body {
+              font-family: Times New Roman", Times, serif;
+              padding: 2rem;
+              direction: rtl;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 1rem;
+            }
+            th, td {
+              border: 1px solid #ccc;
+              padding: 8px;
+              text-align: center;
+            }
+            th {
+              background-color: #f0f0f0;
+            }
+            h3, h4 {
+              margin: 0 0 1rem 0;
+            }
+          </style>
+        </head>
+        <body>${printContent}</body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
   };
 
-  const votingPercentage = ((report.votesCount / TOTAL_MEMBERS) * 100).toFixed(1);
+  const votingPercentage = ((report.voteCount / TOTAL_MEMBERS) * 100).toFixed(1);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl  bg-white print:bg-white" >
+      <DialogContent className="max-w-3xl bg-white">
         <DialogHeader className="flex flex-row items-center justify-between print:pb-6" dir="rtl">
           <DialogTitle className="flex items-center gap-2 text-xl mt-4">
             <FileChartColumn className="h-6 w-6" />
             <span>تقرير التصويت</span>
           </DialogTitle>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="print:hidden"
-              onClick={handlePrint}
-            >
+            <Button variant="outline" size="icon" onClick={handlePrint}>
               <Printer className="h-4 w-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="print:hidden"
-              onClick={() => onOpenChange(true)}
-            >
-              <Scroll className="h-4 w-4" />
-            </Button>
+        
           </div>
         </DialogHeader>
 
         <ScrollArea className="max-h-[80vh] overflow-auto" dir="rtl">
-          <div className="mt-4 space-y-6 px-1">
+          <div className="mt-4 space-y-6 px-1" id="print-section">
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{report.title}</h3>
-              <p className="text-muted-foreground">{report.description}</p>
+              <h3 className="text-lg font-semibold">{report.voteTitle}</h3>
+              <p className="text-muted-foreground">{report.dscrp}</p>
             </div>
 
             <Table>
@@ -79,18 +102,19 @@ const VoteReportDialog = ({ open, onOpenChange, report }) => {
               <TableBody>
                 <TableRow>
                   <TableCell className="font-medium">تاريخ التصويت</TableCell>
-                  <TableCell>{formatDate(report.date)}</TableCell>
+                  <TableCell>{formatDate(report.startDate)}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">عدد المصوتين</TableCell>
                   <TableCell>
-                    {report.votesCount} من أصل {TOTAL_MEMBERS} عضو ({votingPercentage}
-                    %)
+                    {report.voteCount} من أصل {TOTAL_MEMBERS} عضو ({votingPercentage}%)
                   </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">الحالة</TableCell>
-                  <TableCell>{report.status}</TableCell>
+                  <TableCell>
+                    {report.votecompletestatus === 1 ? "مكتمل" : "غير مكتمل"}
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>

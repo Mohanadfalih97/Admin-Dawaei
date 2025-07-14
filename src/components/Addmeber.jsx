@@ -137,6 +137,7 @@ const AddMember = () => {
     // نجاح التسجيل
     if (memberResponse.ok && memberResult.data) {
       toast.success("تم حفظ العضو بنجاح");
+      navigate("/members");
 
       const memberId = memberResult.data.memberId;
       const memberEmail = memberResult.data.eMail;
@@ -165,7 +166,6 @@ const AddMember = () => {
         toast.error("⚠️ حدث خطأ أثناء إرسال رمز التحقق.");
       }
 
-      navigate("/members");
 
     } else {
       // معالجة الأخطاء المرتبطة بالحقول

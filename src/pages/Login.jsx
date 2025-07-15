@@ -142,7 +142,7 @@ if (response.ok && result.data?.token) {
       localStorage.setItem("userEmail", email);
 
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}api/otp/send`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}otp/send`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

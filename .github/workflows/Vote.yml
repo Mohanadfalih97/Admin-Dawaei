@@ -19,10 +19,10 @@ jobs:
           node-version: '24'  # Specify the Node.js version you need
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --force
 
       - name: Build app
-        run: npm run build
+        run: npm run build --force
 
       - name: Install sshpass
         run: sudo apt-get install -y sshpass

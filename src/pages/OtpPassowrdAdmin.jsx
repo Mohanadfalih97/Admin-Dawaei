@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { User, Home } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { Alert, AlertTitle, AlertDescription } from "../components/Ui/Alert";
-import { toast } from "react-toastify";
+// import { toast } from "react-toastify";
 import OtpInput from "react-otp-input"; // ✅ استيراد
 
 

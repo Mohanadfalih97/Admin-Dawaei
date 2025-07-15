@@ -11,42 +11,7 @@ const ResetPassword = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
 
-  // ✅ إرسال OTP تلقائيًا عند تحميل الصفحة
-  useEffect(() => {
-    const email = localStorage.getItem("userEmail");
-
-    if (!email) {
-      toast.error("لم يتم العثور على بريد إلكتروني لإرسال الرمز.");
-      return;
-    }
-
-    const sendOtp = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}api/otp/send`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "Accept-Language": "en",
-          },
-          body: JSON.stringify({ email }),
-        });
-
-        if (response.ok) {
-          toast.success("تم إرسال رمز التحقق إلى بريدك الإلكتروني.");
-        } else {
-          const error = await response.json();
-          toast.error(error.detail || "فشل إرسال رمز التحقق.");
-        }
-      } catch (error) {
-        console.error("OTP send error:", error);
-        toast.error("حدث خطأ أثناء إرسال رمز التحقق.");
-      }
-    };
-
-    sendOtp();
-  }, []);
-
+ 
   const handleReset = async (e) => {
     e.preventDefault();
 

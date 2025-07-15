@@ -12,24 +12,22 @@ const OtpVerification = () => {
   const navigate = useNavigate();
 
   const email = localStorage.getItem("userEmail");
-  const token = localStorage.getItem("token");
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
 
-    if (!email || !token) {
+    if (!email) {
       setErrorMsg("المعلومات غير مكتملة. الرجاء تسجيل الدخول أولاً.");
       return;
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}api/otp/verify`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}otp/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
           "Accept-Language": "en",
-          Authorization: `Bearer ${token}`, // ✅ مطلوب
         },
         body: JSON.stringify({
           email,
@@ -40,7 +38,6 @@ const OtpVerification = () => {
       const result = await response.json();
 
       if (response.ok) {
-        toast.success(result.message || "تم التحقق بنجاح.");
         navigate("/ResetPassword");
       } else {
         setErrorMsg(result.message || "رمز التحقق غير صحيح أو منتهي الصلاحية.");

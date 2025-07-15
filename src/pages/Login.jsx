@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { User,Home } from "lucide-react";
+// import { User,Home } from "lucide-react";
+import { User } from "lucide-react";
 import { useNavigate , Link } from "react-router-dom";
 import { PasswordInput } from "../components/Ui/password-input";
 import { toast } from "react-toastify";

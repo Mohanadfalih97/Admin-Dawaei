@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { User, ShieldCheck } from "lucide-react";
+import { User} from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -81,14 +81,14 @@ const Login = () => {
           </p>
         </div>
 
-        <Link to="/login" className="no-underline">
+        {/* <Link to="/login" className="no-underline">
           <div className="flex flex-row items-start gap-2 cursor-pointer hover:opacity-80 transition">
             <ShieldCheck className="text-blue-800 w-10 h-9" />
             <span className="text-xl text-center bg-blue-800 text-white py-2 rounded-md hover:bg-blue-900 transition w-44">
               دخول كـ مسؤول
             </span>
           </div>
-        </Link>
+        </Link> */}
 
         {errorMsg && (
           <p className="text-red-500 text-sm mb-4">{errorMsg}</p>

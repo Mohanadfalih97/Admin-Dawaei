@@ -8,26 +8,29 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   const logout = useCallback(() => {
-    ["token", "memberID", "userEmail", "chakra-ui-color-mode" ,"userName","userRole","userId"].forEach((key) =>
+    ["token", "memberID", "userEmail", "chakra-ui-color-mode", "userName", "userRole", "userId"].forEach((key) =>
       localStorage.removeItem(key)
     );
     setUser(null);
-    navigate("/LoginAsMember");
+    navigate("/Login");
   }, [navigate]);
 
+  // ✅ يعمل فقط عند أول تحميل للصفحة
   useEffect(() => {
     const token = localStorage.getItem("token");
     const memberID = localStorage.getItem("memberID");
 
-    if (token && memberID) {
-      setUser({ token, memberID });
-    } else {
+    // ✅ إذا لم يكن المستخدم مسجل دخول سابقًا، لا تسوي logout مباشر!
+    if (!user && (!token || !memberID)) {
       logout();
+    } else if (token && memberID) {
+      setUser({ token, memberID });
     }
-  }, [logout]); // ✅ الآن ESLint لن يعطيك تحذير
+  }, []); // ✅ حذف logout من dependencies عشان ما يعيد التشغيل
 
   const login = (data) => {
-     localStorage.setItem("token", data.token);
+    // ❌ لا نمسح أي شيء هنا
+    localStorage.setItem("token", data.token);
     localStorage.setItem("memberID", data.memberID);
     localStorage.setItem("userId", data.userId);
     localStorage.setItem("userName", data.userName);
@@ -43,4 +46,3 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-

@@ -21,12 +21,8 @@ jobs:
       - name: Install dependencies
         run: npm install --force
 
-      - name: Run ESLint (non-blocking)
-        run: npm run lint -- --quiet || true
-
       - name: Build app
         run: |
-          npm run lint -- --quiet || true 
           npm run build --force
 
       - name: Install sshpass
@@ -51,11 +47,12 @@ jobs:
       - name: Create symlink for latest folder
         run: |
           DATE_FOLDER=${{ steps.set_date.outputs.date }}
-          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "rm -f /var/www/node.js/vote-admin/latest"
-          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "ln -sf /var/www/node.js/vote-admin/$DATE_FOLDER /var/www/node.js/vote-admin/latest"
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} \
+          "rm -f /var/www/node.js/vote-admin/latest"
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} \
+          "ln -sf /var/www/node.js/vote-admin/$DATE_FOLDER /var/www/node.js/vote-admin/latest"
 
       - name: Restart Nginx
         run: |
           sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no \
-          ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} \
-          "sudo systemctl restart nginx || echo 'Nginx not reloaded'"
+          ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "sudo systemctl restart nginx"

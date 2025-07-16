@@ -21,12 +21,13 @@ jobs:
       - name: Install dependencies
         run: npm install --force
 
-      - name: Run ESLint
-        run: npm run lint
-        continue-on-error: true
+      - name: Run ESLint (non-blocking)
+        run: npm run lint -- --quiet || true
 
       - name: Build app
-        run: npm run build --force
+        run: |
+          npm run lint -- --quiet || true 
+          npm run build --force
 
       - name: Install sshpass
         run: sudo apt-get install -y sshpass

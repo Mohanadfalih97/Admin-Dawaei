@@ -45,11 +45,14 @@ import Addinstitution from "./components/Addinstitution";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { AuthProvider } from "./AuthContext";
+
 
 const App = () => {
   return (
+
     <Router>
-      <>
+      <AuthProvider>
         <Routes>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Navigate to="/login" replace />} />
@@ -102,7 +105,7 @@ const App = () => {
         </Routes>
 
         <ToastContainer position="top-center" rtl />
-      </>
+      </AuthProvider>
     </Router>
   );
 };

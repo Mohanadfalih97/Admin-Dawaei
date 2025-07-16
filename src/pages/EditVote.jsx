@@ -26,6 +26,8 @@ const EditVote = () => {
   const [deleting, setDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [voteOptions, setVoteOptions] = useState([]);
+  const [cycles, setCycles] = useState([]);
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -62,7 +64,7 @@ const EditVote = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
-
+setCycles(cycleResponse.data.data.items || []);
         // جلب خيارات التصويت
         const optionsResponse = await axios.get(
           `${process.env.REACT_APP_API_URL}vote-options`,
@@ -76,7 +78,7 @@ const EditVote = () => {
         );
         setVoteOptions(optionsResponse.data.data.items || []);
       } catch (err) {
-        toast.error("❌ فشل تحميل بيانات التصويت");
+        toast.error(" فشل تحميل بيانات التصويت");
       }
     };
 
@@ -97,9 +99,9 @@ const EditVote = () => {
         },
       });
       setVoteOptions([...voteOptions, response.data.data]);
-      toast.success("✅ تم إضافة خيار التصويت");
+      toast.success(" تم إضافة خيار التصويت");
     } catch {
-      toast.error("❌ فشل في إضافة خيار التصويت");
+      toast.error(" فشل في إضافة خيار التصويت");
     } finally {
       setSubmitting(false);
     }
@@ -124,9 +126,9 @@ const EditVote = () => {
           Accept: "application/json",
         },
       });
-      toast.success("🗑️ تم حذف الخيار");
+      toast.success(" تم حذف الخيار");
     } catch {
-      toast.error("❌ فشل في حذف الخيار");
+      toast.error(" فشل في حذف الخيار");
     } finally {
       setDeleting(false);
     }
@@ -139,9 +141,9 @@ const EditVote = () => {
         voteId: id,
         voteDscrp: updatedDescription,
       });
-      toast.success("✅ تم تحديث الخيار");
+      toast.success(" تم تحديث الخيار");
     } catch {
-      toast.error("❌ فشل في تحديث الخيار");
+      toast.error(" فشل في تحديث الخيار");
     } finally {
       setIsUpdating(false);
     }
@@ -150,7 +152,7 @@ const EditVote = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!cycleId) {
-      toast.error("❌ يرجى اختيار الدورة الانتخابية");
+      toast.error(" يرجى اختيار الدورة الانتخابية");
       return;
     }
 
@@ -176,10 +178,10 @@ const EditVote = () => {
           Accept: "application/json",
         },
       });
-      toast.success("✅ تم تعديل التصويت بنجاح");
+      toast.success(" تم تعديل التصويت بنجاح");
       navigate("/VotePageMain");
     } catch {
-      toast.error("❌ فشل في تعديل التصويت");
+      toast.error(" فشل في تعديل التصويت");
     } finally {
       setSubmitting(false);
     }
@@ -189,10 +191,10 @@ const EditVote = () => {
     setDeleting(true);
     try {
       await axios.delete(`${process.env.REACT_APP_API_URL}vote/${id}`);
-      toast.success("🗑️ تم حذف التصويت");
+      toast.success(" تم حذف التصويت");
       navigate("/VotePageMain");
     } catch {
-      toast.error("❌ فشل في حذف التصويت");
+      toast.error(" فشل في حذف التصويت");
     } finally {
       setDeleting(false);
     }
@@ -228,6 +230,7 @@ const EditVote = () => {
         <VoteOptions     voteActveStatus={voteActveStatus}
   setVoteActveStatus={setVoteActveStatus}
   cycleId={cycleId}
+    cycles={cycles}
   setCycleId={setCycleId} />
  
 

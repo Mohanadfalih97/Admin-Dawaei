@@ -16,7 +16,7 @@ const ResetPassword = () => {
 
     const userEmail = localStorage.getItem("userEmail");
     if (!userEmail) {
-      toast.error("❌ لم يتم العثور على البريد الإلكتروني.");
+      toast.error(" لم يتم العثور على البريد الإلكتروني.");
       return;
     }
 
@@ -37,7 +37,7 @@ const ResetPassword = () => {
       const userIdResult = await userIdResponse.json();
 
       if (!userIdResponse.ok || !userIdResult.data?.items?.length) {
-        toast.error("❌ لم يتم العثور على المستخدم.");
+        toast.error(" لم يتم العثور على المستخدم.");
         return;
       }
 

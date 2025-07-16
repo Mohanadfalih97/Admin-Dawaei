@@ -40,7 +40,7 @@ const DepartmentTable = () => {
         setPageSize(data.pageSize || 10);
       } catch (error) {
         console.error("حدث خطأ أثناء جلب القطاعات:", error);
-        toast.error("❌ فشل تحميل القطاعات");
+        toast.error(" فشل تحميل القطاعات");
       } finally {
         setLoading(false);
       }
@@ -62,10 +62,10 @@ const DepartmentTable = () => {
       });
 
       setDepartments((prev) => prev.filter((d) => d.id !== id));
-      toast.success("✅ تم حذف القطاع بنجاح");
+      toast.success(" تم حذف القطاع بنجاح");
     } catch (error) {
       console.error("فشل في الحذف:", error);
-      toast.error("❌ حدث خطأ أثناء الحذف");
+      toast.error(" حدث خطأ أثناء الحذف");
     } finally {
       setDeletingId(null);
     }

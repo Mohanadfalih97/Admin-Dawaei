@@ -94,7 +94,7 @@ const ElectionCyclesTable = ({ searchTerm }) => {
         }
       );
 
-      toast.success("✅ تم تحديث حالة الدورة بنجاح");
+      toast.success(" تم تحديث حالة الدورة بنجاح");
 
       // تحديث القيمة محليًا
       setElections((prev) =>
@@ -104,7 +104,7 @@ const ElectionCyclesTable = ({ searchTerm }) => {
       );
     } catch (error) {
       console.error("فشل في تحديث حالة الدورة:", error);
-      toast.error("❌ فشل في تحديث حالة الدورة");
+      toast.error(" فشل في تحديث حالة الدورة");
     }
   };
 

@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import MembersDilog from "../components/MembersDilog";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
-import { FileText } from "lucide-react";
+import { FileText,RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 
 
 
@@ -15,6 +17,12 @@ const MemberTable = ({ searchTerm }) => {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+const goToResetAccesscodePage = (memberId) => {
+  navigate(`/RestAccesscodeByAdmin/${memberId}`);
+};
+
 
   const formatDateArabic = (dateStr) => {
     if (!dateStr) return "—";
@@ -126,6 +134,13 @@ const filteredMembers = members.filter((member) => {
 >
   <FileText size={18} />
 </button>
+  <button
+      onClick={() => goToResetAccesscodePage(member.memberId)}
+      className="text-green-600 hover:text-green-800"
+      title="إعادة تعيين الرمز"
+    >
+      <RefreshCw size={18} />
+    </button>
 
 
                    

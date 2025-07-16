@@ -1,18 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import VoteReportDialog from "../components/ReportDilog";
 import { FileText } from "lucide-react";
 import axios from "axios";
 
 const AvailableReports = () => {
-  const [votes, setVotes] = useState([]);
+   const [votes, setVotes] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [loading, setLoading] = useState(true);
-
   const token = localStorage.getItem("token");
 
-  const fetchVotes = async () => {
+  const fetchVotes = useCallback(async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}vote`, {
         headers: {
@@ -23,7 +22,6 @@ const AvailableReports = () => {
 
       const fetchedVotes = res.data.data.items || [];
 
-      // جلب الخيارات والتنفيذات لكل تصويت
       const enrichedVotes = await Promise.all(
         fetchedVotes.map(async (vote) => {
           const [optionsRes, execRes] = await Promise.all([
@@ -55,11 +53,11 @@ const AvailableReports = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchVotes();
-  }, []);
+  }, [fetchVotes]);
 
   const countVoteResults = (executions, options) => {
     const optionMap = {};

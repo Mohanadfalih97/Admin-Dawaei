@@ -36,10 +36,10 @@ const Login = () => {
   const payload = JSON.parse(atob(token.split('.')[1]));
   localStorage.setItem("token", token);
   localStorage.setItem("memberID", payload.nameid);
-  toast.success("تم تسجيل الدخول بنجاح ✅", { position: "top-center" });
+  toast.success("تم تسجيل الدخول بنجاح ", { position: "top-center" });
   navigate("/VoteUsers");
 } else {
-  let arabicMsg = "فشل تسجيل الدخول ❌";
+  let arabicMsg = "فشل تسجيل الدخول ";
   setShowResetLink(false); // إخفاء الرابط افتراضيًا
 
   if (response.status === 401) {
@@ -66,7 +66,7 @@ const Login = () => {
     } catch (error) {
       console.error("Login error:", error);
       setErrorMsg("حدث خطأ أثناء الاتصال بالخادم.");
-      toast.error("خطأ في الاتصال بالخادم ❌", { position: "top-center" });
+      toast.error("خطأ في الاتصال بالخادم ", { position: "top-center" });
     }
   };
 

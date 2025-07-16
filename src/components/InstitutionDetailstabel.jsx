@@ -34,10 +34,10 @@ const InstitutionDetailstabel = () => {
       setTotalPages(result.data.totalPages || 1);
       setCurrentPage(result.data.pageNumber || 1);
     } else {
-      toast.error("❌ فشل جلب البيانات");
+      toast.error(" فشل جلب البيانات");
     }
   } catch (error) {
-    toast.error("❌ خطأ أثناء الجلب");
+    toast.error(" خطأ أثناء الجلب");
   } finally {
     setLoading(false);
   }
@@ -75,7 +75,7 @@ const handleDeleteCompany = async (id) => {
     });
 
     if (response.ok) {
-      toast.success("✅ تم حذف المؤسسة بنجاح");
+      toast.success(" تم حذف المؤسسة بنجاح");
 
       // تحديث القائمة بعد الحذف
       setInstitutions((prev) => prev.filter((item) => item.id !== id));
@@ -84,7 +84,7 @@ const handleDeleteCompany = async (id) => {
       throw new Error(result.msg || "فشل الحذف");
     }
   } catch (error) {
-    toast.error("❌ " + error.message);
+    toast.error(error.message);
   }
 };
 

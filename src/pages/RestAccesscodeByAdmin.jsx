@@ -44,7 +44,12 @@ const handleSubmit = async (e) => {
     if (response.ok) {
       toast.success("تم تغيير الرمز السري بنجاح");
       navigate("/members");
-    } else {
+    } else  if (result.msg === "Member Id required") {
+  toast.error("مطلوب إدخال معرف العضو");
+} else if (result.msg === "Member not found or deleted ") {
+  toast.error("العضو غير موجود أو تم حذفه");
+}else
+{
       toast.error(result.msg || "فشل تغيير الرمز السري");
     }
   } catch (error) {

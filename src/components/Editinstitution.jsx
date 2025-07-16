@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import defaultProfileImage from "../asset/Imge/profiledefautimg.png";
@@ -7,25 +7,14 @@ import { Camera } from "lucide-react";
 const Editinstitution = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation(); // ✅
+  const location = useLocation();
 
   const [institutionName, setInstitutionName] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ تحميل البيانات من state أو من API كـ fallback
-  useEffect(() => {
-    const company = location.state?.company;
-    if (company) {
-      setInstitutionName(company.institutionName);
-      setImagePreview(company.imgUrl);
-    } else {
-      fetchInstitution(); // fallback عند تحديث الصفحة مباشرة
-    }
-  }, [location.state]);
-
-  const fetchInstitution = async () => {
+  const fetchInstitution = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`${process.env.REACT_APP_API_URL}institution?id=${id}`, {
@@ -41,12 +30,22 @@ const Editinstitution = () => {
         setInstitutionName(institution.institutionName);
         setImagePreview(institution.imgUrl);
       } else {
-        toast.error("❌ لم يتم العثور على المؤسسة");
+        toast.error(" لم يتم العثور على المؤسسة");
       }
     } catch (err) {
-      toast.error("❌ خطأ أثناء تحميل البيانات");
+      toast.error(" خطأ أثناء تحميل البيانات");
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    const company = location.state?.company;
+    if (company) {
+      setInstitutionName(company.institutionName);
+      setImagePreview(company.imgUrl);
+    } else {
+      fetchInstitution();
+    }
+  }, [location.state, fetchInstitution]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -59,7 +58,7 @@ const Editinstitution = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!institutionName.trim()) {
-      toast.error("❌ يرجى إدخال اسم المؤسسة");
+      toast.error(" يرجى إدخال اسم المؤسسة");
       return;
     }
 
@@ -109,14 +108,14 @@ const Editinstitution = () => {
       });
 
       if (updateResponse.ok) {
-        toast.success("✅ تم تحديث المؤسسة بنجاح");
+        toast.success(" تم تحديث المؤسسة بنجاح");
         navigate("/InstitutionDetails");
       } else {
         const error = await updateResponse.json();
         throw new Error(error.msg || "فشل التحديث");
       }
     } catch (err) {
-      toast.error("❌ " + err.message);
+      toast.error( err.message);
     } finally {
       setLoading(false);
     }
@@ -156,13 +155,15 @@ const Editinstitution = () => {
         onChange={(e) => setInstitutionName(e.target.value)}
       />
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-primary text-white rounded py-2 hover:bg-primary-dark transition"
-      >
+     <button
+  type="submit"
+  disabled={loading}
+  className={`w-full text-white rounded py-2 transition
+    ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary-dark"}
+  `}
+>
         {loading ? "جاري التعديل..." : "تحديث"}
-      </button>
+</button>
     </form>
   );
 };

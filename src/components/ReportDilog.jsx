@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "../components/Ui/dialog";
 import { Button } from "./Ui/Button";
-import { FileChartColumn, Printer, Scroll } from "lucide-react";
+import { FileChartColumn, Printer} from "lucide-react";
 import { ScrollArea } from "../components/Ui/scroll-area";
 import {
   Table,

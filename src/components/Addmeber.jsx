@@ -94,9 +94,9 @@ const AddMember = () => {
 
       if (!uploadResponse.ok || !uploadResult.data) {
         if (uploadResult.msg === "FILE_TOO_LARGE") {
-          toast.error("❌ حجم الملف كبير جدًا. الحد الأقصى المسموح به هو 20 ميغابايت.");
+          toast.error(" حجم الملف كبير جدًا. الحد الأقصى المسموح به هو 20 ميغابايت.");
         } else if (uploadResult.msg === "INVALID_FILE_TYPE") {
-          toast.error("❌ نوع الملف غير مدعوم.");
+          toast.error(" نوع الملف غير مدعوم.");
         } else {
           toast.error(uploadResult.msg || "حدث خطأ أثناء رفع الملف.");
         }

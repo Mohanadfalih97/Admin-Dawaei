@@ -22,7 +22,7 @@ const CreateInstitution = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!institutionName.trim()) {
-      toast.error("❌ يرجى إدخال اسم المؤسسة");
+      toast.error(" يرجى إدخال اسم المؤسسة");
       return;
     }
 
@@ -76,7 +76,7 @@ const CreateInstitution = () => {
       const result = await response.json();
 
       if (response.ok) {
-        toast.success("✅ تم إنشاء المؤسسة بنجاح");
+        toast.success(" تم إنشاء المؤسسة بنجاح");
         setInstitutionName("");
         setImageFile(null);
         setImagePreview(null);
@@ -86,7 +86,7 @@ const CreateInstitution = () => {
         throw new Error(result.msg || "فشل إنشاء المؤسسة");
       }
     } catch (err) {
-      toast.error("❌ " + err.message);
+      toast.error( err.message);
     } finally {
       setLoading(false);
     }
@@ -126,13 +126,15 @@ const CreateInstitution = () => {
         onChange={(e) => setInstitutionName(e.target.value)}
       />
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-primary text-white rounded py-2 hover:bg-primary-dark transition"
-      >
-        {loading ? "جاري الإرسال..." :"حفظ"}
-      </button>
+    <button
+  type="submit"
+  disabled={loading}
+  className={`w-full text-white rounded py-2 transition
+    ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary-dark"}
+  `}
+>
+  {loading ? "جاري الإرسال..." : "حفظ"}
+</button>
     </form>
   );
 };

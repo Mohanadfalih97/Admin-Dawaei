@@ -21,6 +21,10 @@ jobs:
       - name: Install dependencies
         run: npm install --force
 
+      - name: Run ESLint
+        run: npm run lint
+        continue-on-error: true
+
       - name: Build app
         run: npm run build --force
 

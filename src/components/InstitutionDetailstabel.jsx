@@ -97,7 +97,7 @@ const handleDeleteCompany = async (id) => {
           to="/Add-institution"
           className="bg-primary text-center py-2 px-4 text-white rounded-md hover:bg-primary-dark transition duration-300 w-full md:w-auto"
         >
-          إنشاء فورم
+          إنشاء مؤسسة
         </Link>
         <h1 className="text-2xl md:text-3xl text-primary font-semibold text-center md:text-right">
           تفاصيل المؤسسة

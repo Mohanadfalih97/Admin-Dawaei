@@ -92,7 +92,6 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
           <tr>
             <th className="px-4 py-2 border">العدد</th>
             <th className="px-4 py-2 border">وصف التصويت</th>
-            <th className="px-4 py-2 border">نسبة التصويت (%)</th>
             <th className="px-4 py-2 border">حالة التصويت</th>
             <th className="px-4 py-2 border">إجراءات</th>
           </tr>
@@ -107,18 +106,10 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
               <tr key={vote.id} className="hover:bg-gray-100">
                 <td className="px-4 py-2 border">{(currentPage - 1) * pageSize + index + 1}</td>
                 <td className="px-4 py-2 border">{vote.dscrp || "بدون وصف"}</td>
-                <td className="px-4 py-2 border">--</td>
 
                 <td className="px-4 py-2 border space-y-1 ">
                <div className="flex items-center gap-6 justify-center">
-                   <label className="flex items-center gap-2 justify-center">
-                    <input
-                      type="checkbox"
-                      checked={vote.votecompletestatus === 1}
-                      onChange={(e) => updateVoteStatus(vote, "votecompletestatus", e.target.checked ? 1 : 0)}
-                    />
-                    مكتمل
-                  </label>
+                  
                   <label className="flex items-center gap-2 justify-center">
                     <input
                       type="checkbox"

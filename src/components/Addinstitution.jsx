@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import defaultProfileImage from "../asset/Imge/profiledefautimg.png";
 import { Camera } from "lucide-react";
 import { toast } from "react-toastify";
-import {useNavigate} from "react-router-dom"
+import { useNavigate } from "react-router-dom";
 
 const CreateInstitution = () => {
   const [institutionName, setInstitutionName] = useState("");
@@ -14,6 +14,11 @@ const CreateInstitution = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        toast.error("حجم الصورة كبير جدًا. يرجى تقليل الحجم والمحاولة مرة أخرى.");
+        return;
+      }
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
@@ -22,7 +27,7 @@ const CreateInstitution = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!institutionName.trim()) {
-      toast.error(" يرجى إدخال اسم المؤسسة");
+      toast.error("يرجى إدخال اسم المؤسسة");
       return;
     }
 
@@ -45,9 +50,19 @@ const CreateInstitution = () => {
           body: imageForm,
         });
 
-        const uploadResult = await uploadResponse.json();
+    if (!uploadResponse.ok) {
+  if (uploadResponse.status === 413) {
+    // رسالة الخطأ عندما يكون الحجم كبيرًا جدًا
+    toast.error("حجم الصورة كبير جدًا. يرجى تقليل الحجم والمحاولة مرة أخرى.");
+    return;
+  }
 
-        if (!uploadResponse.ok || !uploadResult.data) {
+  const uploadResult = await uploadResponse.json();
+  throw new Error(uploadResult.msg || "فشل رفع الصورة");
+}
+
+        const uploadResult = await uploadResponse.json();
+        if (!uploadResult.data) {
           throw new Error(uploadResult.msg || "فشل رفع الصورة");
         }
 
@@ -76,17 +91,16 @@ const CreateInstitution = () => {
       const result = await response.json();
 
       if (response.ok) {
-        toast.success(" تم إنشاء المؤسسة بنجاح");
+        toast.success("تم إنشاء المؤسسة بنجاح");
         setInstitutionName("");
         setImageFile(null);
         setImagePreview(null);
         navigate("/InstitutionDetails");
-
       } else {
         throw new Error(result.msg || "فشل إنشاء المؤسسة");
       }
     } catch (err) {
-      toast.error( err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -126,15 +140,14 @@ const CreateInstitution = () => {
         onChange={(e) => setInstitutionName(e.target.value)}
       />
 
-    <button
-  type="submit"
-  disabled={loading}
-  className={`w-full text-white rounded py-2 transition
-    ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary-dark"}
-  `}
->
-  {loading ? "جاري الإرسال..." : "حفظ"}
-</button>
+      <button
+        type="submit"
+        disabled={loading}
+        className={`w-full text-white rounded py-2 transition
+          ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary-dark"}`}
+      >
+        {loading ? "جاري الإرسال..." : "حفظ"}
+      </button>
     </form>
   );
 };

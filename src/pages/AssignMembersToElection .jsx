@@ -12,15 +12,23 @@ const AssignMembersToElection = () => {
   const [electionCycles, setElectionCycles] = useState([]);
   const [selectedCycleId, setSelectedCycleId] = useState("");
   const [changes, setChanges] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1); // الصفحة الحالية
+  const [totalPages, setTotalPages] = useState(1); // عدد الصفحات الكلي
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMembers = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}members`);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}members`, {
+          params: {
+            pageNumber: currentPage, // إضافة رقم الصفحة
+            pageSize: 10, // حجم الصفحة ثابت هنا (10)
+          },
+        });
         const items = response.data.data.items || [];
         setMembers(items);
+        setTotalPages(response.data.data.totalPages); // تعيين إجمالي عدد الصفحات
 
         const assigned = items
           .filter((member) => member.cycleId && member.cycleId !== 0)
@@ -36,7 +44,7 @@ const AssignMembersToElection = () => {
     };
 
     fetchMembers();
-  }, []);
+  }, [currentPage]); // التحديث عند تغيير رقم الصفحة
 
   useEffect(() => {
     const fetchCycles = async () => {
@@ -119,6 +127,13 @@ const AssignMembersToElection = () => {
     }
   };
 
+  // التحكم في التنقل بين الصفحات
+  const goToPage = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
   return (
     <div className="mt-5 p-3 md:p-6 border rounded-lg shadow-md overflow-x-auto" style={{ direction: "rtl" }}>
       <h1 className="text-2xl md:text-3xl text-primary font-semibold text-center mb-6 text-right">
@@ -195,6 +210,43 @@ const AssignMembersToElection = () => {
           حفظ التغييرات
         </button>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center mt-6 gap-2 flex-wrap">
+          <button
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            السابق
+          </button>
+
+          {(() => {
+            const visiblePages = 5;
+            const currentGroup = Math.floor((currentPage - 1) / visiblePages);
+            const startPage = currentGroup * visiblePages + 1;
+            const endPage = Math.min(startPage + visiblePages - 1, totalPages);
+
+            return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((pageNum) => (
+              <button
+                key={pageNum}
+                onClick={() => goToPage(pageNum)}
+                className={`px-3 py-1 border rounded ${pageNum === currentPage ? 'bg-blue-600 text-white' : 'hover:bg-gray-200'}`}
+              >
+                {pageNum}
+              </button>
+            ));
+          })()}
+
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            التالي
+          </button>
+        </div>
+      )}
     </div>
   );
 };

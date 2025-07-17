@@ -16,17 +16,18 @@ export const AuthProvider = ({ children }) => {
   }, [navigate]);
 
   // ✅ يعمل فقط عند أول تحميل للصفحة
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const memberID = localStorage.getItem("memberID");
+ useEffect(() => {
+  const token = localStorage.getItem("token");
+  const memberID = localStorage.getItem("memberID");
 
-    // ✅ إذا لم يكن المستخدم مسجل دخول سابقًا، لا تسوي logout مباشر!
-    if (!user && (!token || !memberID)) {
-      logout();
-    } else if (token && memberID) {
-      setUser({ token, memberID });
-    }
-  }, []); // ✅ حذف logout من dependencies عشان ما يعيد التشغيل
+  // If the user is not logged in, logout the user
+  if (!user && (!token || !memberID)) {
+    logout();
+  } else if (token && memberID) {
+    setUser({ token, memberID });
+  }
+}, [logout, user]); // Include logout and user as dependencies
+ // ✅ حذف logout من dependencies عشان ما يعيد التشغيل
 
   const login = (data) => {
     // ❌ لا نمسح أي شيء هنا

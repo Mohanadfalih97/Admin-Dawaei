@@ -65,9 +65,9 @@ const handleSubmit = async (e) => {
         </div>
         <div className="flex flex-col items-center justify-center gap-2">
           <Lock />
-          <h2 className="text-xl font-bold text-gray-800 mb-2">تعيين  الرمز السري</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">اعادة تعين  الرمز السري</h2>
           <p className="text-sm text-gray-500 mb-6">
-            أدخل الرمز التعريفي  والرمز السري جديد لحسابك.
+            أدخل الرمز التعريفي لاعادة تعين الرمز السري .
           </p>
         </div>
 
@@ -97,7 +97,7 @@ const handleSubmit = async (e) => {
     loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-800 hover:bg-blue-900"
   }`}
 >
-  {loading ? "جاري الإنشاء..." : "انشاء رمز السري"}
+  {loading ? "جاري ..." : "اعادة رمز السري"}
 </button>
 
         </form>

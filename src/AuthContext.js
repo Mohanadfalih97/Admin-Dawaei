@@ -7,34 +7,37 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
+  // دالة تسجيل الخروج مع useCallback
   const logout = useCallback(() => {
+    // مسح جميع بيانات الكاش المخزنة
     ["token", "memberID", "userEmail", "chakra-ui-color-mode", "userName", "userRole", "userId"].forEach((key) =>
       localStorage.removeItem(key)
     );
     setUser(null);
-    navigate("/Login");
-  }, [navigate]);
+    navigate("/Login"); // الانتقال إلى صفحة تسجيل الدخول
+  }, [navigate]); // التأكد من إضافة navigate إلى التبعيات
 
+  // useEffect للتحقق من البيانات المخزنة عند التحميل
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const memberID = localStorage.getItem("memberID");
 
-    // إذا لم يكن المستخدم مسجل دخول سابقًا، لا تسوي logout مباشر!
-    if (!user && (!token || !memberID)) {
+    // إذا لم يكن التوكن أو العضو موجودًا في الكاش، قم بتسجيل الخروج مباشرة
+    if (!token) {
       logout();
-    } else if (token && memberID) {
-      setUser({ token, memberID });
+    } else {
+      // إذا كانت البيانات موجودة، قم بتعيين المستخدم
+      setUser({ token });
     }
-  }, [logout, user]); // إضافة logout و user هنا لتجنب التحذير
+  }, [logout]); // استخدام logout فقط كتبعيات
 
   const login = (data) => {
-    // لا نمسح أي شيء هنا
+    // تخزين بيانات المستخدم في localStorage
     localStorage.setItem("token", data.token);
-    localStorage.setItem("memberID", data.memberID);
     localStorage.setItem("userId", data.userId);
+    localStorage.setItem("userEmail", data.userEmail);
     localStorage.setItem("userName", data.userName);
     localStorage.setItem("userRole", data.userRole);
-    setUser(data);
+    setUser(data); // تعيين المستخدم
   };
 
   return (

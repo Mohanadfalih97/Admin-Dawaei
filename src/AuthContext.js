@@ -1,43 +1,51 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import publicRoutes from "./router/publicrouter"; // ✅ استدعاء صحيح من الملف
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
 
-  // دالة تسجيل الخروج مع useCallback
   const logout = useCallback(() => {
-    // مسح جميع بيانات الكاش المخزنة
-    ["token", "memberID", "userEmail", "chakra-ui-color-mode", "userName", "userRole", "userId"].forEach((key) =>
-      localStorage.removeItem(key)
-    );
+    [
+      "token",
+      "memberID",
+      "userEmail",
+      "chakra-ui-color-mode",
+      "userName",
+      "userRole",
+      "userId",
+    ].forEach((key) => localStorage.removeItem(key));
     setUser(null);
-    navigate("/Login"); // الانتقال إلى صفحة تسجيل الدخول
-  }, [navigate]); // التأكد من إضافة navigate إلى التبعيات
+    navigate("/Login");
+  }, [navigate]);
 
-  // useEffect للتحقق من البيانات المخزنة عند التحميل
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const path = location.pathname.toLowerCase();
 
-    // إذا لم يكن التوكن أو العضو موجودًا في الكاش، قم بتسجيل الخروج مباشرة
-    if (!token) {
+    // ✅ التحقق من كون المسار عامًا (حتى لو كان فيه /:id أو غيره)
+    const isPublic = publicRoutes.some((route) =>
+      path === route.toLowerCase() || path.startsWith(route.toLowerCase() + "/")
+    );
+
+    if (!token && !isPublic) {
       logout();
-    } else {
-      // إذا كانت البيانات موجودة، قم بتعيين المستخدم
+    } else if (token) {
       setUser({ token });
     }
-  }, [logout]); // استخدام logout فقط كتبعيات
+  }, [logout, location.pathname]);
 
   const login = (data) => {
-    // تخزين بيانات المستخدم في localStorage
     localStorage.setItem("token", data.token);
     localStorage.setItem("userId", data.userId);
     localStorage.setItem("userEmail", data.userEmail);
     localStorage.setItem("userName", data.userName);
     localStorage.setItem("userRole", data.userRole);
-    setUser(data); // تعيين المستخدم
+    setUser(data);
   };
 
   return (

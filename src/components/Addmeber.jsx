@@ -17,6 +17,9 @@ const AddMember = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [institutions, setInstitutions] = useState([]);
+const [institutionId, setInstitutionId] = useState("");
+
 
   const [errors, setErrors] = useState({
     fullName: "",
@@ -25,6 +28,34 @@ const AddMember = () => {
   });
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+  const fetchInstitutions = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${process.env.REACT_APP_API_URL}institution`, {
+        headers: {
+          "Accept-Language": "en",
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.data?.items) {
+        setInstitutions(result.data.items);
+      } else {
+        toast.error("فشل في تحميل المؤسسات");
+      }
+    } catch (error) {
+      console.error("Institution fetch error:", error);
+      toast.error("حدث خطأ أثناء تحميل المؤسسات");
+    }
+  };
+
+  fetchInstitutions();
+}, []);
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -120,6 +151,7 @@ const AddMember = () => {
       position,
       role: 0,
       imgUrl: uploadedImagePath,
+        institutionId: parseInt(institutionId),
     };
 
     // إرسال بيانات العضو
@@ -255,6 +287,25 @@ const AddMember = () => {
               ))}
             </select>
           </div>
+          <div className="text-right">
+  <label className="block mb-1 text-sm font-semibold text-gray-700">
+    المؤسسة <span className="text-red-600">*</span>
+  </label>
+  <select
+    value={institutionId}
+    onChange={(e) => setInstitutionId(e.target.value)}
+    required
+    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+  >
+    <option value="">اختر المؤسسة</option>
+    {institutions.map((inst) => (
+      <option key={inst.id} value={inst.id}>
+        {inst.institutionName}
+      </option>
+    ))}
+  </select>
+</div>
+
 
           <InputField label="المنصب" value={position} onChange={setPosition} />
 

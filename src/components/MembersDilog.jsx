@@ -33,6 +33,9 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
   const [watsApp, setWatsApp] = useState("");
   const [eMail, setEMail] = useState("");
   const navigate = useNavigate();
+  const [institutions, setInstitutions] = useState([]);
+const [institutionId, setInstitutionId] = useState("");
+
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -68,6 +71,8 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
       setPhone2(member.phone2 || "");
       setWatsApp(member.watsApp || "");
       setEMail(member.eMail || "");
+      setInstitutionId(member.institutionId?.toString() || "");
+
     }
   }, [member]);
 
@@ -78,6 +83,32 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
       setImagePreview(URL.createObjectURL(file));
     }
   };
+  useEffect(() => {
+  const fetchInstitutions = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${process.env.REACT_APP_API_URL}institution`, {
+        headers: {
+          "Accept-Language": "en",
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+      if (response.ok && result.data?.items) {
+        setInstitutions(result.data.items);
+      } else {
+        toast.error("فشل في تحميل المؤسسات");
+      }
+    } catch (error) {
+      toast.error("حدث خطأ أثناء تحميل المؤسسات");
+    }
+  };
+
+  fetchInstitutions();
+}, []);
+
 
   const handleUpdate = async () => {
     if (!member?.id) return;
@@ -122,6 +153,8 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
         role: member.role || 0,
         cycleId: member.cycleId || 0,
         imgUrl: updatedImgUrl,
+        institutionId: parseInt(institutionId) || null,
+
       };
 
       const response = await fetch(`${process.env.REACT_APP_API_URL}members/${member.id}`, {
@@ -295,6 +328,24 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
                 <input type="email" className="border px-3 py-2 rounded w-full text-center" value={eMail} onChange={(e) => setEMail(e.target.value)} />
               </TableCell>
             </TableRow>
+            <TableRow>
+  <TableCell className="font-medium">المؤسسة</TableCell>
+  <TableCell>
+    <select
+      className="border px-3 py-2 rounded w-full text-center"
+      value={institutionId}
+      onChange={(e) => setInstitutionId(e.target.value)}
+    >
+      <option value="">اختر المؤسسة</option>
+      {institutions.map((inst) => (
+        <option key={inst.id} value={inst.id}>
+          {inst.institutionName}
+        </option>
+      ))}
+    </select>
+  </TableCell>
+</TableRow>
+
           </TableBody>
         </Table>
 

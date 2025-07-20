@@ -135,41 +135,13 @@ if (response.ok && result.data?.token) {
               <input type="checkbox" className="form-checkbox" />
               تذكرني
             </label>
-     <Link
+<Link
   to="/Otp-password"
   className="text-sm text-blue-600 hover:underline"
-  onClick={async () => {
-    if (email.trim()) {
-      localStorage.setItem("userEmail", email);
-
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}otp/send`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "Accept-Language": "en",
-          },
-          body: JSON.stringify({ email }),
-        });
-
-        if (response.ok) {
-          toast.success("تم إرسال رمز التحقق إلى بريدك الإلكتروني.");
-        } else {
-          const error = await response.json();
-          toast.error(error.detail || "فشل إرسال رمز التحقق.");
-        }
-      } catch (error) {
-        console.error("OTP send error:", error);
-        toast.error("حدث خطأ أثناء إرسال رمز التحقق.");
-      }
-    } else {
-      toast.error("يرجى إدخال البريد الإلكتروني أولاً.");
-    }
-  }}
 >
   نسيت كلمة المرور؟
 </Link>
+
 
           </div>
 

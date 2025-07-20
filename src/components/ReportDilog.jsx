@@ -28,44 +28,68 @@ const VoteReportDialog = ({ open, onOpenChange, report }) => {
     return format(new Date(date), "EEEE d MMMM yyyy", { locale: ar });
   };
 
-  const handlePrint = () => {
-    const printContent = document.getElementById("print-section").innerHTML;
-    const printWindow = window.open("", "_blank");
-    printWindow.document.open();
-    printWindow.document.write(`
-      <html dir="rtl" lang="ar">
-        <head>
-          <title>تقرير التصويت</title>
-          <style>
-            body {
-              font-family: Times New Roman", Times, serif;
-              padding: 2rem;
-              direction: rtl;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 1rem;
-            }
-            th, td {
-              border: 1px solid #ccc;
-              padding: 8px;
-              text-align: center;
-            }
-            th {
-              background-color: #f0f0f0;
-            }
-            h3, h4 {
-              margin: 0 0 1rem 0;
-            }
-          </style>
-        </head>
-        <body>${printContent}</body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
-  };
+const handlePrint = () => {
+  const printContent = document.getElementById("print-section").innerHTML;
+  const printWindow = window.open("", "_blank");
+  printWindow.document.open();
+  printWindow.document.write(`
+    <html dir="rtl" lang="ar">
+      <head>
+        <title>تقرير التصويت</title>
+        <style>
+        
+page {
+    background: white;
+    display: block;
+    margin: 0 auto;
+    margin-bottom: 0.5cm;
+    box-shadow: 0 0 0.5cm rgba(0,0,0,0.5);
+}
+
+    page[size="A4"] {
+        width: 300mm;
+        height: 297mm
+    }
+
+@media print {
+    body, page {
+        background: white;
+        margin: 0;
+        box-shadow: 0;
+    }
+}
+          body {
+            font-family: "Times New Roman", Times, serif;
+            padding: 0;
+            margin: 0;
+            direction: rtl;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+          }
+          th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+          }
+          th {
+            background-color: #f0f0f0;
+          }
+          h3, h4 {
+            margin: 0 0 1rem 0;
+          }
+        </style>
+      </head>
+      <body>${printContent}</body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+};
+
 
   const votingPercentage = ((report.voteCount / TOTAL_MEMBERS) * 100).toFixed(1);
 

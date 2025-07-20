@@ -169,6 +169,8 @@ const [institutionId, setInstitutionId] = useState("");
       if (response.ok) {
         toast.success("تم تحديث بيانات العضو بنجاح");
         onOpenChange(false);
+        window.location.reload();
+
         navigate("/members");
       } else {
         toast.error("فشل في تحديث البيانات");

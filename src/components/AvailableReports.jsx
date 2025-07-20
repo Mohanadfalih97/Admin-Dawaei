@@ -109,7 +109,7 @@ const AvailableReports = () => {
                   <th className="p-3 border">عنوان التصويت</th>
                   <th className="p-3 border">الوصف</th>
                   <th className="p-3 border">تاريخ التصويت</th>
-                  <th className="p-3 border">عدد الأعضاء</th>
+                  <th className="p-3 border">اقل عدد للتصويت</th>
                   <th className="p-3 border">عدد المصوتين</th>
                   <th className="p-3 border">خيارات التصويت</th>
                   <th className="p-3 border">الإجراء</th>

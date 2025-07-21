@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import MembersDilog from "../components/MembersDilog";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
-import { FileText,RefreshCw } from "lucide-react";
+import { FileText, RefreshCw, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import { toast } from "react-toastify";
 
 
 
@@ -19,11 +19,6 @@ const MemberTable = ({ searchTerm }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-const goToResetAccesscodePage = (memberId) => {
-  navigate(`/RestAccesscodeByAdmin/${memberId}`);
-};
-
-
   const formatDateArabic = (dateStr) => {
     if (!dateStr) return "—";
     try {
@@ -33,43 +28,77 @@ const goToResetAccesscodePage = (memberId) => {
     }
   };
 
- useEffect(() => {
-  const fetchMembers = async () => {
-    const token = localStorage.getItem("token");
+  const sendVoteLink = async (email) => {
+    if (!email) {
+      toast.error("البريد الإلكتروني غير متوفر");
+      return;
+    }
+
     try {
-      setLoading(true);
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}members?PageNumber=${currentPage}&PageSize=${pageSize}`,
-        {
-          headers: {
-            Accept: "application/json",
-            "Accept-Language": "en",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${process.env.REACT_APP_API_URL}otp/send-member-link`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept-Language": "ar",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          voteUrl: `${process.env.REACT_APP_VOTE_URL}/vote`,
+        }),
+      });
 
-      const result = await response.json();
-
-      if (response.ok && result.data?.items) {
-        setMembers(result.data.items);
-        setTotalPages(result.data.totalPages || 1);
-        setPageSize(result.data.pageSize || 10);
-        setError("");
+      const text = await response.text();
+      if (response.ok) {
       } else {
-        setError(result.msg || "فشل في جلب البيانات");
+        toast.error(` فشل الإرسال: ${text}`);
       }
     } catch (err) {
-      console.error("Fetch error:", err);
-      setError("حدث خطأ أثناء الاتصال بالخادم.");
-    } finally {
-      setLoading(false);
+      console.error("Error:", err);
+      toast.error("حدث خطأ أثناء إرسال الرابط.");
     }
   };
 
-  fetchMembers();
-}, [currentPage, pageSize]);
+  const goToResetAccesscodePage = (memberId) => {
+    navigate(`/RestAccesscodeByAdmin/${memberId}`);
+  };
 
+  useEffect(() => {
+    const fetchMembers = async () => {
+      const token = localStorage.getItem("token");
+      try {
+        setLoading(true);
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}members?PageNumber=${currentPage}&PageSize=${pageSize}`,
+          {
+            headers: {
+              Accept: "application/json",
+              "Accept-Language": "en",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const result = await response.json();
+
+        if (response.ok && result.data?.items) {
+          setMembers(result.data.items);
+          setTotalPages(result.data.totalPages || 1);
+          setPageSize(result.data.pageSize || 10);
+          setError("");
+        } else {
+          setError(result.msg || "فشل في جلب البيانات");
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setError("حدث خطأ أثناء الاتصال بالخادم.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMembers();
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -80,11 +109,10 @@ const goToResetAccesscodePage = (memberId) => {
     setOpen(true);
   };
 
-const filteredMembers = members.filter((member) => {
-  const search = searchTerm.trim().toLowerCase();
-  return member.fullName?.toLowerCase().includes(search);
-});
-
+  const filteredMembers = members.filter((member) => {
+    const search = searchTerm.trim().toLowerCase();
+    return member.fullName?.toLowerCase().includes(search);
+  });
 
   const goToPage = (page) => {
     if (page >= 1 && page <= totalPages) setCurrentPage(page);
@@ -125,28 +153,32 @@ const filteredMembers = members.filter((member) => {
           ) : (
             filteredMembers.map((member) => (
               <tr key={member.id} className="hover:bg-gray-100">
-                <td className="px-2 md:px-6 py-4 border-b text-center">
-                  <div className="flex flex-row gap-4 py-3">
-                <button
-  onClick={() => openDialog(member)}
-  className="text-blue-600 hover:text-blue-800"
-  title="عرض التقرير"
->
-  <FileText size={18} />
-</button>
-  <button
+        <td className="px-2 md:px-6 py-4 border-b text-center">
+  <div className="flex flex-row gap-4 py-3 justify-center">
+    <button
+      onClick={() => openDialog(member)}
+      className="text-blue-600 hover:text-blue-800"
+      title="عرض التقرير"
+    >
+      <FileText size={18} />
+    </button>
+    <button
       onClick={() => goToResetAccesscodePage(member.memberId)}
       className="text-green-600 hover:text-green-800"
       title="إعادة تعيين الرمز"
     >
       <RefreshCw size={18} />
     </button>
+    <button
+      onClick={() => sendVoteLink(member.eMail)}
+      className="text-purple-600 hover:text-purple-800"
+      title="إرسال رابط التصويت"
+    >
+      <Send size={18} />
+    </button>
+  </div>
+</td>
 
-
-                   
-                  </div>
-                
-                </td>
                 <td className="px-2 md:px-6 py-4 border-b text-right text-gray-600">
                   {formatDateArabic(member.updatedAt)}
                 </td>
@@ -180,7 +212,6 @@ const filteredMembers = members.filter((member) => {
         </tbody>
       </table>
 
-      {/* ✅ الباجنيشن بحد أقصى 5 صفحات في كل مجموعة */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center mt-6 gap-2 flex-wrap">
           <button
@@ -218,24 +249,23 @@ const filteredMembers = members.filter((member) => {
         </div>
       )}
 
-   <MembersDilog
-  open={open}
-  onOpenChange={setOpen}
-  member={selectedReport}
-  memberId={selectedReport?.memberId}
-  fullName={selectedReport?.fullName}
-  department={selectedReport?.department}
-  position={selectedReport?.position}
-  imgUrl={selectedReport?.imgUrl}
-  phone1={selectedReport?.phone1}
-  phone2={selectedReport?.phone2}
-  watsApp={selectedReport?.watsApp}
-  eMail={selectedReport?.eMail}
-  cycleId={selectedReport?.cycleId}
-  createdAt={selectedReport?.createdAt}
-  updatedAt={selectedReport?.updatedAt}
-/>
-
+      <MembersDilog
+        open={open}
+        onOpenChange={setOpen}
+        member={selectedReport}
+        memberId={selectedReport?.memberId}
+        fullName={selectedReport?.fullName}
+        department={selectedReport?.department}
+        position={selectedReport?.position}
+        imgUrl={selectedReport?.imgUrl}
+        phone1={selectedReport?.phone1}
+        phone2={selectedReport?.phone2}
+        watsApp={selectedReport?.watsApp}
+        eMail={selectedReport?.eMail}
+        cycleId={selectedReport?.cycleId}
+        createdAt={selectedReport?.createdAt}
+        updatedAt={selectedReport?.updatedAt}
+      />
     </div>
   );
 };

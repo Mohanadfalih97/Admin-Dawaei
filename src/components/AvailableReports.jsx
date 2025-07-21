@@ -5,55 +5,94 @@ import { FileText } from "lucide-react";
 import axios from "axios";
 
 const AvailableReports = () => {
-   const [votes, setVotes] = useState([]);
+  const [votes, setVotes] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
 
-  const fetchVotes = useCallback(async () => {
-    try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}vote`, {
+const fetchVotes = useCallback(async () => {
+  try {
+    const res = await axios.get(
+      `${process.env.REACT_APP_API_URL}vote?votecompletestatus=1`,
+      {
         headers: {
           Authorization: `Bearer ${token}`,
           "Accept-Language": "ar",
         },
-      });
+      }
+    );
 
-      const fetchedVotes = res.data.data.items || [];
+    const fetchedVotes = res.data.data.items || [];
 
-      const enrichedVotes = await Promise.all(
-        fetchedVotes.map(async (vote) => {
-          const [optionsRes, execRes] = await Promise.all([
-            axios.get(`${process.env.REACT_APP_API_URL}vote-options?voteId=${vote.id}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-            axios.get(`${process.env.REACT_APP_API_URL}vote-excution?voteId=${vote.id}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-          ]);
+    const enrichedVotes = await Promise.all(
+      fetchedVotes.map(async (vote) => {
+        const [optionsRes, execRes] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_API_URL}vote-options?voteId=${vote.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${process.env.REACT_APP_API_URL}vote-excution?voteId=${vote.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
 
-          const voteOptions = optionsRes.data.data.items;
-          const voteExecutions = execRes.data.data.items;
+        const voteOptions = optionsRes.data.data.items || [];
+        const voteExecutions = execRes.data.data.items || [];
 
-          const results = countVoteResults(voteExecutions, voteOptions);
+        const optionMap = {};
+        voteOptions.forEach((opt) => {
+          optionMap[opt.id] = opt.voteDscrp;
+        });
 
-          return {
-            ...vote,
-            voteTotle: vote.minMumbersVoted,
-            voteCount: voteExecutions.length,
-            results,
-          };
-        })
-      );
+        const executionsWithNames = await Promise.all(
+          voteExecutions.map(async (exec) => {
+            try {
+              const res = await axios.get(`${process.env.REACT_APP_API_URL}members/${exec.memberVoterId}`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Accept-Language": "ar",
+                },
+              });
+              return {
+                fullName: res.data?.data?.fullName || "غير معروف",
+                voteResultId: exec.voteResultId,
+              };
+            } catch {
+              return {
+                fullName: "غير معروف",
+                voteResultId: exec.voteResultId,
+              };
+            }
+          })
+        );
 
-      setVotes(enrichedVotes);
-    } catch (error) {
-      console.error("Error fetching votes:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+        const groupedVoters = {};
+        executionsWithNames.forEach(({ voteResultId, fullName }) => {
+          const option = optionMap[voteResultId] || "خيار غير معروف";
+          if (!groupedVoters[option]) groupedVoters[option] = [];
+          groupedVoters[option].push(fullName);
+        });
+
+        const results = countVoteResults(voteExecutions, voteOptions);
+
+        return {
+          ...vote,
+          voteTotle: vote.minMumbersVoted,
+          voteCount: voteExecutions.length,
+          results,
+          groupedVoters,
+        };
+      })
+    );
+
+    setVotes(enrichedVotes);
+  } catch (error) {
+    console.error("Error fetching votes:", error);
+  } finally {
+    setLoading(false);
+  }
+}, [token]);
+
 
   useEffect(() => {
     fetchVotes();
@@ -109,7 +148,7 @@ const AvailableReports = () => {
                   <th className="p-3 border">عنوان التصويت</th>
                   <th className="p-3 border">الوصف</th>
                   <th className="p-3 border">تاريخ التصويت</th>
-                  <th className="p-3 border">اقل عدد للتصويت</th>
+                  <th className="p-3 border">اقل عدد للنصاب</th>
                   <th className="p-3 border">عدد المصوتين</th>
                   <th className="p-3 border">خيارات التصويت</th>
                   <th className="p-3 border">الإجراء</th>
@@ -132,6 +171,7 @@ const AvailableReports = () => {
                         </div>
                       ))}
                     </td>
+                   
                     <td className="p-3 border text-center">
                       <button
                         onClick={() => openDialog(vote)}

@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "../components/Ui/dialog";
 import { Button } from "./Ui/Button";
-import { FileChartColumn, Printer} from "lucide-react";
+import { FileChartColumn, Printer } from "lucide-react";
 import { ScrollArea } from "../components/Ui/scroll-area";
 import {
   Table,
@@ -28,68 +28,46 @@ const VoteReportDialog = ({ open, onOpenChange, report }) => {
     return format(new Date(date), "EEEE d MMMM yyyy", { locale: ar });
   };
 
-const handlePrint = () => {
-  const printContent = document.getElementById("print-section").innerHTML;
-  const printWindow = window.open("", "_blank");
-  printWindow.document.open();
-  printWindow.document.write(`
-    <html dir="rtl" lang="ar">
-      <head>
-        <title>تقرير التصويت</title>
-        <style>
-        
-page {
-    background: white;
-    display: block;
-    margin: 0 auto;
-    margin-bottom: 0.5cm;
-    box-shadow: 0 0 0.5cm rgba(0,0,0,0.5);
-}
-
-    page[size="A4"] {
-        width: 300mm;
-        height: 297mm
-    }
-
-@media print {
-    body, page {
-        background: white;
-        margin: 0;
-        box-shadow: 0;
-    }
-}
-          body {
-            font-family: "Times New Roman", Times, serif;
-            padding: 0;
-            margin: 0;
-            direction: rtl;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 1rem;
-          }
-          th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: center;
-          }
-          th {
-            background-color: #f0f0f0;
-          }
-          h3, h4 {
-            margin: 0 0 1rem 0;
-          }
-        </style>
-      </head>
-      <body>${printContent}</body>
-    </html>
-  `);
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
-};
-
+  const handlePrint = () => {
+    const printContent = document.getElementById("print-section").innerHTML;
+    const printWindow = window.open("", "_blank");
+    printWindow.document.open();
+    printWindow.document.write(`
+      <html dir="rtl" lang="ar">
+        <head>
+          <title>تقرير التصويت</title>
+          <style>
+            body {
+              font-family: "Times New Roman", Times, serif;
+              padding: 20px;
+              margin: 0;
+              direction: rtl;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 1rem;
+            }
+            th, td {
+              border: 1px solid #ccc;
+              padding: 8px;
+              text-align: center;
+            }
+            th {
+              background-color: #f0f0f0;
+            }
+            h3, h4, h5 {
+              margin: 0 0 1rem 0;
+            }
+          </style>
+        </head>
+        <body>${printContent}</body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
 
   const votingPercentage = ((report.voteCount / TOTAL_MEMBERS) * 100).toFixed(1);
 
@@ -105,7 +83,6 @@ page {
             <Button variant="outline" size="icon" onClick={handlePrint}>
               <Printer className="h-4 w-4" />
             </Button>
-        
           </div>
         </DialogHeader>
 
@@ -164,6 +141,36 @@ page {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+            )}
+
+            {report.groupedVoters && (
+              <div className="pb-4">
+                <h4 className="text-lg font-semibold mb-3">تفاصيل المصوتين حسب كل خيار</h4>
+                {Object.entries(report.groupedVoters).map(([option, names], idx) => {
+                  const filteredNames = names.filter((name) => name !== "غير معروف");
+                  if (filteredNames.length === 0 || option === "خيار غير معروف") return null;
+
+                  return (
+                    <div key={idx} className="mb-6">
+                      <h5 className="text-md font-bold mb-2">{option}</h5>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>الاسم</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredNames.map((name, i) => (
+                            <TableRow key={i}>
+                              <TableCell>{name}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

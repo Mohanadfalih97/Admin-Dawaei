@@ -149,43 +149,60 @@ setCycles(cycleResponse.data.data.items || []);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!cycleId) {
-      toast.error(" يرجى اختيار الدورة الانتخابية");
-      return;
-    }
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    setSubmitting(true);
+  if (!cycleId) {
+    toast.error(" يرجى اختيار الدورة الانتخابية");
+    return;
+  }
 
-    const formPayload = {
-      voteTitle: title,
-      dscrp,
-      startDate,
-      minMumbersVoted,
-      finishDate,
-      docUrl: file ? file.name : "",
-      votecompletestatus,
-      voteActveStatus,
-      voteInfo: 0,
-      cycleId: Number(cycleId),
-    };
+  // ✅ تحقق من أن finishDate صالح ومقارنة بالتاريخ الحالي
+  const today = new Date();
+  const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-    try {
-      await axios.put(`${process.env.REACT_APP_API_URL}vote/${id}`, formPayload, {
-        headers: {
-          "Accept-Language": "en",
-          Accept: "application/json",
-        },
-      });
-      toast.success(" تم تعديل التصويت بنجاح");
-      navigate("/VotePageMain");
-    } catch {
-      toast.error(" فشل في تعديل التصويت");
-    } finally {
-      setSubmitting(false);
-    }
+  const finish = new Date(finishDate);
+  const finishDateOnly = new Date(finish.getFullYear(), finish.getMonth(), finish.getDate());
+
+  if (voteActveStatus === 1 && finishDateOnly < todayDateOnly) {
+    toast.error("📅 تاريخ التصويت منتهي، يرجى تحديث تاريخ الانتهاء قبل تنشيط التصويت.");
+    return;
+  }
+
+  setSubmitting(true);
+
+  const finalVoteCompleteStatus = voteActveStatus === 1 ? 0 : votecompletestatus;
+
+  const formPayload = {
+    voteTitle: title,
+    dscrp,
+    startDate,
+    minMumbersVoted,
+    finishDate,
+    docUrl: file ? file.name : "",
+    votecompletestatus: finalVoteCompleteStatus,
+    voteActveStatus,
+    voteInfo: 0,
+    cycleId: Number(cycleId),
   };
+
+  try {
+    await axios.put(`${process.env.REACT_APP_API_URL}vote/${id}`, formPayload, {
+      headers: {
+        "Accept-Language": "en",
+        Accept: "application/json",
+      },
+    });
+    toast.success(" تم تعديل التصويت بنجاح");
+    navigate("/VotePageMain");
+  } catch {
+    toast.error(" فشل في تعديل التصويت");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+
 
   const handleDelete = async () => {
     setDeleting(true);

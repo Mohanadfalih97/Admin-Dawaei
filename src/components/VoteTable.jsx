@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from 'react-toastify';
-import { Pencil,  } from "lucide-react";
-
+import { Pencil, Key } from "lucide-react";
 
 const VoteTable = ({ searchTerm, filterStatus }) => {
   const [votes, setVotes] = useState([]);
@@ -11,6 +10,8 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchVotes = async () => {
@@ -46,6 +47,35 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
   }, [searchTerm, filterStatus]);
 
   const updateVoteStatus = async (vote, field, value) => {
+    if (field === "voteActveStatus" && value === 1) {
+      const today = new Date();
+      const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+      const voteFinishDate = new Date(vote.finishDate);
+      const finishDateOnly = new Date(voteFinishDate.getFullYear(), voteFinishDate.getMonth(), voteFinishDate.getDate());
+
+      if (todayDateOnly > finishDateOnly) {
+        toast.error("📅 تاريخ التصويت منتهي، يرجى تعديل التاريخ قبل تفعيل التصويت");
+
+        navigate(`/EditVote/${vote.id}`, {
+          state: {
+            voteTitle: vote.voteTitle,
+            dscrp: vote.dscrp,
+            startDate: vote.startDate,
+            finishDate: vote.finishDate,
+            docUrl: vote.docUrl,
+            voteInfo: vote.voteInfo,
+            minMumbersVoted: vote.minMumbersVoted,
+            votecompletestatus: vote.votecompletestatus,
+            voteActveStatus: vote.voteActveStatus,
+            cycleId: vote.cycleId,
+          }
+        });
+
+        return;
+      }
+    }
+
     try {
       await axios.put(`${process.env.REACT_APP_API_URL}vote/${vote.id}`, {
         voteTitle: vote.voteTitle,
@@ -62,14 +92,14 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
         headers: {
           "Accept-Language": "en",
           Accept: "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}` // إذا كنت تستخدم توكن
+          Authorization: `Bearer ${localStorage.getItem("token")}`
         }
       });
 
-      toast.success("تم تحديث الحالة");
+      toast.success("✅ تم تحديث الحالة");
       setVotes(prev => prev.map(v => v.id === vote.id ? { ...v, [field]: value } : v));
     } catch (error) {
-      toast.error("فشل في تحديث الحالة");
+      toast.error("❌ فشل في تحديث الحالة");
     }
   };
 
@@ -108,17 +138,17 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
                 <td className="px-4 py-2 border">{vote.dscrp || "بدون وصف"}</td>
 
                 <td className="px-4 py-2 border space-y-1 ">
-               <div className="flex items-center gap-6 justify-center">
-                  
-                  <label className="flex items-center gap-2 justify-center">
-                    <input
-                      type="checkbox"
-                      checked={vote.voteActveStatus === 1}
-                      onChange={(e) => updateVoteStatus(vote, "voteActveStatus", e.target.checked ? 1 : 0)}
-                    />
-                    نشط
-                  </label>
-               </div>
+                  <div className="flex items-center gap-6 justify-center">
+                    <label className="flex items-center gap-2 justify-center">
+                      <Key size={16} className="text-yellow-500" />
+                      <input
+                        type="checkbox"
+                        checked={vote.voteActveStatus === 1}
+                        onChange={(e) => updateVoteStatus(vote, "voteActveStatus", e.target.checked ? 1 : 0)}
+                      />
+                      نشط
+                    </label>
+                  </div>
                 </td>
 
                 <td className="px-4 py-2 border">
@@ -134,9 +164,9 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
                     voteActveStatus: vote.voteActveStatus,
                     cycleId: vote.cycleId,
                   }}>
-                   <button className="text-blue-600 hover:text-blue-800">
-      <Pencil size={18} />
-    </button>
+                    <button className="text-blue-600 hover:text-blue-800">
+                      <Pencil size={18} />
+                    </button>
                   </Link>
                 </td>
               </tr>

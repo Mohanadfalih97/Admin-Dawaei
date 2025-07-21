@@ -53,10 +53,12 @@ const fetchVotes = useCallback(async () => {
                   "Accept-Language": "ar",
                 },
               });
-              return {
-                fullName: res.data?.data?.fullName || "غير معروف",
-                voteResultId: exec.voteResultId,
-              };
+           return {
+  fullName: res.data?.data?.fullName || "غير معروف",
+  voteResultId: exec.voteResultId,
+  createdAt: exec.createdAt,
+};
+
             } catch {
               return {
                 fullName: "غير معروف",
@@ -67,10 +69,11 @@ const fetchVotes = useCallback(async () => {
         );
 
         const groupedVoters = {};
-        executionsWithNames.forEach(({ voteResultId, fullName }) => {
+executionsWithNames.forEach(({ voteResultId, fullName, createdAt }) => {
           const option = optionMap[voteResultId] || "خيار غير معروف";
-          if (!groupedVoters[option]) groupedVoters[option] = [];
-          groupedVoters[option].push(fullName);
+      if (!groupedVoters[option]) groupedVoters[option] = [];
+groupedVoters[option].push({ fullName, createdAt });
+
         });
 
         const results = countVoteResults(voteExecutions, voteOptions);

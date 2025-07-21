@@ -144,35 +144,41 @@ const VoteReportDialog = ({ open, onOpenChange, report }) => {
               </div>
             )}
 
-            {report.groupedVoters && (
-              <div className="pb-4">
-                <h4 className="text-lg font-semibold mb-3">تفاصيل المصوتين حسب كل خيار</h4>
-                {Object.entries(report.groupedVoters).map(([option, names], idx) => {
-                  const filteredNames = names.filter((name) => name !== "غير معروف");
-                  if (filteredNames.length === 0 || option === "خيار غير معروف") return null;
+       {report.groupedVoters && (
+  <div className="pb-4">
+    <h4 className="text-lg font-semibold mb-3">تفاصيل النصاب   </h4>
+    {Object.entries(report.groupedVoters).map(([option, names], idx) => {
+      const filteredNames = names.filter((name) => name !== "غير معروف");
+      if (filteredNames.length === 0 || option === "خيار غير معروف") return null;
 
-                  return (
-                    <div key={idx} className="mb-6">
-                      <h5 className="text-md font-bold mb-2">{option}</h5>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>الاسم</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredNames.map((name, i) => (
-                            <TableRow key={i}>
-                              <TableCell>{name}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+      return (
+        <div key={idx} className="mb-6">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>المصوتون</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+           {filteredNames.map(({ fullName, createdAt }, i) => (
+  <TableRow key={i}>
+    <TableCell>
+      {fullName}{" "}
+      <span className="text-gray-500 text-sm">
+        ({format(new Date(createdAt), "yyyy/MM/dd HH:mm", { locale: ar })})
+      </span>
+    </TableCell>
+  </TableRow>
+))}
+
+            </TableBody>
+          </Table>
+        </div>
+      );
+    })}
+  </div>
+)}
+
           </div>
         </ScrollArea>
       </DialogContent>

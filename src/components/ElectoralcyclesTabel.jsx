@@ -46,7 +46,7 @@ const ElectionCyclesTable = ({ searchTerm }) => {
     };
 
     fetchElectionCycles();
-  }, [searchTerm, currentPage, pageSize]);
+  }, [searchTerm, currentPage, pageSize,token]);
 
   const deleteElectionCycle = async (id) => {
     setDeletingId(id);

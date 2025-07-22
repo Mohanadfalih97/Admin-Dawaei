@@ -40,7 +40,7 @@ const MainLayout = () => {
     };
 
     fetchActiveCycle();
-  }, []);
+  }, [token]);
   return (
     <section className="">
       <Topbar />

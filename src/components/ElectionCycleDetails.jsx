@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useCallback } from "react";
 
 const PAGE_SIZE = 5;
 
@@ -12,44 +13,43 @@ const ElectionCycleDetails = () => {
         const token = localStorage.getItem("token"); // ✅ احصل على التوكن
 
 
-  const fetchDetails = async (pageNumber) => {
-    setLoading(true);
-    setError("");
+const fetchDetails = useCallback(async (pageNumber) => {
+  setLoading(true);
+  setError("");
 
-    try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}election-cycle-details`,
-        {
-          params: {
-            PageNumber: pageNumber,
-            PageSize: PAGE_SIZE,
-          },
-          headers: {
-             Authorization: `Bearer ${token}`,
-            "Accept-Language": "en",
-            Accept: "application/json",
-          },
-        }
-      );
-
-      if (response.status === 200 && response.data?.data?.items) {
-        setDetails(response.data.data.items);
-        setTotalPages(response.data.data.totalPages || 1);
-      } else {
-        setError("فشل في تحميل البيانات.");
+  try {
+    const response = await axios.get(
+      `${process.env.REACT_APP_API_URL}election-cycle-details`,
+      {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: PAGE_SIZE,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Accept-Language": "en",
+          Accept: "application/json",
+        },
       }
-    } catch (err) {
-      console.error(err);
-      setError("حدث خطأ أثناء تحميل البيانات.");
-    } finally {
-      setLoading(false);
+    );
+
+    if (response.status === 200 && response.data?.data?.items) {
+      setDetails(response.data.data.items);
+      setTotalPages(response.data.data.totalPages || 1);
+    } else {
+      setError("فشل في تحميل البيانات.");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    setError("حدث خطأ أثناء تحميل البيانات.");
+  } finally {
+    setLoading(false);
+  }
+}, [token]); // ✅ أضف token كمُعتمد لأنك تستخدمه داخل fetchDetails
 
-  useEffect(() => {
-    fetchDetails(page);
-  }, [page]);
-
+useEffect(() => {
+  fetchDetails(page);
+}, [page, fetchDetails]); 
   const handlePrev = () => {
     if (page > 1) setPage(page - 1);
   };

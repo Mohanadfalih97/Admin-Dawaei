@@ -17,45 +17,61 @@ const AssignMembersToElection = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}members`, {
-          params: {
-            pageNumber: currentPage, // إضافة رقم الصفحة
-            pageSize: 10, // حجم الصفحة ثابت هنا (10)
-          },
-        });
-        const items = response.data.data.items || [];
-        setMembers(items);
-        setTotalPages(response.data.data.totalPages); // تعيين إجمالي عدد الصفحات
+ const fetchMembers = async () => {
+  try {
+    setLoading(true);
+    const token = localStorage.getItem("token"); // ✅ اجلب التوكن من localStorage
 
-        const assigned = items
-          .filter((member) => member.cycleId && member.cycleId !== 0)
-          .map((member) => member.id);
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}members`, {
+      params: {
+        pageNumber: currentPage,
+        pageSize: 10,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`, // ✅ أضف التوكن هنا
+        Accept: "application/json",
+        "Accept-Language": "ar",
+      },
+    });
 
-        setSelectedMembers(assigned);
-      } catch (error) {
-        console.error("حدث خطأ أثناء جلب الأعضاء:", error);
-        toast.error("فشل في تحميل قائمة الأعضاء");
-      } finally {
-        setLoading(false);
-      }
-    };
+    const items = response.data.data.items || [];
+    setMembers(items);
+    setTotalPages(response.data.data.totalPages);
+
+    const assigned = items
+      .filter((member) => member.cycleId && member.cycleId !== 0)
+      .map((member) => member.id);
+
+    setSelectedMembers(assigned);
+  } catch (error) {
+    console.error("حدث خطأ أثناء جلب الأعضاء:", error);
+    toast.error("فشل في تحميل قائمة الأعضاء");
+  } finally {
+    setLoading(false);
+  }
+};
 
     fetchMembers();
   }, [currentPage]); // التحديث عند تغيير رقم الصفحة
 
   useEffect(() => {
-    const fetchCycles = async () => {
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}elections-cycles`);
-        setElectionCycles(response.data.data.items || []);
-      } catch (error) {
-        console.error("فشل في تحميل الدورات:", error);
-        toast.error("حدث خطأ أثناء جلب الدورات الانتخابية");
-      }
-    };
+const fetchCycles = async () => {
+  try {
+    const token = localStorage.getItem("token"); // ✅
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}elections-cycles`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // ✅
+        Accept: "application/json",
+        "Accept-Language": "ar",
+      },
+    });
+    setElectionCycles(response.data.data.items || []);
+  } catch (error) {
+    console.error("فشل في تحميل الدورات:", error);
+    toast.error("حدث خطأ أثناء جلب الدورات الانتخابية");
+  }
+};
+
 
     fetchCycles();
   }, []);

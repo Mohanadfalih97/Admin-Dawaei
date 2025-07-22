@@ -13,34 +13,38 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchVotes = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}vote`, {
-          params: {
-            PageNumber: currentPage,
-            PageSize: pageSize,
-          },
-          headers: {
-            "Accept-Language": "en",
-            Accept: "application/json",
-          },
-        });
+ useEffect(() => {
+  const fetchVotes = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token"); // ✅ احصل على التوكن
 
-        const data = response.data.data;
-        setVotes(data.items || []);
-        setTotalPages(data.totalPages || 1);
-        setPageSize(data.pageSize || 10);
-      } catch (err) {
-        toast.error("فشل في تحميل البيانات");
-      } finally {
-        setLoading(false);
-      }
-    };
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}vote`, {
+        params: {
+          PageNumber: currentPage,
+          PageSize: pageSize,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ أضف التوكن هنا
+          "Accept-Language": "en",
+          Accept: "application/json",
+        },
+      });
 
-    fetchVotes();
-  }, [currentPage, pageSize]);
+      const data = response.data.data;
+      setVotes(data.items || []);
+      setTotalPages(data.totalPages || 1);
+      setPageSize(data.pageSize || 5);
+    } catch (err) {
+      toast.error("فشل في تحميل البيانات");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchVotes();
+}, [currentPage, pageSize]);
+
 
   useEffect(() => {
     setCurrentPage(1);

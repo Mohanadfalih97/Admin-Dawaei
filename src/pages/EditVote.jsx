@@ -20,19 +20,16 @@ const EditVote = () => {
   const [votecompletestatus, setVoteStatus] = useState(0);
   const [minMumbersVoted, setMinMumbersVoted] = useState(0);
   const [voteActveStatus, setVoteActveStatus] = useState(0);
-  const [cycleId, setCycleId] = useState(""); // الدورة الانتخابية
-
+  const [cycleId, setCycleId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [voteOptions, setVoteOptions] = useState([]);
   const [cycles, setCycles] = useState([]);
 
-
   useEffect(() => {
     const loadData = async () => {
       try {
-        // بيانات التصويت
         if (voteData) {
           setTitle(voteData.voteTitle || "");
           setDscrp(voteData.dscrp || "");
@@ -54,28 +51,24 @@ const EditVote = () => {
           setFile(data.docUrl ? { name: data.docUrl } : null);
           setVoteStatus(data.votecompletestatus ?? 0);
           setVoteActveStatus(data.voteActveStatus ?? 0);
- setCycleId(data.cycleId ?? "");
+          setCycleId(data.cycleId ?? "");
         }
 
-        // جلب الدورات الانتخابية
         const cycleResponse = await axios.get(`${process.env.REACT_APP_API_URL}elections-cycles`, {
           headers: {
             "Accept-Language": "en",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
-setCycles(cycleResponse.data.data.items || []);
-        // جلب خيارات التصويت
-        const optionsResponse = await axios.get(
-          `${process.env.REACT_APP_API_URL}vote-options`,
-          {
-            params: { VoteId: id },
-            headers: {
-              "Accept-Language": "en",
-              Accept: "application/json",
-            },
-          }
-        );
+        setCycles(cycleResponse.data.data.items || []);
+
+        const optionsResponse = await axios.get(`${process.env.REACT_APP_API_URL}vote-options`, {
+          params: { VoteId: id },
+          headers: {
+            "Accept-Language": "en",
+            Accept: "application/json",
+          },
+        });
         setVoteOptions(optionsResponse.data.data.items || []);
       } catch (err) {
         toast.error(" فشل تحميل بيانات التصويت");
@@ -87,10 +80,7 @@ setCycles(cycleResponse.data.data.items || []);
 
   const handleAddOption = async () => {
     try {
-      const newOption = {
-        voteId: id,
-        voteDscrp: "",
-      };
+      const newOption = { voteId: id, voteDscrp: "" };
       setSubmitting(true);
       const response = await axios.post(`${process.env.REACT_APP_API_URL}vote-options`, newOption, {
         headers: {
@@ -117,7 +107,6 @@ setCycles(cycleResponse.data.data.items || []);
     const updatedOptions = [...voteOptions];
     updatedOptions.splice(index, 1);
     setVoteOptions(updatedOptions);
-
     try {
       setDeleting(true);
       await axios.delete(`${process.env.REACT_APP_API_URL}vote-options/${optionId}`, {
@@ -149,60 +138,77 @@ setCycles(cycleResponse.data.data.items || []);
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!cycleId) {
-    toast.error(" يرجى اختيار الدورة الانتخابية");
-    return;
-  }
+    if (!cycleId) {
+      toast.error(" يرجى اختيار الدورة الانتخابية");
+      return;
+    }
 
-  // ✅ تحقق من أن finishDate صالح ومقارنة بالتاريخ الحالي
-  const today = new Date();
-  const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const today = new Date();
+    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const finish = new Date(finishDate);
+    const finishDateOnly = new Date(finish.getFullYear(), finish.getMonth(), finish.getDate());
 
-  const finish = new Date(finishDate);
-  const finishDateOnly = new Date(finish.getFullYear(), finish.getMonth(), finish.getDate());
+    if (voteActveStatus === 1 && finishDateOnly < todayDateOnly) {
+      toast.error("📅 تاريخ التصويت منتهي، يرجى تحديث تاريخ الانتهاء قبل تنشيط التصويت.");
+      return;
+    }
 
-  if (voteActveStatus === 1 && finishDateOnly < todayDateOnly) {
-    toast.error("📅 تاريخ التصويت منتهي، يرجى تحديث تاريخ الانتهاء قبل تنشيط التصويت.");
-    return;
-  }
+    setSubmitting(true);
+    let uploadedDocUrl = file?.name || "";
 
-  setSubmitting(true);
+    if (file && file instanceof File) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
 
-  const finalVoteCompleteStatus = voteActveStatus === 1 ? 0 : votecompletestatus;
+        const uploadRes = await axios.post(`${process.env.REACT_APP_API_URL}attachments`, formData, {
+          headers: {
+            "Accept-Language": "en",
+            "Content-Type": "multipart/form-data",
+          },
+        });
 
-  const formPayload = {
-    voteTitle: title,
-    dscrp,
-    startDate,
-    minMumbersVoted,
-    finishDate,
-    docUrl: file ? file.name : "",
-    votecompletestatus: finalVoteCompleteStatus,
-    voteActveStatus,
-    voteInfo: 0,
-    cycleId: Number(cycleId),
+        uploadedDocUrl = uploadRes.data.data;
+      } catch {
+        toast.error("فشل في رفع المرفق الجديد");
+        setSubmitting(false);
+        return;
+      }
+    }
+
+    const finalVoteCompleteStatus = voteActveStatus === 1 ? 0 : votecompletestatus;
+
+    const formPayload = {
+      voteTitle: title,
+      dscrp,
+      startDate,
+      minMumbersVoted,
+      finishDate,
+      docUrl: uploadedDocUrl,
+      votecompletestatus: finalVoteCompleteStatus,
+      voteActveStatus,
+      voteInfo: 0,
+      cycleId: Number(cycleId),
+    };
+
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}vote/${id}`, formPayload, {
+        headers: {
+          "Accept-Language": "en",
+          Accept: "application/json",
+        },
+      });
+      toast.success(" تم تعديل التصويت بنجاح");
+      navigate("/VotePageMain");
+    } catch {
+      toast.error(" فشل في تعديل التصويت");
+    } finally {
+      setSubmitting(false);
+    }
   };
-
-  try {
-    await axios.put(`${process.env.REACT_APP_API_URL}vote/${id}`, formPayload, {
-      headers: {
-        "Accept-Language": "en",
-        Accept: "application/json",
-      },
-    });
-    toast.success(" تم تعديل التصويت بنجاح");
-    navigate("/VotePageMain");
-  } catch {
-    toast.error(" فشل في تعديل التصويت");
-  } finally {
-    setSubmitting(false);
-  }
-};
-
-
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -236,6 +242,20 @@ const handleSubmit = async (e) => {
           setMinMumbersVoted={setMinMumbersVoted}
         />
 
+        {/* رابط المرفق الحالي */}
+        {file && file.name && typeof file.name === "string" && (
+          <div className="mt-2 text-right">
+            <a
+              href={file.name}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              📎 تحميل المرفق الحالي
+            </a>
+          </div>
+        )}
+
         <DateTimeSelector
           startDate={startDate}
           setStartDate={setStartDate}
@@ -243,13 +263,13 @@ const handleSubmit = async (e) => {
           setFinishDate={setFinishDate}
         />
 
-        {/* اختيار الدورة الانتخابية */}
-        <VoteOptions     voteActveStatus={voteActveStatus}
-  setVoteActveStatus={setVoteActveStatus}
-  cycleId={cycleId}
-    cycles={cycles}
-  setCycleId={setCycleId} />
- 
+        <VoteOptions
+          voteActveStatus={voteActveStatus}
+          setVoteActveStatus={setVoteActveStatus}
+          cycleId={cycleId}
+          setCycleId={setCycleId}
+          cycles={cycles}
+        />
 
         {/* خيارات التصويت */}
         <div className="w-full flex flex-col items-end mt-6" style={{ direction: "rtl" }}>
@@ -292,7 +312,6 @@ const handleSubmit = async (e) => {
           ))}
         </div>
 
-        {/* أزرار التحكم */}
         <div className="w-full flex items-center justify-between mt-6" style={{ direction: "rtl" }}>
           <button
             type="submit"

@@ -13,6 +13,8 @@ const ElectionCyclesTable = ({ searchTerm }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState(null);
+        const token = localStorage.getItem("token"); // ✅ احصل على التوكن
+
 
   useEffect(() => {
     const fetchElectionCycles = async () => {
@@ -25,6 +27,7 @@ const ElectionCyclesTable = ({ searchTerm }) => {
             PageSize: pageSize,
           },
           headers: {
+             Authorization: `Bearer ${token}`,
             Accept: "application/json",
             "Accept-Language": "en",
           },

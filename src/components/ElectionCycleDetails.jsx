@@ -9,6 +9,8 @@ const ElectionCycleDetails = () => {
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+        const token = localStorage.getItem("token"); // ✅ احصل على التوكن
+
 
   const fetchDetails = async (pageNumber) => {
     setLoading(true);
@@ -23,6 +25,7 @@ const ElectionCycleDetails = () => {
             PageSize: PAGE_SIZE,
           },
           headers: {
+             Authorization: `Bearer ${token}`,
             "Accept-Language": "en",
             Accept: "application/json",
           },

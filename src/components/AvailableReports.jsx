@@ -1,8 +1,30 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import VoteReportDialog from "../components/ReportDilog";
 import { FileText } from "lucide-react";
 import axios from "axios";
+
+// ✅ دالة حساب النتائج خارج الكمبوننت لحل مشكلة loop
+const countVoteResults = (executions, options) => {
+  const optionMap = {};
+  options.forEach((opt) => {
+    optionMap[opt.id] = opt.voteDscrp;
+  });
+
+  const counts = {};
+  executions.forEach((exec) => {
+    const desc = optionMap[exec.voteResultId];
+    if (!desc) return;
+    counts[desc] = (counts[desc] || 0) + 1;
+  });
+
+  const total = executions.length;
+  return Object.entries(counts).map(([option, votes]) => ({
+    option,
+    votes,
+    percentage: ((votes / total) * 100).toFixed(1),
+  }));
+};
 
 const AvailableReports = () => {
   const [votes, setVotes] = useState([]);
@@ -11,116 +33,93 @@ const AvailableReports = () => {
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
 
-const fetchVotes = useCallback(async () => {
-  try {
-    const res = await axios.get(
-      `${process.env.REACT_APP_API_URL}vote?votecompletestatus=1`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Accept-Language": "ar",
-        },
-      }
-    );
+  useEffect(() => {
+    const fetchVotes = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_URL}vote?votecompletestatus=1`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Accept-Language": "ar",
+            },
+          }
+        );
 
-    const fetchedVotes = res.data.data.items || [];
+        const fetchedVotes = res.data.data.items || [];
 
-    const enrichedVotes = await Promise.all(
-      fetchedVotes.map(async (vote) => {
-        const [optionsRes, execRes] = await Promise.all([
-          axios.get(`${process.env.REACT_APP_API_URL}vote-options?voteId=${vote.id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(`${process.env.REACT_APP_API_URL}vote-excution?voteId=${vote.id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+        const enrichedVotes = await Promise.all(
+          fetchedVotes.map(async (vote) => {
+            const [optionsRes, execRes] = await Promise.all([
+              axios.get(`${process.env.REACT_APP_API_URL}vote-options?voteId=${vote.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
+              axios.get(`${process.env.REACT_APP_API_URL}vote-excution?voteId=${vote.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
+            ]);
 
-        const voteOptions = optionsRes.data.data.items || [];
-        const voteExecutions = execRes.data.data.items || [];
+            const voteOptions = optionsRes.data.data.items || [];
+            const voteExecutions = execRes.data.data.items || [];
 
-        const optionMap = {};
-        voteOptions.forEach((opt) => {
-          optionMap[opt.id] = opt.voteDscrp;
-        });
+            const optionMap = {};
+            voteOptions.forEach((opt) => {
+              optionMap[opt.id] = opt.voteDscrp;
+            });
 
-        const executionsWithNames = await Promise.all(
-          voteExecutions.map(async (exec) => {
-            try {
-              const res = await axios.get(`${process.env.REACT_APP_API_URL}members/${exec.memberVoterId}`, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Accept-Language": "ar",
-                },
-              });
-           return {
-  fullName: res.data?.data?.fullName || "غير معروف",
-  voteResultId: exec.voteResultId,
-  createdAt: exec.createdAt,
-};
+            const executionsWithNames = await Promise.all(
+              voteExecutions.map(async (exec) => {
+                try {
+                  const res = await axios.get(`${process.env.REACT_APP_API_URL}members/${exec.memberVoterId}`, {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                      "Accept-Language": "ar",
+                    },
+                  });
+                  return {
+                    fullName: res.data?.data?.fullName || "غير معروف",
+                    voteResultId: exec.voteResultId,
+                    createdAt: exec.createdAt,
+                  };
+                } catch {
+                  return {
+                    fullName: "غير معروف",
+                    voteResultId: exec.voteResultId,
+                    createdAt: exec.createdAt,
+                  };
+                }
+              })
+            );
 
-            } catch {
-              return {
-                fullName: "غير معروف",
-                voteResultId: exec.voteResultId,
-              };
-            }
+            const groupedVoters = {};
+            executionsWithNames.forEach(({ voteResultId, fullName, createdAt }) => {
+              const option = optionMap[voteResultId] || "خيار غير معروف";
+              if (!groupedVoters[option]) groupedVoters[option] = [];
+              groupedVoters[option].push({ fullName, createdAt });
+            });
+
+            const results = countVoteResults(voteExecutions, voteOptions);
+
+            return {
+              ...vote,
+              voteTotle: vote.minMumbersVoted,
+              voteCount: voteExecutions.length, // ✅ عدد المصوتين الفعلي
+              results,
+              groupedVoters,
+            };
           })
         );
 
-        const groupedVoters = {};
-executionsWithNames.forEach(({ voteResultId, fullName, createdAt }) => {
-          const option = optionMap[voteResultId] || "خيار غير معروف";
-      if (!groupedVoters[option]) groupedVoters[option] = [];
-groupedVoters[option].push({ fullName, createdAt });
+        setVotes(enrichedVotes);
+      } catch (error) {
+        console.error("Error fetching votes:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        });
-
-        const results = countVoteResults(voteExecutions, voteOptions);
-
-        return {
-          ...vote,
-          voteTotle: vote.minMumbersVoted,
-          voteCount: voteExecutions.length,
-          results,
-          groupedVoters,
-        };
-      })
-    );
-
-    setVotes(enrichedVotes);
-  } catch (error) {
-    console.error("Error fetching votes:", error);
-  } finally {
-    setLoading(false);
-  }
-}, [token]);
-
-
-  useEffect(() => {
     fetchVotes();
-  }, [fetchVotes]);
-
-  const countVoteResults = (executions, options) => {
-    const optionMap = {};
-    options.forEach((opt) => {
-      optionMap[opt.id] = opt.voteDscrp;
-    });
-
-    const counts = {};
-    executions.forEach((exec) => {
-      const desc = optionMap[exec.voteResultId];
-      if (!desc) return;
-      counts[desc] = (counts[desc] || 0) + 1;
-    });
-
-    const total = executions.length;
-    return Object.entries(counts).map(([option, votes]) => ({
-      option,
-      votes,
-      percentage: ((votes / total) * 100).toFixed(1),
-    }));
-  };
+  }, [token]);
 
   const openDialog = (report) => {
     setSelectedReport(report);
@@ -174,7 +173,6 @@ groupedVoters[option].push({ fullName, createdAt });
                         </div>
                       ))}
                     </td>
-                   
                     <td className="p-3 border text-center">
                       <button
                         onClick={() => openDialog(vote)}

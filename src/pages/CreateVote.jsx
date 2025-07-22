@@ -36,20 +36,48 @@ const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
 
-  const payload = {
-    voteTitle,
-    dscrp,
-    minMumbersVoted,
-    creationDate: new Date().toISOString(),
-    startDate,
-    finishDate,
-    docUrl: file ? file.name : "string",
-    voteInfo: 0,
-    voteActveStatus,
-    cycleId: Number(cycleId),
-  };
+  let uploadedFileUrl = "string";
 
   try {
+    // 1️⃣ رفع المرفق أولاً إذا كان موجودًا
+    if (file) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadRes = await fetch(`${process.env.REACT_APP_API_URL}attachments`, {
+        method: "POST",
+        headers: {
+          "Accept-Language": "en",
+        },
+        body: formData,
+      });
+
+      const uploadResult = await uploadRes.json();
+
+      if (!uploadRes.ok || !uploadResult.data) {
+        toast.error("فشل رفع الملف");
+        setLoading(false);
+        return;
+      }
+
+      uploadedFileUrl = uploadResult.data;
+    }
+
+    // 2️⃣ إعداد البيانات لإرسال التصويت
+    const payload = {
+      voteTitle,
+      dscrp,
+      minMumbersVoted,
+      creationDate: new Date().toISOString(),
+      startDate,
+      finishDate,
+      docUrl: uploadedFileUrl,
+      voteInfo: 0,
+      voteActveStatus,
+      cycleId: Number(cycleId),
+    };
+
+    // 3️⃣ إرسال التصويت
     const response = await fetch(`${process.env.REACT_APP_API_URL}vote`, {
       method: "POST",
       headers: {
@@ -65,8 +93,9 @@ const handleSubmit = async (e) => {
     if (response.ok) {
       toast.success("تم إنشاء التصويت بنجاح");
 
-      // إرسال خيارات التصويت باستخدام voteId
       const voteId = result.data?.id;
+
+      // 4️⃣ إرسال خيارات التصويت إذا تم إنشاء التصويت بنجاح
       if (voteId) {
         await Promise.all(
           options.map((option) =>
@@ -88,7 +117,6 @@ const handleSubmit = async (e) => {
 
       navigate("/VotePageMain");
     } else {
-      // 🔴 عرض كل رسالة خطأ على حدة
       if (result.msg) {
         const messages = result.msg.split(" | ");
         messages.forEach((m) => toast.error(m));

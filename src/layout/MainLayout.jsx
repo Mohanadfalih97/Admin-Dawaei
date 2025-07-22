@@ -8,6 +8,8 @@ import { toast } from "react-toastify";
 
 const MainLayout = () => {
    const [activeCycle, setActiveCycle] = useState(null);
+         const token = localStorage.getItem("token"); // ✅ احصل على التوكن
+
 
   useEffect(() => {
     const fetchActiveCycle = async () => {
@@ -19,6 +21,7 @@ const MainLayout = () => {
             PageSize: 1, // نريد أول دورة نشطة فقط
           },
           headers: {
+             Authorization: `Bearer ${token}`,
             Accept: "application/json",
             "Accept-Language": "en",
           },

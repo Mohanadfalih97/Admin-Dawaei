@@ -48,6 +48,8 @@ const handleSubmit = async (e) => {
         method: "POST",
         headers: {
           "Accept-Language": "en",
+           Authorization: `Bearer ${localStorage.getItem("token")}`,
+
         },
         body: formData,
       });

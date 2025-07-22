@@ -110,38 +110,42 @@ const fetchCycles = async () => {
     });
   };
 
-  const saveChanges = async () => {
-    if (!selectedCycleId) {
-      toast.warning("يرجى اختيار دورة انتخابية أولاً.");
-      return;
+ const saveChanges = async () => {
+  if (!selectedCycleId) {
+    toast.warning("يرجى اختيار دورة انتخابية أولاً.");
+    return;
+  }
+
+  const token = localStorage.getItem("token"); // ✅ اجلب التوكن هنا
+
+  try {
+    for (const memberId of changes) {
+      const member = members.find((m) => m.id === memberId);
+      if (!member) continue;
+
+      const updatedMember = {
+        ...member,
+        cycleId: parseInt(selectedCycleId),
+      };
+
+      await axios.put(`${process.env.REACT_APP_API_URL}members/${memberId}`, updatedMember, {
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ أضف التوكن هنا
+          Accept: "application/json",
+          "Accept-Language": "ar",
+        },
+      });
     }
 
-    try {
-      for (const memberId of changes) {
-        const member = members.find((m) => m.id === memberId);
-        if (!member) continue;
+    toast.success("تم حفظ التغييرات بنجاح.");
+    setChanges([]);
+    navigate("/assign-members");
+  } catch (error) {
+    console.error("خطأ أثناء التحديث:", error);
+    toast.error("فشل في تحديث بيانات الأعضاء.");
+  }
+};
 
-        const updatedMember = {
-          ...member,
-          cycleId: parseInt(selectedCycleId),
-        };
-
-        await axios.put(`${process.env.REACT_APP_API_URL}members/${memberId}`, updatedMember, {
-          headers: {
-            Accept: "application/json",
-            "Accept-Language": "ar",
-          },
-        });
-      }
-
-      toast.success("تم حفظ التغييرات بنجاح.");
-      setChanges([]);
-      navigate("/assign-members");
-    } catch (error) {
-      console.error("خطأ أثناء التحديث:", error);
-      toast.error("فشل في تحديث بيانات الأعضاء.");
-    }
-  };
 
   // التحكم في التنقل بين الصفحات
   const goToPage = (page) => {

@@ -2,11 +2,15 @@ import React, { useState } from "react";
 import { Lock, Home } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import {Eye, EyeOff } from "lucide-react"
 
 const ResetAccessCode = () => {
   const [memberId, setMemberId] = useState(""); // ✅ حقل الرمز الحالي
   const [newCode, setNewCode] = useState("");
   const [confirmCode, setConfirmCode] = useState("");
+const [showNewPassword, setShowNewPassword] = useState(false);
+const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
   const navigate = useNavigate();
 
@@ -85,14 +89,23 @@ const ResetAccessCode = () => {
             <label className="block mb-1 text-sm font-semibold text-gray-700">
                الرمز السري الجديد
             </label>
-            <input
-              type="password"
-              value={newCode}
-              onChange={(e) => setNewCode(e.target.value)}
-              placeholder="أدخل الرمز السري الجديد "
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
+             <div className="relative">
+              <input
+                type={showNewPassword ? "text" : "password"}
+                value={newCode}
+                onChange={(e) => setNewCode(e.target.value)}
+                placeholder="أدخل الرمز السري الجديد"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 "
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-600"
+              >
+                {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
            
           </div>
 
@@ -100,14 +113,23 @@ const ResetAccessCode = () => {
             <label className="block mb-1 text-sm font-semibold text-gray-700">
               تأكيد  الرمز السري
             </label>
-            <input
-              type= "password"
-              value={confirmCode}
-              onChange={(e) => setConfirmCode(e.target.value)}
-              placeholder="أعد إدخال  تأكيد  الرمز السري"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
+       <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmCode}
+                onChange={(e) => setConfirmCode(e.target.value)}
+                placeholder="أعد إدخال تأكيد الرمز السري"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 "
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-600"
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           
           </div>
 

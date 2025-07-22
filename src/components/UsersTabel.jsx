@@ -3,11 +3,8 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Alert, AlertTitle, AlertDescription } from "../components/Ui/Alert"; // المسار حسب مجلدك
+import { Alert, AlertTitle, AlertDescription } from "../components/Ui/Alert";
 import { Pencil, Trash2 } from "lucide-react";
-
-
-
 
 const UsersTable = () => {
   const [users, setUsers] = useState([]);
@@ -20,81 +17,83 @@ const UsersTable = () => {
   const [showSuperAdminAlert, setShowSuperAdminAlert] = useState(false);
   const [deletingUserId, setDeletingUserId] = useState(null);
 
-
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
-useEffect(() => {
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}auth/get-all-users`, {
-        params: {
-          name: searchQuery,
-          PageNumber: currentPage,
-          PageSize: pageSize,
-          StartDate: "",
-          EndDate: "",
-          IsDeleted: false,
-        },
-        headers: {
-          "Accept-Language": "en",
-          Accept: "application/json",
-        },
-      });
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}auth/get-all-users`, {
+          params: {
+            name: searchQuery,
+            PageNumber: currentPage,
+            PageSize: pageSize,
+            StartDate: "",
+            EndDate: "",
+            IsDeleted: false,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ إضافة التوكن
+            "Accept-Language": "en",
+            Accept: "application/json",
+          },
+        });
 
-      const data = response.data.data;
-      setUsers(data.items || []);
-      setTotalPages(data.totalPages || 1);
-      setPageSize(data.pageSize || 10);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+        const data = response.data.data;
+        setUsers(data.items || []);
+        setTotalPages(data.totalPages || 1);
+        setPageSize(data.pageSize || 10);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        toast.error("حدث خطأ أثناء تحميل المستخدمين.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchUsers();
-}, [searchQuery, currentPage, pageSize]);
+    fetchUsers();
+  }, [searchQuery, currentPage, pageSize, token]);
 
   const openDialog = (user) => {
     navigate(`/user/${user.id}`, { state: { user } });
   };
 
-
-const deleteUser = async (user) => {
-  if (user.staticRole === 0) {
-    setShowSuperAdminAlert(true);
-    return;
-  }
-
-  setDeletingUserId(user.id); // ⬅️ تحديد المستخدم الجاري حذفه
-
-  try {
-    const response = await axios.delete(`${process.env.REACT_APP_API_URL}auth/${user.id}`, {
-      headers: {
-        "Accept-Language": "en",
-        Accept: "application/json",
-      },
-    });
-
-    if (response.status === 200) {
-      toast.success("تم حذف المستخدم بنجاح!");
-      setUsers(users.filter((u) => u.id !== user.id));
+  const deleteUser = async (user) => {
+    if (user.staticRole === 0) {
+      setShowSuperAdminAlert(true);
+      return;
     }
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    toast.error("حدث خطأ أثناء الحذف!");
-  } finally {
-    setDeletingUserId(null); // ⬅️ إلغاء التحديد بعد انتهاء العملية
-  }
-};
 
-useEffect(() => {
-  if (showSuperAdminAlert) {
-    const timeout = setTimeout(() => setShowSuperAdminAlert(false), 4000);
-    return () => clearTimeout(timeout);
-  }
-}, [showSuperAdminAlert]);
+    setDeletingUserId(user.id);
+
+    try {
+      const response = await axios.delete(`${process.env.REACT_APP_API_URL}auth/${user.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ إضافة التوكن
+          "Accept-Language": "en",
+          Accept: "application/json",
+        },
+      });
+
+      if (response.status === 200) {
+        toast.success("تم حذف المستخدم بنجاح!");
+        setUsers(users.filter((u) => u.id !== user.id));
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("حدث خطأ أثناء الحذف!");
+    } finally {
+      setDeletingUserId(null);
+    }
+  };
+
+  useEffect(() => {
+    if (showSuperAdminAlert) {
+      const timeout = setTimeout(() => setShowSuperAdminAlert(false), 4000);
+      return () => clearTimeout(timeout);
+    }
+  }, [showSuperAdminAlert]);
 
   const goToPage = (page) => {
     if (page >= 1 && page <= totalPages) setCurrentPage(page);
@@ -150,46 +149,41 @@ useEffect(() => {
           ) : users.length === 0 ? (
             <tr><td colSpan="6" className="text-center text-red-500 py-4">لا توجد نتائج مطابقة.</td></tr>
           ) : (
-            users.map((user,index) => (
+            users.map((user, index) => (
               <tr key={user.id} className="hover:bg-gray-100">
                 <td className="px-2 md:px-4 py-2 border text-center">{(currentPage - 1) * pageSize + index + 1}</td>
                 <td className="px-2 md:px-4 py-2 border text-center text-gray-700">{user.name}</td>
                 <td className="px-2 md:px-4 py-2 border text-center text-gray-700">{user.email}</td>
                 <td className="px-2 md:px-4 py-2 border text-center text-gray-700">{user.phoneCountryCode}</td>
                 <td className="px-2 md:px-4 py-2 border text-center">
-                
-                   <button className="text-blue-600 hover:text-blue-800"
-                     onClick={() => openDialog(user)}  >
-      <Pencil size={18} />
-    </button>
+                  <button className="text-blue-600 hover:text-blue-800" onClick={() => openDialog(user)}>
+                    <Pencil size={18} />
+                  </button>
                 </td>
                 <td className="px-2 md:px-4 py-2 border text-center">
-   
-  <button
-    onClick={() => deleteUser(user)}
-  disabled={deletingUserId === user.id}
-    className="text-red-600 hover:text-red-800"
-  >
-    <Trash2 size={18} />
-  </button>
-
+                  <button
+                    onClick={() => deleteUser(user)}
+                    disabled={deletingUserId === user.id}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </td>
               </tr>
             ))
           )}
         </tbody>
       </table>
+
       {showSuperAdminAlert && (
-  <Alert variant="destructive" className="mt-4">
-    <AlertTitle>تنبيه</AlertTitle>
-    <AlertDescription>
-      لا يمكنك حذف مستخدم بصلاحية <strong>سوبر أدمن</strong>.
-    </AlertDescription>
-  </Alert>
-)}
+        <Alert variant="destructive" className="mt-4">
+          <AlertTitle>تنبيه</AlertTitle>
+          <AlertDescription>
+            لا يمكنك حذف مستخدم بصلاحية <strong>سوبر أدمن</strong>.
+          </AlertDescription>
+        </Alert>
+      )}
 
-
-      {/* ✅ Pagination: فقط 5 صفحات في كل مجموعة */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center mt-6 gap-2 flex-wrap">
           <button

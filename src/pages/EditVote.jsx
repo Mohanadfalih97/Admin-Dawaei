@@ -27,6 +27,8 @@ const EditVote = () => {
   const [voteOptions, setVoteOptions] = useState([]);
   const [cycles, setCycles] = useState([]);
 
+  const token = localStorage.getItem("token");
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -41,7 +43,13 @@ const EditVote = () => {
           setVoteActveStatus(voteData.voteActveStatus ?? 0);
           setCycleId(voteData.cycleId ?? "");
         } else {
-          const res = await axios.get(`${process.env.REACT_APP_API_URL}vote/${id}`);
+          const res = await axios.get(`${process.env.REACT_APP_API_URL}vote/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Accept-Language": "en",
+              Accept: "application/json",
+            },
+          });
           const data = res.data.data.items[0];
           setTitle(data.voteTitle || "");
           setDscrp(data.dscrp || "");
@@ -56,8 +64,9 @@ const EditVote = () => {
 
         const cycleResponse = await axios.get(`${process.env.REACT_APP_API_URL}elections-cycles`, {
           headers: {
+            Authorization: `Bearer ${token}`,
             "Accept-Language": "en",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Accept: "application/json",
           },
         });
         setCycles(cycleResponse.data.data.items || []);
@@ -65,6 +74,7 @@ const EditVote = () => {
         const optionsResponse = await axios.get(`${process.env.REACT_APP_API_URL}vote-options`, {
           params: { VoteId: id },
           headers: {
+            Authorization: `Bearer ${token}`,
             "Accept-Language": "en",
             Accept: "application/json",
           },
@@ -76,7 +86,7 @@ const EditVote = () => {
     };
 
     loadData();
-  }, [voteData, id]);
+  }, [voteData, id, token]);
 
   const handleAddOption = async () => {
     try {
@@ -84,6 +94,7 @@ const EditVote = () => {
       setSubmitting(true);
       const response = await axios.post(`${process.env.REACT_APP_API_URL}vote-options`, newOption, {
         headers: {
+          Authorization: `Bearer ${token}`,
           "Accept-Language": "en",
           Accept: "application/json",
         },
@@ -111,6 +122,7 @@ const EditVote = () => {
       setDeleting(true);
       await axios.delete(`${process.env.REACT_APP_API_URL}vote-options/${optionId}`, {
         headers: {
+          Authorization: `Bearer ${token}`,
           "Accept-Language": "en",
           Accept: "application/json",
         },
@@ -129,6 +141,12 @@ const EditVote = () => {
       await axios.put(`${process.env.REACT_APP_API_URL}vote-options/${optionId}`, {
         voteId: id,
         voteDscrp: updatedDescription,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Accept-Language": "en",
+          Accept: "application/json",
+        },
       });
       toast.success(" تم تحديث الخيار");
     } catch {
@@ -166,6 +184,7 @@ const EditVote = () => {
 
         const uploadRes = await axios.post(`${process.env.REACT_APP_API_URL}attachments`, formData, {
           headers: {
+            Authorization: `Bearer ${token}`,
             "Accept-Language": "en",
             "Content-Type": "multipart/form-data",
           },
@@ -197,6 +216,7 @@ const EditVote = () => {
     try {
       await axios.put(`${process.env.REACT_APP_API_URL}vote/${id}`, formPayload, {
         headers: {
+          Authorization: `Bearer ${token}`,
           "Accept-Language": "en",
           Accept: "application/json",
         },
@@ -213,7 +233,13 @@ const EditVote = () => {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await axios.delete(`${process.env.REACT_APP_API_URL}vote/${id}`);
+      await axios.delete(`${process.env.REACT_APP_API_URL}vote/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Accept-Language": "en",
+          Accept: "application/json",
+        },
+      });
       toast.success(" تم حذف التصويت");
       navigate("/VotePageMain");
     } catch {
@@ -242,7 +268,6 @@ const EditVote = () => {
           setMinMumbersVoted={setMinMumbersVoted}
         />
 
-        {/* رابط المرفق الحالي */}
         {file && file.name && typeof file.name === "string" && (
           <div className="mt-2 text-right">
             <a
@@ -271,7 +296,6 @@ const EditVote = () => {
           cycles={cycles}
         />
 
-        {/* خيارات التصويت */}
         <div className="w-full flex flex-col items-end mt-6" style={{ direction: "rtl" }}>
           <div className="w-full flex justify-between items-center">
             <h3 className="text-xl font-semibold">خيارات التصويت</h3>

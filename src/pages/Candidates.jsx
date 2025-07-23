@@ -1,4 +1,4 @@
-import CandidatesTabel from "../components/CandidatesTabel"; // تأكد من المسار
+import CandidatesTabel from "../components/Candidates/CandidatesTabel"; // تأكد من المسار
 
 const Candidates = () =>
     

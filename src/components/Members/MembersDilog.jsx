@@ -5,7 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "./Ui/dialog";
+} from "../Ui/dialog";
 import {
   Table,
   TableHeader,
@@ -13,11 +13,11 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from "./Ui/table";
+} from "../Ui/table";
 import { FileChartLine, Camera } from "lucide-react";
-import { Button } from "../components/Ui/Button";
+import { Button } from "../Ui/Button";
 import { toast } from "react-toastify";
-import defaultProfileImage from "../asset/Imge/profiledefautimg.png";
+import defaultProfileImage from "../../asset/Imge/profiledefautimg.png";
 
 const MembersDilog = ({ open, onOpenChange, member }) => {
   const [name, setName] = useState("");

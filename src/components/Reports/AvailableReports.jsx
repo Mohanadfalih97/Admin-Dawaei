@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FileText } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import * as Dialog from "@radix-ui/react-dialog";
-import VoteReportDialog from "../components/ReportDilog";
+import VoteReportDialog from "./ReportDilog";
 
-// ✅ استدعاء بيانات التصويت بالنتائج مباشرة
+// ✅ دالة لتغذية كل تصويت بالنتائج المحسوبة
 const enrichVote = async (vote, token) => {
   const res = await axios.get(`${process.env.REACT_APP_API_URL}vote/calculate-result/${vote.id}`, {
     headers: {
@@ -29,12 +29,15 @@ const enrichVote = async (vote, token) => {
   };
 };
 
-const fetchVotes = async ({ page }) => {
+// ✅ تحميل تقارير التصويت حسب الدورة
+const fetchVotes = async ({ page, cycleId }) => {
   const token = localStorage.getItem("token");
 
   const res = await axios.get(`${process.env.REACT_APP_API_URL}vote`, {
     params: {
+      isCalculated: 1,
       votecompletestatus: 1,
+      electionsCyclesId: cycleId || undefined,
       PageNumber: page,
       PageSize: 10,
     },
@@ -61,9 +64,35 @@ const AvailableReports = () => {
   const [open, setOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
 
+  const [electionCycles, setElectionCycles] = useState([]);
+  const [selectedCycleId, setSelectedCycleId] = useState("");
+
+  // ✅ تحميل الدورات الانتخابية
+  useEffect(() => {
+    const fetchCycles = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}elections-cycles`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Accept-Language": "ar",
+          },
+        });
+
+        setElectionCycles(res.data?.data?.items || []);
+      } catch (err) {
+        console.error("Error fetching election cycles:", err);
+      }
+    };
+
+    fetchCycles();
+  }, []);
+
+  // ✅ تحميل التصويتات حسب الدورة المحددة
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["votes", page],
-    queryFn: () => fetchVotes({ page }),
+    queryKey: ["votes", page, selectedCycleId],
+    queryFn: () => fetchVotes({ page, cycleId: selectedCycleId }),
+    enabled: selectedCycleId !== "", // ✅ يعمل فقط إذا تم اختيار دورة
     keepPreviousData: true,
   });
 
@@ -85,6 +114,8 @@ const AvailableReports = () => {
         </p>
       </div>
 
+   
+
       <div className="mt-5 p-5 border rounded-lg">
         <div className="flex flex-col items-end gap-1 mb-4">
           <h1 className="text-2xl font-semibold">التقارير المتاحة</h1>
@@ -92,13 +123,35 @@ const AvailableReports = () => {
             اطلع على نتائج وتفاصيل التصويتات السابقة
           </p>
         </div>
-
-        {isLoading ? (
+   {/* ✅ فلتر الدورة الانتخابية */}
+      <div className="mb-6 text-right" style={{ direction: "rtl" }}>
+        <label htmlFor="cycleSelect" className="block mb-2 font-semibold">
+          اختر الدورة الانتخابية:
+        </label>
+        <select
+          id="cycleSelect"
+          value={selectedCycleId}
+          onChange={(e) => {
+            setSelectedCycleId(e.target.value);
+            setPage(1);
+          }}
+          className="border rounded px-3 py-2 w-full md:w-1/3"
+        >
+          <option value="">-- اختر الدورة --</option>
+          {electionCycles.map((cycle) => (
+            <option key={cycle.id} value={cycle.id}>
+              {cycle.dscrp}
+            </option>
+          ))}
+        </select>
+      </div>
+        {/* ✅ حالة انتظار أو خطأ أو بدون اختيار */}
+        {selectedCycleId === "" ? (
+          <p className="text-center text-gray-600">يرجى اختيار دورة لعرض النتائج</p>
+        ) : isLoading ? (
           <p className="text-center">جاري التحميل...</p>
         ) : isError ? (
-          <p className="text-center text-red-600">
-            حدث خطأ أثناء تحميل البيانات
-          </p>
+          <p className="text-center text-red-600">حدث خطأ أثناء تحميل البيانات</p>
         ) : (
           <>
             <div className="overflow-x-auto" style={{ direction: "rtl" }}>
@@ -169,6 +222,7 @@ const AvailableReports = () => {
               </table>
             </div>
 
+            {/* ✅ الترقيم */}
             {totalPages > 1 && (
               <div className="flex justify-center items-center mt-6 gap-2 flex-wrap">
                 <button
@@ -211,6 +265,7 @@ const AvailableReports = () => {
         )}
       </div>
 
+      {/* ✅ عرض التقرير */}
       <Dialog.Root
         open={open}
         onOpenChange={(val) => {

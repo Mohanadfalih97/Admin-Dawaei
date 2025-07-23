@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import VoteTable from "../components/VoteTable";
+import VoteTable from "../components/Vote/VoteTable";
 
 const VoteMainPage = () => {
   const [searchTerm, setSearchTerm] = useState("");

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Home, User, Camera } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import defaultProfileImage from "../asset/Imge/profiledefautimg.png";
+import defaultProfileImage from "../../asset/Imge/profiledefautimg.png";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 

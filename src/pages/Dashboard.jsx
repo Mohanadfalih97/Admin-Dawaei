@@ -1,6 +1,6 @@
 import React from "react";
-import Navbar from "../components/Navbar";
-import Cards from "../components/VoteCard";
+import Navbar from "../components/NavBar/Navbar";
+import Cards from "../components/Vote/VoteCard";
 import Statistics from "../components/Statistics";
 import * as Tabs from "@radix-ui/react-tabs";
 

@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
-import Topbar from "../components/Topbar";
-import Sidbar from "../components/Sidbar";
+import Topbar from "../components/NavBar/Topbar";
+import Sidbar from "../components/NavBar/Sidbar";
 import { useEffect, useState } from "react";
 
 import axios from "axios";

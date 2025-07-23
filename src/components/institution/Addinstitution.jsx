@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import defaultProfileImage from "../asset/Imge/profiledefautimg.png";
+import defaultProfileImage from "../../asset/Imge/profiledefautimg.png";
 import { Camera } from "lucide-react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";

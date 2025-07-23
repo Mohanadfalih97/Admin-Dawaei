@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import InputsVote from "../components/InputsVote";
+import InputsVote from "../components/Vote/InputsVote";
 import DateTimeSelector from "../components/DateTimeSelector";
-import VoteOptions from "../components/VoteOptions";
-import VoteNominations from "../components/VoteNominations";
+import VoteOptions from "../components/Vote/VoteOptions";
+import VoteNominations from "../components/Vote/VoteNominations";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 

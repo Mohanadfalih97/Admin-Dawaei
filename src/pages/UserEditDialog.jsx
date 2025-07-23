@@ -1,6 +1,6 @@
 
 
-import UserEditDialog from "../components/EditUser";
+import UserEditDialog from "../components/users/EditUser";
 
 const UserDialog = () => {
   return (

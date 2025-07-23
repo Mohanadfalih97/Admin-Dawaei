@@ -1,5 +1,5 @@
-import { Button } from "./Ui/Button";
-import { Input } from "./Ui/Input";
+import { Button } from "../Ui/Button";
+import { Input } from "../Ui/Input";
 
 const VoteNominations = ({ options, onOptionChange, onAddOption, onRemoveOption }) => {
   return (

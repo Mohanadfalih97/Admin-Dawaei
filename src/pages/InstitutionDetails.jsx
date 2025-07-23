@@ -1,6 +1,6 @@
 import React from "react";
 
-import InstitutionDetailstabel from "../components/InstitutionDetailstabel";
+import InstitutionDetailstabel from "../components/institution/InstitutionDetailstabel";
 
 const Reports = () => {
   return (

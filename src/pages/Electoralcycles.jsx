@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import ElectoralcyclesTabel from "../components/ElectoralcyclesTabel";
+import ElectoralcyclesTabel from "../components/Electoralcycles/ElectoralcyclesTabel";
 
 const Electoralcycles = () => {
   const [searchTerm, setSearchTerm] = useState("");

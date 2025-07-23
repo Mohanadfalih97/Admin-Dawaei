@@ -1,7 +1,7 @@
 import * as Tabs from "@radix-ui/react-tabs";
 import { LogOut } from "lucide-react";
 import {  useNavigate } from "react-router-dom";
-import VoteUserDetails from "../components/VoteUserDetails";
+import VoteUserDetails from "../components/Vote/VoteUserDetails";
 
 const VoteUses = () => {
   const navigate = useNavigate();

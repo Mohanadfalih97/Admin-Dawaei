@@ -32,15 +32,15 @@ import AddMember from "./pages/AddmemberPage";
 import UserEditDialog from "./pages/UserEditDialog";
 import Electoralcycles from "./pages/Electoralcycles";
 import Candidates from "./pages/Candidates";
-import AddElectoralcycles from "./components/AddElectoralcycles";
-import EditElectoralcycles from "./components/EditElectoralcycles";
-import AddCandidates from "./components/AddCandidates";
-import EditCandidates from "./components/EditCandidates";
-import ElectionCycleDetails from "./components/ElectionCycleDetails";
-import AddDepartment from "./components/AddDepartment";
-import EditDepartment from "./components/EditDepartment";
-import Addinstitution from "./components/Addinstitution";
- import Editinstitution from "./components/Editinstitution";
+import AddElectoralcycles from "./components/Electoralcycles/AddElectoralcycles";
+import EditElectoralcycles from "./components/Electoralcycles/EditElectoralcycles";
+import AddCandidates from "./components/Candidates/AddCandidates";
+import EditCandidates from "./components/Candidates/EditCandidates";
+import ElectionCycleDetails from "./components/Electoralcycles/ElectionCycleDetails";
+import AddDepartment from "./components/Department/AddDepartment";
+import EditDepartment from "./components/Department/EditDepartment";
+import Addinstitution from "./components/institution/Addinstitution";
+ import Editinstitution from "./components/institution/Editinstitution";
  
 
 import { ToastContainer } from "react-toastify";

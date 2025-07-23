@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Alert, AlertTitle, AlertDescription } from "../components/Ui/Alert";
+import { Alert, AlertTitle, AlertDescription } from "../Ui/Alert";
 import { Pencil, Trash2 } from "lucide-react";
 
 const UsersTable = () => {

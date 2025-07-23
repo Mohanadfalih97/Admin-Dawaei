@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Pencil, Trash2 } from "lucide-react";
-import defaultProfileImage from "../asset/Imge/profiledefautimg.png";
+import defaultProfileImage from "../../asset/Imge/profiledefautimg.png";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 

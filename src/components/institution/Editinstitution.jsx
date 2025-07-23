@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-import defaultProfileImage from "../asset/Imge/profiledefautimg.png";
+import defaultProfileImage from "../../asset/Imge/profiledefautimg.png";
 import { Camera } from "lucide-react";
 
 const Editinstitution = () => {

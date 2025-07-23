@@ -1,4 +1,4 @@
-import AddMember from "../components/Addmeber"; // تأكد من المسار
+import AddMember from "../components/Members/Addmember"; // تأكد من المسار
 
 const AddMemberPage = () =>
     

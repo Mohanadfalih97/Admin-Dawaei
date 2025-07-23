@@ -10,7 +10,7 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from "./Ui/table";
+} from "../Ui/table";
 
 const EditDepartment = () => {
   const { id } = useParams();

@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { Button } from "./Ui/Button";
-import { ScrollArea } from "./Ui/scroll-area";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./Ui/table";
+import { Button } from "../Ui/Button";
+import { ScrollArea } from "../Ui/scroll-area";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../Ui/table";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 

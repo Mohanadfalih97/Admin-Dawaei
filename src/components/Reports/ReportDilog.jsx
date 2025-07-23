@@ -4,10 +4,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../components/Ui/dialog";
-import { Button } from "./Ui/Button";
+} from "../Ui/dialog";
+import { Button } from "../Ui/Button";
 import { FileChartColumn, Printer } from "lucide-react";
-import { ScrollArea } from "../components/Ui/scroll-area";
+import { ScrollArea } from "../Ui/scroll-area";
 import {
   Table,
   TableHeader,
@@ -15,7 +15,7 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from "../components/Ui/table";
+} from "../Ui/table";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";

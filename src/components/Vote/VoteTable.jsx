@@ -13,38 +13,36 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
 
   const navigate = useNavigate();
 
- useEffect(() => {
-  const fetchVotes = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token"); // ✅ احصل على التوكن
+  useEffect(() => {
+    const fetchVotes = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}vote`, {
+          params: {
+            PageNumber: currentPage,
+            PageSize: pageSize,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Accept-Language": "en",
+            Accept: "application/json",
+          },
+        });
 
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}vote`, {
-        params: {
-          PageNumber: currentPage,
-          PageSize: pageSize,
-        },
-        headers: {
-          Authorization: `Bearer ${token}`, // ✅ أضف التوكن هنا
-          "Accept-Language": "en",
-          Accept: "application/json",
-        },
-      });
+        const data = response.data.data;
+        setVotes(data.items?.map(v => ({ ...v, isCalculated: v.isCalculated || 0 })) || []);
+        setTotalPages(data.totalPages || 1);
+        setPageSize(data.pageSize || 5);
+      } catch (err) {
+        toast.error("فشل في تحميل البيانات");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      const data = response.data.data;
-      setVotes(data.items || []);
-      setTotalPages(data.totalPages || 1);
-      setPageSize(data.pageSize || 5);
-    } catch (err) {
-      toast.error("فشل في تحميل البيانات");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchVotes();
-}, [currentPage, pageSize]);
-
+    fetchVotes();
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -53,29 +51,13 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
   const updateVoteStatus = async (vote, field, value) => {
     if (field === "voteActveStatus" && value === 1) {
       const today = new Date();
-      const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-
       const voteFinishDate = new Date(vote.finishDate);
-      const finishDateOnly = new Date(voteFinishDate.getFullYear(), voteFinishDate.getMonth(), voteFinishDate.getDate());
 
-      if (todayDateOnly > finishDateOnly) {
-        toast.error("📅 تاريخ التصويت منتهي، يرجى تعديل التاريخ قبل تفعيل التصويت");
-
+      if (today > voteFinishDate) {
+        toast.error("📅 تاريخ التصويت منتهي، يرجى تعديل التاريخ قبل التفعيل");
         navigate(`/EditVote/${vote.id}`, {
-          state: {
-            voteTitle: vote.voteTitle,
-            dscrp: vote.dscrp,
-            startDate: vote.startDate,
-            finishDate: vote.finishDate,
-            docUrl: vote.docUrl,
-            voteInfo: vote.voteInfo,
-            minMumbersVoted: vote.minMumbersVoted,
-            votecompletestatus: vote.votecompletestatus,
-            voteActveStatus: vote.voteActveStatus,
-            cycleId: vote.cycleId,
-          }
+          state: { ...vote }
         });
-
         return;
       }
     }
@@ -107,6 +89,25 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
     }
   };
 
+  const handleCalculateResults = async (voteId) => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}vote/calculate-result/${voteId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Accept-Language": "ar",
+          Accept: "application/json"
+        }
+      });
+
+      const resultData = response.data.data;
+      toast.success(`🧮 تم حساب النتائج: عدد المصوتين ${resultData.actualVoters}`);
+      console.log("نتائج التصويت:", resultData);
+    } catch (error) {
+      toast.error("❌ فشل في حساب النتائج");
+      console.error(error);
+    }
+  };
+
   const filteredVotes = votes.filter((vote) => {
     const matchesSearch = vote.dscrp?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus ? vote.votecompletestatus === filterStatus : true;
@@ -127,7 +128,9 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
             <th className="px-4 py-2 border">العدد</th>
             <th className="px-4 py-2 border">وصف التصويت</th>
             <th className="px-4 py-2 border">حالة التصويت</th>
+            <th className="px-4 py-2 border">حالة الإكمال</th>
             <th className="px-4 py-2 border">إجراءات</th>
+                  <th className="px-4 py-2 border"></th>
           </tr>
         </thead>
         <tbody>
@@ -137,43 +140,76 @@ const VoteTable = ({ searchTerm, filterStatus }) => {
             <tr><td colSpan="6" className="py-4 text-red-600">لا توجد نتائج مطابقة</td></tr>
           ) : (
             filteredVotes.map((vote, index) => (
-              <tr key={vote.id} className="hover:bg-gray-100">
-                <td className="px-4 py-2 border">{(currentPage - 1) * pageSize + index + 1}</td>
-                <td className="px-4 py-2 border">{vote.dscrp || "بدون وصف"}</td>
+          <tr
+  key={vote.id}
+  className={`hover:bg-gray-100 ${
+    vote.isCalculated === 1 ? "bg-gray-100 text-gray-500 opacity-70" : ""
+  }`}
+>
+  <td className="px-4 py-2 border">{(currentPage - 1) * pageSize + index + 1}</td>
+  <td className="px-4 py-2 border">{vote.dscrp || "بدون وصف"}</td>
 
-                <td className="px-4 py-2 border space-y-1 ">
-                  <div className="flex items-center gap-6 justify-center">
-                    <label className="flex items-center gap-2 justify-center">
-                      <Key size={16} className="text-yellow-500" />
-                      <input
-                        type="checkbox"
-                        checked={vote.voteActveStatus === 1}
-                        onChange={(e) => updateVoteStatus(vote, "voteActveStatus", e.target.checked ? 1 : 0)}
-                      />
-                      نشط
-                    </label>
-                  </div>
-                </td>
+  <td className="px-4 py-2 border space-y-1">
+    <div className="flex items-center gap-6 justify-center">
+      <label className="flex items-center gap-2 justify-center">
+        <Key size={16} className="text-yellow-500" />
+        <input
+          type="checkbox"
+          checked={vote.voteActveStatus === 1}
+          disabled={vote.isCalculated === 1} // ✅ لا يمكن تغييره إذا تم الحساب
+          onChange={(e) =>
+            updateVoteStatus(vote, "voteActveStatus", e.target.checked ? 1 : 0)
+          }
+        />
+        نشط
+      </label>
+    </div>
+  </td>
 
-                <td className="px-4 py-2 border">
-                  <Link to={`/EditVote/${vote.id}`} state={{
-                    voteTitle: vote.voteTitle,
-                    dscrp: vote.dscrp,
-                    startDate: vote.startDate,
-                    finishDate: vote.finishDate,
-                    docUrl: vote.docUrl,
-                    voteInfo: vote.voteInfo,
-                    minMumbersVoted: vote.minMumbersVoted,
-                    votecompletestatus: vote.votecompletestatus,
-                    voteActveStatus: vote.voteActveStatus,
-                    cycleId: vote.cycleId,
-                  }}>
-                    <button className="text-blue-600 hover:text-blue-800">
-                      <Pencil size={18} />
-                    </button>
-                  </Link>
-                </td>
-              </tr>
+  <td className="px-4 py-2 border">
+    {vote.votecompletestatus === 1 ? "📌 مكتمل" : "⌛ غير مكتمل"}
+  </td>
+
+  <td className="px-4 py-2 border space-y-1">
+    <div className="flex items-center justify-center gap-2 flex-wrap">
+    {vote.isCalculated === 1 ? (
+  <button
+    disabled
+    className="text-blue-600 hover:text-blue-800 cursor-not-allowed"
+    title="تم الحساب - لا يمكن التعديل"
+  >
+    <Pencil size={18} />
+  </button>
+) : (
+  <Link to={`/EditVote/${vote.id}`} state={{ ...vote }}>
+    <button className="text-blue-600 hover:text-blue-800">
+      <Pencil size={18} />
+    </button>
+  </Link>
+)}
+
+    </div>
+  </td>
+
+  <td className="px-4 py-2 border space-y-1">
+    <div className="flex items-center justify-center gap-2 flex-wrap">
+      {vote.votecompletestatus === 1 && (
+        <button
+          className={`border-2 rounded-lg px-2 py-1 ${
+            vote.isCalculated === 1
+              ? "text-green-600 border-green-600 hover:text-green-800 hover:border-green-800 cursor-not-allowed"
+              : "text-green-600 border-green-600 hover:text-green-800 hover:border-green-800"
+          }`}
+          onClick={() => handleCalculateResults(vote.id)}
+          disabled={vote.isCalculated === 1}
+        >
+          {vote.isCalculated === 1 ? "تم حساب النتائج" : "حساب النتائج"}
+        </button>
+      )}
+    </div>
+  </td>
+</tr>
+
             ))
           )}
         </tbody>

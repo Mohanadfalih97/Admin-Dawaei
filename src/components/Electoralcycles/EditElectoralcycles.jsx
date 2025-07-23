@@ -3,9 +3,9 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
-import { Button } from "./Ui/Button";
-import { ScrollArea } from "./Ui/scroll-area";
-import { Table, TableHeader, TableBody, TableRow, TableCell } from "./Ui/table";
+import { Button } from "../Ui/Button";
+import { ScrollArea } from "../Ui/scroll-area";
+import { Table, TableHeader, TableBody, TableRow, TableCell } from "../Ui/table";
 
 const EditElectoralcycles = () => {
   const navigate = useNavigate();

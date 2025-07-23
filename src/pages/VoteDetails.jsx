@@ -1,5 +1,5 @@
 import React from "react";
-import ShowDeatailsVote from "../components/ShowDeatailsVote";
+import ShowDeatailsVote from "../components/Vote/ShowDeatailsVote";
 import { Calendar } from "lucide-react";
 
 const VoteDetails = () => {

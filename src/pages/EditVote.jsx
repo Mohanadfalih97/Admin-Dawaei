@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import InputsVote from "../components/InputsVote";
+import InputsVote from "../components/Vote/InputsVote";
 import DateTimeSelector from "../components/DateTimeSelector";
 import { toast } from "react-toastify";
-import VoteOptions from "../components/VoteOptions";
+import VoteOptions from "../components/Vote/VoteOptions";
 
 const EditVote = () => {
   const { id } = useParams();
@@ -17,7 +17,6 @@ const EditVote = () => {
   const [file, setFile] = useState(null);
   const [startDate, setStartDate] = useState("");
   const [finishDate, setFinishDate] = useState("");
-  const [votecompletestatus, setVoteStatus] = useState(0);
   const [minMumbersVoted, setMinMumbersVoted] = useState(0);
   const [voteActveStatus, setVoteActveStatus] = useState(0);
   const [cycleId, setCycleId] = useState("");
@@ -39,7 +38,6 @@ const EditVote = () => {
           setStartDate(voteData.startDate || "");
           setFinishDate(voteData.finishDate || "");
           setFile(voteData.docUrl ? { name: voteData.docUrl } : null);
-          setVoteStatus(voteData.votecompletestatus ?? 0);
           setVoteActveStatus(voteData.voteActveStatus ?? 0);
           setCycleId(voteData.cycleId ?? "");
         } else {
@@ -57,7 +55,6 @@ const EditVote = () => {
           setStartDate(data.startDate || "");
           setFinishDate(data.finishDate || "");
           setFile(data.docUrl ? { name: data.docUrl } : null);
-          setVoteStatus(data.votecompletestatus ?? 0);
           setVoteActveStatus(data.voteActveStatus ?? 0);
           setCycleId(data.cycleId ?? "");
         }
@@ -198,7 +195,7 @@ const EditVote = () => {
       }
     }
 
-    const finalVoteCompleteStatus = voteActveStatus === 1 ? 0 : votecompletestatus;
+    const finalVoteCompleteStatus = 0;
 
     const formPayload = {
       voteTitle: title,

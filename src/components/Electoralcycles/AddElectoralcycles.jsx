@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
-import { Button } from "./Ui/Button";
-import { ScrollArea } from "./Ui/scroll-area";
-import { Table, TableHeader, TableBody, TableRow, TableCell } from "./Ui/table";
+import { Button } from "../Ui/Button";
+import { ScrollArea } from "../Ui/scroll-area";
+import { Table, TableHeader, TableBody, TableRow, TableCell } from "../Ui/table";
 
 const ElectoralCycleForm = () => {
   const navigate = useNavigate();
@@ -32,6 +32,8 @@ const handleSave = async () => {
   setLoading(true);
 
   try {
+        const Token= localStorage.getItem("token");
+
     const response = await axios.post(
       `${process.env.REACT_APP_API_URL}elections-cycles`,
       {
@@ -42,7 +44,10 @@ const handleSave = async () => {
       {
         headers: {
           "Accept-Language": "en",
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+           Authorization: `Bearer ${Token}`,
+
+
         }
       }
     );

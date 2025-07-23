@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import MemberTable from "../components/MemberTable";
+import MemberTable from "../components/Members/MemberTable";
 import { Link } from "react-router-dom";
 
 const Members = () => {

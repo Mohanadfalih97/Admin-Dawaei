@@ -1,6 +1,6 @@
 import React from "react";
 
-import UsersTable from "../components/UsersTabel";
+import UsersTable from "../components/users/UsersTabel";
 
 const UsersInfo = () => {
   return (

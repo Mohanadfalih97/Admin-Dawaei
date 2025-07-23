@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import MembersDilog from "../components/MembersDilog";
+import MembersDilog from "./MembersDilog";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { FileText, RefreshCw, Send } from "lucide-react";
@@ -29,18 +29,23 @@ const MemberTable = ({ searchTerm }) => {
   };
 
   const sendVoteLink = async (email) => {
+
     if (!email) {
       toast.error("البريد الإلكتروني غير متوفر");
       return;
     }
 
     try {
+          const Token= localStorage.getItem("token");
+
       const response = await fetch(`${process.env.REACT_APP_API_URL}otp/send-member-link`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept-Language": "ar",
           Accept: "application/json",
+          Authorization: `Bearer ${Token}`,
+
         },
         body: JSON.stringify({
           email: email,

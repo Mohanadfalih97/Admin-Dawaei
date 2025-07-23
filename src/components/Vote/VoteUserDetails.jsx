@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Mail, MapPin, Phone } from "lucide-react";
-import defaultProfileImage from "../asset/Imge/profiledefautimg.png";
-import logo from "../asset/Imge/logo.png";
+import defaultProfileImage from "../../asset/Imge/profiledefautimg.png";
+import logo from "../../asset/Imge/logo.png";
 
 const VotingPage = ({ enable = true }) => {
   const [selectedOption, setSelectedOption] = useState("");

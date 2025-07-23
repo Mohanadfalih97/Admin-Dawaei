@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Calendar, ChartBar, UserRound } from "lucide-react";
-import BoxCard from "./BoxCard";
+import BoxCard from "../BoxCard";
 
 const Cards = () => {
   const [membersCount, setMembersCount] = useState(0);

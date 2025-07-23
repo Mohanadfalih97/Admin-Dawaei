@@ -1,6 +1,6 @@
 import React from "react";
 
-import AvailableReports from "../components/AvailableReports";
+import AvailableReports from "../components/Reports/AvailableReports";
 
 const Reports = () => {
   return (

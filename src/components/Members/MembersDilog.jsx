@@ -33,8 +33,7 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
   const [watsApp, setWatsApp] = useState("");
   const [eMail, setEMail] = useState("");
   const navigate = useNavigate();
-  const [institutions, setInstitutions] = useState([]);
-const [institutionId, setInstitutionId] = useState("");
+
 
 
   useEffect(() => {
@@ -71,7 +70,6 @@ const [institutionId, setInstitutionId] = useState("");
       setPhone2(member.phone2 || "");
       setWatsApp(member.watsApp || "");
       setEMail(member.eMail || "");
-      setInstitutionId(member.institutionId?.toString() || "");
 
     }
   }, [member]);
@@ -83,31 +81,7 @@ const [institutionId, setInstitutionId] = useState("");
       setImagePreview(URL.createObjectURL(file));
     }
   };
-  useEffect(() => {
-  const fetchInstitutions = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.REACT_APP_API_URL}institution`, {
-        headers: {
-          "Accept-Language": "en",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
 
-      const result = await response.json();
-      if (response.ok && result.data?.items) {
-        setInstitutions(result.data.items);
-      } else {
-        toast.error("فشل في تحميل المؤسسات");
-      }
-    } catch (error) {
-      toast.error("حدث خطأ أثناء تحميل المؤسسات");
-    }
-  };
-
-  fetchInstitutions();
-}, []);
 
 
   const handleUpdate = async () => {
@@ -153,7 +127,6 @@ const [institutionId, setInstitutionId] = useState("");
         role: member.role || 0,
         cycleId: member.cycleId || 0,
         imgUrl: updatedImgUrl,
-        institutionId: parseInt(institutionId) || null,
 
       };
 
@@ -330,23 +303,7 @@ const [institutionId, setInstitutionId] = useState("");
                 <input type="email" className="border px-3 py-2 rounded w-full text-center" value={eMail} onChange={(e) => setEMail(e.target.value)} />
               </TableCell>
             </TableRow>
-            <TableRow>
-  <TableCell className="font-medium">المؤسسة</TableCell>
-  <TableCell>
-    <select
-      className="border px-3 py-2 rounded w-full text-center"
-      value={institutionId}
-      onChange={(e) => setInstitutionId(e.target.value)}
-    >
-      <option value="">اختر المؤسسة</option>
-      {institutions.map((inst) => (
-        <option key={inst.id} value={inst.id}>
-          {inst.institutionName}
-        </option>
-      ))}
-    </select>
-  </TableCell>
-</TableRow>
+
 
           </TableBody>
         </Table>

@@ -1,10 +1,10 @@
 import React from "react";
 
-import InstitutionDetailstabel from "../components/institution/InstitutionDetailstabel";
+import InstitutionDetailstabel from "../components/institution/Editinstitution";
 
 const Reports = () => {
   return (
-    <section className="flex flex-col">
+    <section>
       <InstitutionDetailstabel />
     </section>
   );

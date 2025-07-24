@@ -15,6 +15,8 @@ const AssignMembersToElection = () => {
   const [currentPage, setCurrentPage] = useState(1); // الصفحة الحالية
   const [totalPages, setTotalPages] = useState(1); // عدد الصفحات الكلي
   const navigate = useNavigate();
+  const [saving, setSaving] = useState(false);
+
 
   useEffect(() => {
  const fetchMembers = async () => {
@@ -110,13 +112,14 @@ const fetchCycles = async () => {
     });
   };
 
- const saveChanges = async () => {
+const saveChanges = async () => {
   if (!selectedCycleId) {
     toast.warning("يرجى اختيار دورة انتخابية أولاً.");
     return;
   }
 
-  const token = localStorage.getItem("token"); // ✅ اجلب التوكن هنا
+  const token = localStorage.getItem("token");
+  setSaving(true); // ✅ بدأ الحفظ
 
   try {
     for (const memberId of changes) {
@@ -130,7 +133,7 @@ const fetchCycles = async () => {
 
       await axios.put(`${process.env.REACT_APP_API_URL}members/${memberId}`, updatedMember, {
         headers: {
-          Authorization: `Bearer ${token}`, // ✅ أضف التوكن هنا
+          Authorization: `Bearer ${token}`,
           Accept: "application/json",
           "Accept-Language": "ar",
         },
@@ -143,8 +146,11 @@ const fetchCycles = async () => {
   } catch (error) {
     console.error("خطأ أثناء التحديث:", error);
     toast.error("فشل في تحديث بيانات الأعضاء.");
+  } finally {
+    setSaving(false); // ✅ انتهى الحفظ
   }
 };
+
 
 
   // التحكم في التنقل بين الصفحات
@@ -223,12 +229,15 @@ const fetchCycles = async () => {
       </table>
 
       <div className="text-center mt-6 flex">
-        <button
-          onClick={saveChanges}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          حفظ التغييرات
-        </button>
+<button
+  onClick={saveChanges}
+  disabled={loading || saving} // ✅ منع الضغط أثناء الحفظ أو التحميل
+  className={`w-3/12 text-white rounded py-2 transition
+    ${loading || saving ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary-dark"}`}
+>
+  {saving ? "جارٍ الحفظ..." : "حفظ التغييرات"}
+</button>
+
       </div>
 
       {totalPages > 1 && (

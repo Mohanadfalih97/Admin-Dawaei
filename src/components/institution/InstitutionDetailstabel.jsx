@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import defaultProfileImage from "../../asset/Imge/profiledefautimg.png";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -61,44 +61,24 @@ const handleEditCompany = (company) => {
   navigate(`/Editinstitution/${company.id}`, { state: { company } });
 };
 
-const handleDeleteCompany = async (id) => {
 
-  try {
-    const token = localStorage.getItem("token");
-
-    const response = await fetch(`${process.env.REACT_APP_API_URL}institution/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Accept-Language": "en",
-      },
-    });
-
-    if (response.ok) {
-      toast.success(" تم حذف المؤسسة بنجاح");
-
-      // تحديث القائمة بعد الحذف
-      setInstitutions((prev) => prev.filter((item) => item.id !== id));
-    } else {
-      const result = await response.json();
-      throw new Error(result.msg || "فشل الحذف");
-    }
-  } catch (error) {
-    toast.error(error.message);
-  }
-};
 
 
   return (
     <div className="container mx-auto mt-5 p-5 border rounded-lg shadow-md" dir="rtl">
       {/* رأس الصفحة */}
       <div className="flex flex-col-reverse md:flex-row md:items-center justify-between gap-4 mb-4" style={{ direction: "ltr" }}>
-        <Link
-          to="/Add-institution"
-          className="bg-primary text-center py-2 px-4 text-white rounded-md hover:bg-primary-dark transition duration-300 w-full md:w-auto"
-        >
-          إنشاء مؤسسة
-        </Link>
+        <div>
+ {institutions.length === 0 && (
+    <Link
+      to="/Add-institution"
+      className="bg-primary text-center py-2 px-4 text-white rounded-md hover:bg-primary-dark transition duration-300 w-full md:w-auto"
+    >
+      إنشاء مؤسسة
+    </Link>
+  )}
+        </div>
+ 
         <h1 className="text-2xl md:text-3xl text-primary font-semibold text-center md:text-right">
           تفاصيل المؤسسة
         </h1>
@@ -135,9 +115,7 @@ const handleDeleteCompany = async (id) => {
                   <button className="text-blue-600 hover:text-blue-800 mx-2" onClick={() => handleEditCompany(company)}>
                     <Pencil />
                   </button>
-                  <button className="text-red-600 hover:text-red-800 mx-2" onClick={() => handleDeleteCompany(company.id)}>
-                    <Trash2 />
-                  </button>
+              
                 </td>
               </tr>
             ))}

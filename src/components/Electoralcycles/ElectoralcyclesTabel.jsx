@@ -13,7 +13,7 @@ const ElectionCyclesTable = ({ searchTerm }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState(null);
-        const token = localStorage.getItem("token"); // ✅ احصل على التوكن
+  const token = localStorage.getItem("token"); // ✅ احصل على التوكن
 
 
   useEffect(() => {
@@ -81,39 +81,48 @@ const ElectionCyclesTable = ({ searchTerm }) => {
     }
   };
 
-  const updateVoteStatus = async (cycle, field, value) => {
-    try {
-      await axios.put(
-        `${process.env.REACT_APP_API_URL}elections-cycles/${cycle.id}`,
-        {
-          dscrp: cycle.dscrp,
-          startDate: cycle.startDate,
-          finishDate: cycle.finishDate,
-          [field]: value,
+ const updateVoteStatus = async (cycle, field, value) => {
+  try {
+    await axios.put(
+      `${process.env.REACT_APP_API_URL}elections-cycles/${cycle.id}`,
+      {
+        dscrp: cycle.dscrp,
+        startDate: cycle.startDate,
+        finishDate: cycle.finishDate,
+        [field]: value,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Accept: "application/json",
+          "Accept-Language": "ar", // لتحديد اللغة العربية إن كانت مدعومة من السيرفر
+          "Content-Type": "application/json",
         },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            Accept: "application/json",
-            "Accept-Language": "en",
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      }
+    );
 
-      toast.success(" تم تحديث حالة الدورة بنجاح");
+    toast.success("تم تحديث حالة الدورة بنجاح");
 
-      // تحديث القيمة محليًا
-      setElections((prev) =>
-        prev.map((item) =>
-          item.id === cycle.id ? { ...item, [field]: value } : item
-        )
-      );
-    } catch (error) {
-      console.error("فشل في تحديث حالة الدورة:", error);
-      toast.error(" فشل في تحديث حالة الدورة");
+    setElections((prev) =>
+      prev.map((item) =>
+        item.id === cycle.id ? { ...item, [field]: value } : item
+      )
+    );
+  } catch (error) {
+    console.error("فشل في تحديث حالة الدورة:", error);
+    const serverMessage = error.response?.data?.msg;
+
+    // ✅ ترجمة رسائل الخطأ حسب محتوى الرسالة القادمة من السيرفر
+    if (serverMessage === "Election cycle not found.") {
+      toast.error("لم يتم العثور على الدورة الانتخابية.");
+    } else if (serverMessage === "Another active election cycle already exists. You cannot activate this one.") {
+      toast.error("يوجد دورة انتخابية نشطة بالفعل، لا يمكنك تفعيل دورة جديدة.");
+    } else {
+      toast.error("فشل في تحديث حالة الدورة.");
     }
-  };
+  }
+};
+
 
   const formatDate = (date) => {
     return new Date(date).toLocaleString("ar-IQ", {

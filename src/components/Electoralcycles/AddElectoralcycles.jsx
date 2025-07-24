@@ -32,7 +32,7 @@ const handleSave = async () => {
   setLoading(true);
 
   try {
-        const Token= localStorage.getItem("token");
+    const Token = localStorage.getItem("token");
 
     const response = await axios.post(
       `${process.env.REACT_APP_API_URL}elections-cycles`,
@@ -43,11 +43,9 @@ const handleSave = async () => {
       },
       {
         headers: {
-          "Accept-Language": "en",
+          "Accept-Language": "ar",
           "Content-Type": "application/json",
-           Authorization: `Bearer ${Token}`,
-
-
+          Authorization: `Bearer ${Token}`,
         }
       }
     );
@@ -60,8 +58,11 @@ const handleSave = async () => {
     console.error("Error creating electoral cycle:", err);
 
     const serverMessage = err.response?.data?.msg;
+
     if (serverMessage === "Cannot create a new election cycle while another one is still ongoing.") {
       toast.error("لا يمكن إنشاء دورة انتخابية جديدة بينما توجد دورة حالية مستمرة.");
+    } else if (serverMessage === "Cannot create a new election cycle while another one is still marked as active.") {
+      toast.error("لا يمكن إنشاء دورة انتخابية جديدة بينما توجد دورة نشطة حاليًا.");
     } else {
       toast.error("حدث خطأ أثناء إنشاء الدورة!");
     }
@@ -69,6 +70,7 @@ const handleSave = async () => {
     setLoading(false);
   }
 };
+
 
 
   return (

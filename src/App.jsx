@@ -19,7 +19,7 @@ import VotePageMain from "./pages/VotePageMain";
 import EditVote from "./pages/EditVote";
 import VoteUsers from "./pages/VoteUsers";
 import Department from "./pages/Department";
-import InstitutionDetails from "./pages/InstitutionDetails";
+import InstitutionDetails from "./pages/InstitutionForm";
 import AssignMembersToElection  from "./pages/AssignMembersToElection ";
 
 
@@ -40,8 +40,7 @@ import ElectionCycleDetails from "./components/Electoralcycles/ElectionCycleDeta
 import AddDepartment from "./components/Department/AddDepartment";
 import EditDepartment from "./components/Department/EditDepartment";
 import Addinstitution from "./components/institution/Addinstitution";
- import Editinstitution from "./components/institution/Editinstitution";
- 
+import InstitutionForm from "./pages/InstitutionForm"; 
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -76,8 +75,8 @@ const App = () => {
             <Route path="InstitutionDetails" element={<InstitutionDetails />} />
             <Route path="/assign-members" element={<AssignMembersToElection />} />
             <Route path="EditDepartment/:id" element={<EditDepartment />} />
-            <Route path="/Editinstitution/:id" element={<Editinstitution />} />
- 
+            <Route path="/institution/create" element={<InstitutionForm />} />
+            <Route path="/institution/edit/:id" element={<InstitutionForm />} /> 
             <Route path="Add-Department" element={<AddDepartment />} />
             <Route path="Add-institution" element={<Addinstitution/>} />
 

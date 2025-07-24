@@ -1,5 +1,6 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
+import axios from "axios";
 
 import {
   LayoutDashboard,
@@ -8,15 +9,38 @@ import {
   Users,
   Vote,
   UserCog,
-  Building2, // أيقونة للقطاعات
-  ClipboardList // أيقونة للإسناد
+  Building2,
+  ClipboardList,
 } from "lucide-react";
 
 const Sidbar = () => {
-  return (
-  
-    <div className="flex flex-col bg-white shadow-lg h-full w-[300px] py-10 px-4 gap-4 rounded-lg">
+  const [institution, setInstitution] = useState(null);
 
+  useEffect(() => {
+    const fetchInstitution = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}institution`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Accept-Language": "en",
+          },
+        });
+
+        const items = response.data?.data?.items;
+        if (items && items.length > 0) {
+          setInstitution(items[0]);
+        }
+      } catch (error) {
+        console.error("حدث خطأ أثناء جلب بيانات المؤسسة", error);
+      }
+    };
+
+    fetchInstitution();
+  }, []);
+
+  return (
+    <div className="flex flex-col bg-white shadow-lg h-full w-[300px] py-10 px-4 gap-4 rounded-lg">
       <NavLink
         to="/dashboard"
         className={({ isActive }) =>
@@ -108,7 +132,6 @@ const Sidbar = () => {
         <CalendarDays /> تفاصيل الدورات الانتخابيه
       </NavLink>
 
-      {/* ✅ جديد: القطاعات */}
       <NavLink
         to="/Department"
         className={({ isActive }) =>
@@ -122,7 +145,6 @@ const Sidbar = () => {
         <Building2 /> القطاعات
       </NavLink>
 
-      {/* ✅ جديد: إسناد الأعضاء للدورات */}
       <NavLink
         to="/assign-members"
         className={({ isActive }) =>
@@ -135,8 +157,13 @@ const Sidbar = () => {
       >
         <ClipboardList /> إسناد الأعضاء
       </NavLink>
-          <NavLink
-        to="/InstitutionDetails"
+
+      <NavLink
+        to={
+          institution?.id
+            ? `/institution/edit/${institution.id}`
+            : `/institution/create`
+        }
         className={({ isActive }) =>
           `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
             isActive
@@ -145,9 +172,8 @@ const Sidbar = () => {
           }`
         }
       >
-        <Building2 />  تفاصيل المؤسسة
+        <Building2 /> تفاصيل المؤسسة
       </NavLink>
-
     </div>
   );
 };

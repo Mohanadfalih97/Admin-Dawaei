@@ -21,7 +21,7 @@ const MainLayout = () => {
             PageSize: 1, // نريد أول دورة نشطة فقط
           },
           headers: {
-             Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             Accept: "application/json",
             "Accept-Language": "en",
           },
@@ -31,7 +31,6 @@ const MainLayout = () => {
         if (items && items.length > 0) {
           setActiveCycle(items[0]);
         } else {
-          toast.info("لا توجد دورة نشطة حالياً.");
         }
       } catch (error) {
         console.error("Error fetching active cycle:", error);
@@ -46,7 +45,7 @@ const MainLayout = () => {
       <Topbar />
       <div className="flex">
         <section className="flex-1 w-full lg:w-[75%] px-5 py-4">
-            <h1 className="text-center text-blue-900 ">  {activeCycle ? `( ${activeCycle.dscrp} )` : "جارٍ التحميل..."}</h1>
+            <h1 className="text-center text-blue-900 ">  {activeCycle ? `( ${activeCycle.dscrp} )` : "(لاتوجد دورة نشطة حاليا)"}</h1>
           <Outlet />
         </section>
         <section className="hidden md:flex md:w-[25%] px-5 py-4">

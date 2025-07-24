@@ -47,6 +47,7 @@ const EditElectoralcycles = () => {
     setLoading(true);
 
     try {
+      const Token = localStorage.getItem("token");
       const response = await axios.put(
         `${process.env.REACT_APP_API_URL}elections-cycles/${id}`,
         {
@@ -57,7 +58,8 @@ const EditElectoralcycles = () => {
         {
           headers: {
             "Accept-Language": "en",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+          Authorization: `Bearer ${Token}`,
           }
         }
       );

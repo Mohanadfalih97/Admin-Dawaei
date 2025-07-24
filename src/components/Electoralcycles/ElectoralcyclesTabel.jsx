@@ -51,10 +51,14 @@ const ElectionCyclesTable = ({ searchTerm }) => {
   const deleteElectionCycle = async (id) => {
     setDeletingId(id);
     try {
+            const Token = localStorage.getItem("token");
+
       const res = await axios.delete(`${process.env.REACT_APP_API_URL}elections-cycles/${id}`, {
         headers: {
           Accept: "application/json",
           "Accept-Language": "en",
+          Authorization: `Bearer ${Token}`,
+
         },
       });
 

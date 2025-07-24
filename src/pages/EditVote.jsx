@@ -155,11 +155,7 @@ const EditVote = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!cycleId) {
-      toast.error(" يرجى اختيار الدورة الانتخابية");
-      return;
-    }
+   
 
     const today = new Date();
     const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());

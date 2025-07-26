@@ -23,55 +23,70 @@ const ElectoralCycleForm = () => {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-const handleSave = async () => {
-  if (!form.dscrp || !form.startDate || !form.finishDate) {
-    toast.error("يرجى ملء جميع الحقول");
-    return;
-  }
+  const handleSave = async () => {
+    if (!form.dscrp || !form.startDate || !form.finishDate) {
+      toast.error("يرجى ملء جميع الحقول");
+      return;
+    }
 
-  setLoading(true);
+    setLoading(true);
+    const toastId = toast.loading("جاري إنشاء الدورة...");
 
-  try {
-    const Token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-    const response = await axios.post(
-      `${process.env.REACT_APP_API_URL}elections-cycles`,
-      {
-        dscrp: form.dscrp,
-        startDate: new Date(form.startDate).toISOString(),
-        finishDate: new Date(form.finishDate).toISOString()
-      },
-      {
-        headers: {
-          "Accept-Language": "ar",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${Token}`,
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}elections-cycles`,
+        {
+          dscrp: form.dscrp,
+          startDate: new Date(form.startDate).toISOString(),
+          finishDate: new Date(form.finishDate).toISOString()
+        },
+        {
+          headers: {
+            "Accept-Language": "ar",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          }
         }
+      );
+
+      if (response.status === 200) {
+        toast.update(toastId, {
+          render: "تم إنشاء الدورة الانتخابية بنجاح!",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
+        setTimeout(() => navigate("/Electoralcycles"), 1000);
       }
-    );
+    } catch (err) {
+      console.error("Error creating electoral cycle:", err);
+      const msg = err.response?.data?.msg;
 
-    if (response.status === 200) {
-      toast.success("تم إنشاء الدورة الانتخابية بنجاح!");
-      setTimeout(() => navigate("/Electoralcycles"), 1000);
+      if (msg === "Cannot create a new election cycle while another one is still ongoing.") {
+        toast.update(toastId, {
+          render: "لا يمكن إنشاء دورة جديدة بينما توجد دورة مستمرة.",
+          type: "error",
+          isLoading: false,
+        });
+      } else if (msg === "Cannot create a new election cycle while another one is still marked as active.") {
+        toast.update(toastId, {
+          render: "لا يمكن إنشاء دورة جديدة بينما توجد دورة نشطة حاليًا.",
+          type: "error",
+          isLoading: false,
+        });
+      } else {
+        toast.update(toastId, {
+          render: "حدث خطأ أثناء إنشاء الدورة!",
+          type: "error",
+          isLoading: false,
+        });
+      }
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error("Error creating electoral cycle:", err);
-
-    const serverMessage = err.response?.data?.msg;
-
-    if (serverMessage === "Cannot create a new election cycle while another one is still ongoing.") {
-      toast.error("لا يمكن إنشاء دورة انتخابية جديدة بينما توجد دورة حالية مستمرة.");
-    } else if (serverMessage === "Cannot create a new election cycle while another one is still marked as active.") {
-      toast.error("لا يمكن إنشاء دورة انتخابية جديدة بينما توجد دورة نشطة حاليًا.");
-    } else {
-      toast.error("حدث خطأ أثناء إنشاء الدورة!");
-    }
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  };
 
   return (
     <div className="mt-5 p-5 border rounded-lg shadow-md">
@@ -97,7 +112,7 @@ const handleSave = async () => {
               </TableRow>
 
               <TableRow>
-                <TableCell className="font-medium">تاريخ الإنشاء</TableCell>
+                <TableCell className="font-medium">تاريخ البدء</TableCell>
                 <TableCell>
                   <input
                     type="datetime-local"

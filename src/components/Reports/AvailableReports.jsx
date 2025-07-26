@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import * as Dialog from "@radix-ui/react-dialog";
 import VoteReportDialog from "./ReportDilog";
 
-// ✅ دالة لتغذية كل تصويت بالنتائج المحسوبة
+// ✅ تغذية كل تصويت بالنتائج المحسوبة
 const enrichVote = async (vote, token) => {
   const res = await axios.get(`${process.env.REACT_APP_API_URL}vote/calculate-result/${vote.id}`, {
     headers: {
@@ -15,7 +15,6 @@ const enrichVote = async (vote, token) => {
   });
 
   const data = res.data?.data || {};
-
   return {
     ...vote,
     voteCount: data.actualVoters,
@@ -29,15 +28,17 @@ const enrichVote = async (vote, token) => {
   };
 };
 
-// ✅ تحميل تقارير التصويت حسب الدورة
+// ✅ تحميل التصويتات حسب الدورة الانتخابية
 const fetchVotes = async ({ page, cycleId }) => {
   const token = localStorage.getItem("token");
+
+  console.log("📦 CycleId المرسل إلى API:", cycleId); // فقط للتأكد
 
   const res = await axios.get(`${process.env.REACT_APP_API_URL}vote`, {
     params: {
       isCalculated: 1,
       votecompletestatus: 1,
-      electionsCyclesId: cycleId || undefined,
+      CycleId: cycleId || undefined, // ✅ التعديل هنا
       PageNumber: page,
       PageSize: 10,
     },
@@ -59,15 +60,16 @@ const fetchVotes = async ({ page, cycleId }) => {
   };
 };
 
+
+
 const AvailableReports = () => {
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
-
   const [electionCycles, setElectionCycles] = useState([]);
   const [selectedCycleId, setSelectedCycleId] = useState("");
 
-  // ✅ تحميل الدورات الانتخابية
+  // ✅ تحميل الدورات الانتخابية عند فتح الصفحة
   useEffect(() => {
     const fetchCycles = async () => {
       try {
@@ -79,7 +81,13 @@ const AvailableReports = () => {
           },
         });
 
-        setElectionCycles(res.data?.data?.items || []);
+        const items = res.data?.data?.items || [];
+        setElectionCycles(items);
+
+        // ✅ اختيار أول دورة تلقائياً إذا موجودة
+        if (items.length > 0) {
+          setSelectedCycleId(items[0].id);
+        }
       } catch (err) {
         console.error("Error fetching election cycles:", err);
       }
@@ -88,17 +96,15 @@ const AvailableReports = () => {
     fetchCycles();
   }, []);
 
-  // ✅ تحميل التصويتات حسب الدورة المحددة
+  // ✅ تحميل التصويتات عند اختيار دورة أو تغيير الصفحة
   const { data, isLoading, isError } = useQuery({
     queryKey: ["votes", page, selectedCycleId],
     queryFn: () => fetchVotes({ page, cycleId: selectedCycleId }),
-    enabled: selectedCycleId !== "", // ✅ يعمل فقط إذا تم اختيار دورة
+    enabled: selectedCycleId !== "",
     keepPreviousData: true,
   });
 
-  const currentPage = page;
   const totalPages = data?.totalPages || 1;
-
   const goToPage = (pageNum) => {
     if (pageNum >= 1 && pageNum <= totalPages) {
       setPage(pageNum);
@@ -114,8 +120,6 @@ const AvailableReports = () => {
         </p>
       </div>
 
-   
-
       <div className="mt-5 p-5 border rounded-lg">
         <div className="flex flex-col items-end gap-1 mb-4">
           <h1 className="text-2xl font-semibold">التقارير المتاحة</h1>
@@ -123,29 +127,31 @@ const AvailableReports = () => {
             اطلع على نتائج وتفاصيل التصويتات السابقة
           </p>
         </div>
-   {/* ✅ فلتر الدورة الانتخابية */}
-      <div className="mb-6 text-right" style={{ direction: "rtl" }}>
-        <label htmlFor="cycleSelect" className="block mb-2 font-semibold">
-          اختر الدورة الانتخابية:
-        </label>
-        <select
-          id="cycleSelect"
-          value={selectedCycleId}
-          onChange={(e) => {
-            setSelectedCycleId(e.target.value);
-            setPage(1);
-          }}
-          className="border rounded px-3 py-2 w-full md:w-1/3"
-        >
-          <option value="">-- اختر الدورة --</option>
-          {electionCycles.map((cycle) => (
-            <option key={cycle.id} value={cycle.id}>
-              {cycle.dscrp}
-            </option>
-          ))}
-        </select>
-      </div>
-        {/* ✅ حالة انتظار أو خطأ أو بدون اختيار */}
+
+        {/* ✅ فلتر الدورة الانتخابية */}
+        <div className="mb-6 text-right" style={{ direction: "rtl" }}>
+          <label htmlFor="cycleSelect" className="block mb-2 font-semibold">
+            اختر الدورة الانتخابية:
+          </label>
+          <select
+            id="cycleSelect"
+            value={selectedCycleId}
+            onChange={(e) => {
+              setSelectedCycleId(e.target.value);
+              setPage(1);
+            }}
+            className="border rounded px-3 py-2 w-full md:w-1/3"
+          >
+            <option value="">-- اختر الدورة --</option>
+            {electionCycles.map((cycle) => (
+              <option key={cycle.id} value={cycle.id}>
+                {cycle.dscrp}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* ✅ عرض النتائج حسب الحالة */}
         {selectedCycleId === "" ? (
           <p className="text-center text-gray-600">يرجى اختيار دورة لعرض النتائج</p>
         ) : isLoading ? (
@@ -154,6 +160,7 @@ const AvailableReports = () => {
           <p className="text-center text-red-600">حدث خطأ أثناء تحميل البيانات</p>
         ) : (
           <>
+            {/* ✅ جدول التصويتات */}
             <div className="overflow-x-auto" style={{ direction: "rtl" }}>
               <table className="min-w-full text-center border">
                 <thead className="bg-gray-100">
@@ -182,13 +189,9 @@ const AvailableReports = () => {
                       <td className="p-3 border">{vote.voteCount}</td>
                       <td className="p-3 border">
                         {vote.quorumStatusMsg === "Quorum completed successfully" ? (
-                          <span className="text-green-600 font-medium">
-                            تم تحقيق النصاب بنجاح
-                          </span>
+                          <span className="text-green-600 font-medium">تم تحقيق النصاب بنجاح</span>
                         ) : (
-                          <span className="text-red-600 font-medium">
-                            النصاب غير مكتمل
-                          </span>
+                          <span className="text-red-600 font-medium">النصاب غير مكتمل</span>
                         )}
                       </td>
                       <td className="p-3 border text-right">
@@ -196,9 +199,7 @@ const AvailableReports = () => {
                           vote.results.map((result, i) => (
                             <div key={i} className="flex justify-between text-sm mb-1">
                               <span className="font-semibold">{result.option}</span>
-                              <span>
-                                {result.votes} صوت ({result.percentage}%)
-                              </span>
+                              <span>{result.votes} صوت ({result.percentage}%)</span>
                             </div>
                           ))
                         ) : (
@@ -226,8 +227,8 @@ const AvailableReports = () => {
             {totalPages > 1 && (
               <div className="flex justify-center items-center mt-6 gap-2 flex-wrap">
                 <button
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage === 1}
+                  onClick={() => goToPage(page - 1)}
+                  disabled={page === 1}
                   className="px-3 py-1 border rounded disabled:opacity-50"
                 >
                   السابق
@@ -235,7 +236,7 @@ const AvailableReports = () => {
 
                 {(() => {
                   const visiblePages = 5;
-                  const currentGroup = Math.floor((currentPage - 1) / visiblePages);
+                  const currentGroup = Math.floor((page - 1) / visiblePages);
                   const startPage = currentGroup * visiblePages + 1;
                   const endPage = Math.min(startPage + visiblePages - 1, totalPages);
 
@@ -244,7 +245,7 @@ const AvailableReports = () => {
                       key={pageNum}
                       onClick={() => goToPage(pageNum)}
                       className={`px-3 py-1 border rounded ${
-                        pageNum === currentPage ? "bg-blue-600 text-white" : "hover:bg-gray-200"
+                        pageNum === page ? "bg-blue-600 text-white" : "hover:bg-gray-200"
                       }`}
                     >
                       {pageNum}
@@ -253,8 +254,8 @@ const AvailableReports = () => {
                 })()}
 
                 <button
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
+                  onClick={() => goToPage(page + 1)}
+                  disabled={page === totalPages}
                   className="px-3 py-1 border rounded disabled:opacity-50"
                 >
                   التالي
@@ -265,7 +266,7 @@ const AvailableReports = () => {
         )}
       </div>
 
-      {/* ✅ عرض التقرير */}
+      {/* ✅ نافذة التفاصيل */}
       <Dialog.Root
         open={open}
         onOpenChange={(val) => {

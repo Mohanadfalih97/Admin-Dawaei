@@ -21,11 +21,15 @@ const ResetPasswordStepper = () => {
     }
 
     try {
+      const token = localStorage.getItem("token");
+
       const response = await fetch(`${process.env.REACT_APP_API_URL}otp/send`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept-Language": "ar",
+          Authorization: `Bearer ${token}`,
+
         },
         body: JSON.stringify({ email }),
       });
@@ -55,11 +59,15 @@ const ResetPasswordStepper = () => {
     }
 
     try {
+        const token = localStorage.getItem("token");
+
       const response = await fetch(`${process.env.REACT_APP_API_URL}otp/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept-Language": "ar",
+          Authorization: `Bearer ${token}`,
+
         },
         body: JSON.stringify({ email: storedEmail, otpCode }),
       });

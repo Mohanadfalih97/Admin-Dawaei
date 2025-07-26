@@ -27,8 +27,12 @@ const EditElectoralcycles = () => {
     if (cycle) {
       setForm({
         dscrp: cycle.dscrp || "",
-        startDate: cycle.startDate ? cycle.startDate.slice(0, 16) : "",
-        finishDate: cycle.finishDate ? cycle.finishDate.slice(0, 16) : ""
+      startDate: cycle?.startDate
+    ? new Date(cycle.startDate).toISOString().slice(0, 16)
+    : "",
+  finishDate: cycle?.finishDate
+    ? new Date(cycle.finishDate).toISOString().slice(0, 16)
+    : ""
       });
     }
   }, [cycle]);

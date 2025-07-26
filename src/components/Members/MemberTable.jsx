@@ -18,6 +18,34 @@ const MemberTable = ({ searchTerm }) => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [institutionId, setInstitutionId] = useState(null);
+
+
+useEffect(() => {
+  const fetchInstitution = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}institution`, {
+        headers: {
+          "Accept-Language": "en",
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const result = await response.json();
+      if (response.ok && result.data?.items?.length > 0) {
+        setInstitutionId(result.data.items[0].id);
+      } else {
+        console.error("Institution fetch failed");
+      }
+    } catch (err) {
+      console.error("Institution fetch error:", err);
+    }
+  };
+
+  fetchInstitution();
+}, []);
+
 
   const formatDateArabic = (dateStr) => {
     if (!dateStr) return "—";
@@ -270,6 +298,7 @@ const MemberTable = ({ searchTerm }) => {
         cycleId={selectedReport?.cycleId}
         createdAt={selectedReport?.createdAt}
         updatedAt={selectedReport?.updatedAt}
+        institutionId={institutionId}
       />
     </div>
   );

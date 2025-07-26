@@ -4,6 +4,8 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import { Pencil, Trash2 } from "lucide-react";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 
 const ElectionCyclesTable = ({ searchTerm }) => {
   const [elections, setElections] = useState([]);
@@ -13,8 +15,16 @@ const ElectionCyclesTable = ({ searchTerm }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState(null);
-  const token = localStorage.getItem("token"); // ✅ احصل على التوكن
+  const token = localStorage.getItem("token");
 
+  const formatDate = (date) => {
+    if (!date) return "—";
+    try {
+      return format(new Date(date), "EEEE، d MMMM yyyy 'في' hh:mm a", { locale: ar });
+    } catch {
+      return "تاريخ غير صالح";
+    }
+  };
 
   useEffect(() => {
     const fetchElectionCycles = async () => {
@@ -27,9 +37,9 @@ const ElectionCyclesTable = ({ searchTerm }) => {
             PageSize: pageSize,
           },
           headers: {
-             Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             Accept: "application/json",
-            "Accept-Language": "en",
+            "Accept-Language": "ar",
           },
         });
 
@@ -46,89 +56,78 @@ const ElectionCyclesTable = ({ searchTerm }) => {
     };
 
     fetchElectionCycles();
-  }, [searchTerm, currentPage, pageSize,token]);
+  }, [searchTerm, currentPage, pageSize, token]);
 
   const deleteElectionCycle = async (id) => {
     setDeletingId(id);
+    const toastId = toast.loading("جاري الحذف...");
     try {
-            const Token = localStorage.getItem("token");
-
       const res = await axios.delete(`${process.env.REACT_APP_API_URL}elections-cycles/${id}`, {
         headers: {
           Accept: "application/json",
-          "Accept-Language": "en",
-          Authorization: `Bearer ${Token}`,
-
+          "Accept-Language": "ar",
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (res.status === 204) {
-        toast.success("تم حذف الدورة الانتخابية بنجاح");
+        toast.update(toastId, { render: "تم الحذف بنجاح", type: "success", isLoading: false, autoClose: 2000 });
         setElections((prev) => prev.filter((e) => e.id !== id));
       } else {
-        toast.error("لم يتم الحذف، حدث خطأ غير متوقع.");
+        toast.update(toastId, { render: "لم يتم الحذف، خطأ غير متوقع", type: "error", isLoading: false });
       }
     } catch (error) {
       console.error("Error deleting election cycle:", error);
       const serverMessage = error.response?.data?.msg;
       if (serverMessage === "Cannot delete this cycle. One or more members are assigned to it.") {
-        toast.error("لا يمكن حذف هذه الدورة، هناك أعضاء مرتبطون بها.");
+        toast.update(toastId, { render: "لا يمكن حذف هذه الدورة، هناك أعضاء مرتبطون بها.", type: "error", isLoading: false });
       } else {
-        toast.error("فشل في حذف الدورة");
+        toast.update(toastId, { render: "فشل في حذف الدورة", type: "error", isLoading: false });
       }
     } finally {
       setDeletingId(null);
     }
   };
 
- const updateVoteStatus = async (cycle, field, value) => {
-  try {
-    await axios.put(
-      `${process.env.REACT_APP_API_URL}elections-cycles/${cycle.id}`,
-      {
-        dscrp: cycle.dscrp,
-        startDate: cycle.startDate,
-        finishDate: cycle.finishDate,
-        [field]: value,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          Accept: "application/json",
-          "Accept-Language": "ar", // لتحديد اللغة العربية إن كانت مدعومة من السيرفر
-          "Content-Type": "application/json",
+  const updateVoteStatus = async (cycle, field, value) => {
+    const toastId = toast.loading("جاري التحديث...");
+    try {
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}elections-cycles/${cycle.id}`,
+        {
+          dscrp: cycle.dscrp,
+          startDate: cycle.startDate,
+          finishDate: cycle.finishDate,
+          [field]: value,
         },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+            "Accept-Language": "ar",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      toast.update(toastId, { render: "تم تحديث حالة الدورة", type: "success", isLoading: false, autoClose: 2000 });
+      setElections((prev) =>
+        prev.map((item) =>
+          item.id === cycle.id ? { ...item, [field]: value } : item
+        )
+      );
+    } catch (error) {
+      console.error("فشل في تحديث حالة الدورة:", error);
+      const msg = error.response?.data?.msg;
+
+      if (msg === "Election cycle not found.") {
+        toast.update(toastId, { render: "لم يتم العثور على الدورة", type: "error", isLoading: false });
+      } else if (msg === "Another active election cycle already exists. You cannot activate this one.") {
+        toast.update(toastId, { render: "يوجد دورة نشطة بالفعل، لا يمكنك تفعيل أخرى", type: "error", isLoading: false });
+      } else {
+        toast.update(toastId, { render: "فشل في تحديث الحالة", type: "error", isLoading: false });
       }
-    );
-
-    toast.success("تم تحديث حالة الدورة بنجاح");
-
-    setElections((prev) =>
-      prev.map((item) =>
-        item.id === cycle.id ? { ...item, [field]: value } : item
-      )
-    );
-  } catch (error) {
-    console.error("فشل في تحديث حالة الدورة:", error);
-    const serverMessage = error.response?.data?.msg;
-
-    // ✅ ترجمة رسائل الخطأ حسب محتوى الرسالة القادمة من السيرفر
-    if (serverMessage === "Election cycle not found.") {
-      toast.error("لم يتم العثور على الدورة الانتخابية.");
-    } else if (serverMessage === "Another active election cycle already exists. You cannot activate this one.") {
-      toast.error("يوجد دورة انتخابية نشطة بالفعل، لا يمكنك تفعيل دورة جديدة.");
-    } else {
-      toast.error("فشل في تحديث حالة الدورة.");
     }
-  }
-};
-
-
-  const formatDate = (date) => {
-    return new Date(date).toLocaleString("ar-IQ", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
   };
 
   const goToPage = (page) => {
@@ -146,7 +145,7 @@ const ElectionCyclesTable = ({ searchTerm }) => {
             <th className="px-4 py-2 border text-center">تاريخ البدء</th>
             <th className="px-4 py-2 border text-center">تاريخ الانتهاء</th>
             <th className="px-4 py-2 border text-center">تاريخ الإنشاء</th>
-            <th className="px-4 py-2 border text-center">الحاله</th>
+            <th className="px-4 py-2 border text-center">الحالة</th>
             <th className="px-4 py-2 border text-center">تعديل</th>
             <th className="px-4 py-2 border text-center">حذف</th>
           </tr>
@@ -173,6 +172,10 @@ const ElectionCyclesTable = ({ searchTerm }) => {
                     <input
                       type="checkbox"
                       checked={e.voteActveStatus === 1}
+                      disabled={
+                        e.voteActveStatus !== 1 &&
+                        elections.some(c => c.voteActveStatus === 1)
+                      }
                       onChange={(event) =>
                         updateVoteStatus(e, "voteActveStatus", event.target.checked ? 1 : 0)
                       }

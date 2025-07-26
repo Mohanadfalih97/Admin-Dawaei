@@ -11,11 +11,15 @@ const ResetAccessCode = () => {
   // ✅ إرسال إشعار بالبريد بعد إعادة تعيين الرمز
   const sendResetEmailMessage = async (email) => {
     try {
+      const Token = localStorage.getItem("token");
+
       const response = await fetch(`${process.env.REACT_APP_API_URL}otp/send-message-reset`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept-Language": "ar",
+          Authorization: `Bearer ${Token}`,
+
         },
         body: JSON.stringify({ email }),
       });
@@ -55,6 +59,7 @@ const ResetAccessCode = () => {
 
       if (response.ok) {
         toast.success("تم تغيير الرمز السري بنجاح");
+        const token = localStorage.getItem("token");
 
         // 2. جلب الإيميل للعضو
         const emailResponse = await fetch(`${process.env.REACT_APP_API_URL}members?MemberId=${encodeURIComponent(memberId.trim())}`, {
@@ -62,6 +67,8 @@ const ResetAccessCode = () => {
           headers: {
             "Accept": "application/json",
             "Accept-Language": "ar",
+            Authorization: `Bearer ${token}`,
+
           },
         });
 

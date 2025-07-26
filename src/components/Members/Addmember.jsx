@@ -17,6 +17,8 @@ const AddMember = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [institutionId, setInstitutionId] = useState(null);
+
 
 
 
@@ -29,6 +31,34 @@ const AddMember = () => {
   const navigate = useNavigate();
 
 
+
+useEffect(() => {
+  const fetchInstitution = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${process.env.REACT_APP_API_URL}institution`, {
+        headers: {
+          "Accept-Language": "en",
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.data?.items?.length > 0) {
+        setInstitutionId(result.data.items[0].id); // 👈 حفظ أول id
+      } else {
+        toast.error("فشل في تحميل بيانات المؤسسة");
+      }
+    } catch (error) {
+      console.error("خطأ في جلب بيانات المؤسسة:", error);
+      toast.error("حدث خطأ أثناء تحميل بيانات المؤسسة");
+    }
+  };
+
+  fetchInstitution();
+}, []);
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -124,6 +154,7 @@ const AddMember = () => {
       position,
       role: 0,
       imgUrl: uploadedImagePath,
+      institutionId, 
     };
 
     // إرسال بيانات العضو
@@ -258,7 +289,10 @@ const AddMember = () => {
                 </option>
               ))}
             </select>
+
           </div>
+          <input type="hidden" value={institutionId || ''} name="institutionId" />
+
   
 
 

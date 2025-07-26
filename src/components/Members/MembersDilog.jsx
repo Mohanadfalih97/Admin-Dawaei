@@ -19,7 +19,7 @@ import { Button } from "../Ui/Button";
 import { toast } from "react-toastify";
 import defaultProfileImage from "../../asset/Imge/profiledefautimg.png";
 
-const MembersDilog = ({ open, onOpenChange, member }) => {
+const MembersDilog = ({ open, onOpenChange, member,institutionId  }) => {
   const [name, setName] = useState("");
   const [position, setPosition] = useState("");
   const [department, setDepartment] = useState("");
@@ -127,6 +127,7 @@ const MembersDilog = ({ open, onOpenChange, member }) => {
         role: member.role || 0,
         cycleId: member.cycleId || 0,
         imgUrl: updatedImgUrl,
+        institutionId:institutionId,
 
       };
 

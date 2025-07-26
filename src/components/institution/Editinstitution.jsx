@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import defaultProfileImage from "../../asset/Imge/profiledefautimg.png";
 import { Camera } from "lucide-react";
 
 const EditInstitution = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const locationData = useLocation();
 
   const [institutionName, setInstitutionName] = useState("");

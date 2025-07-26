@@ -126,7 +126,11 @@ const EditInstitution = () => {
         body: JSON.stringify(payload),
       });
 
-      const result = await response.json();
+let result = null;
+const text = await response.text();
+if (text) {
+  result = JSON.parse(text);
+}
 
       if (!response.ok) {
         throw new Error(result.msg || "فشل العملية");

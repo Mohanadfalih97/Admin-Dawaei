@@ -50,7 +50,7 @@ useEffect(() => {
   const formatDateArabic = (dateStr) => {
     if (!dateStr) return "—";
     try {
-      return format(new Date(dateStr), "yyyy/MM/dd hh:mm aaaa", { locale: ar });
+      return format(new Date(dateStr), "yyyy/MM/dd ", { locale: ar });
     } catch {
       return "—";
     }

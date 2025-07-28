@@ -4,6 +4,8 @@ import { FileText } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import * as Dialog from "@radix-ui/react-dialog";
 import VoteReportDialog from "./ReportDilog";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 
 // ✅ تغذية كل تصويت بالنتائج المحسوبة
 const enrichVote = async (vote, token) => {
@@ -183,7 +185,7 @@ const AvailableReports = () => {
                       <td className="p-3 border">{vote.voteTitle}</td>
                       <td className="p-3 border">{vote.dscrp}</td>
                       <td className="p-3 border">
-                        {new Date(vote.startDate).toLocaleDateString("ar-EG")}
+{format(new Date(vote.startDate), "eeee، dd MMMM yyyy", { locale: ar })}
                       </td>
                       <td className="p-3 border">{vote.minMumbersVoted}</td>
                       <td className="p-3 border">{vote.voteCount}</td>

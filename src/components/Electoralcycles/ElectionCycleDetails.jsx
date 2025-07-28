@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useCallback } from "react";
-
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 const PAGE_SIZE = 5;
 
 const ElectionCycleDetails = () => {
@@ -94,7 +95,8 @@ useEffect(() => {
                   <td className="px-4 py-2">{item.cycleId}</td>
                   <td className="px-4 py-2">{item.memberName}</td>
                   <td className="px-4 py-2">
-                    {new Date(item.createdAt).toLocaleString("ar-IQ")}
+             {format(new Date(item.createdAt), "eeee، dd MMMM yyyy", { locale: ar })}
+
                   </td>
                 </tr>
               ))

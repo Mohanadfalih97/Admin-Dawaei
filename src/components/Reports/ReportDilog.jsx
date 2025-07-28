@@ -21,6 +21,7 @@ import { ar } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
+
 const fetchVoteDetails = async (voteId) => {
   const token = localStorage.getItem("token");
 

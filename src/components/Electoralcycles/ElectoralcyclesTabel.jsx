@@ -74,16 +74,34 @@ const ElectionCyclesTable = ({ searchTerm }) => {
         toast.update(toastId, { render: "تم الحذف بنجاح", type: "success", isLoading: false, autoClose: 2000 });
         setElections((prev) => prev.filter((e) => e.id !== id));
       } else {
-        toast.update(toastId, { render: "لم يتم الحذف، خطأ غير متوقع", type: "error", isLoading: false });
+        toast.update(toastId, { render: "لم يتم الحذف، خطأ غير متوقع", type: "error", isLoading: false ,autoClose: 2000 });
       }
     } catch (error) {
-      console.error("Error deleting election cycle:", error);
-      const serverMessage = error.response?.data?.msg;
-      if (serverMessage === "Cannot delete this cycle. One or more members are assigned to it.") {
-        toast.update(toastId, { render: "لا يمكن حذف هذه الدورة، هناك أعضاء مرتبطون بها.", type: "error", isLoading: false });
-      } else {
-        toast.update(toastId, { render: "فشل في حذف الدورة", type: "error", isLoading: false });
-      }
+     console.error("Error deleting election cycle:", error);
+  const serverMessage = error.response?.data?.msg;
+
+  if (serverMessage === "Cannot delete this cycle. One or more members are assigned to it.") {
+    toast.update(toastId, {
+      render: "لا يمكن حذف هذه الدورة، هناك أعضاء مرتبطون بها.",
+      type: "error",
+      isLoading: false,
+      autoClose: 2000,
+    });
+  } else if (serverMessage === "Cycle not found or already deleted.") {
+    toast.update(toastId, {
+      render: "لم يتم العثور على الدورة أو تم حذفها مسبقًا.",
+      type: "error",
+      isLoading: false,
+      autoClose: 2000,
+    });
+  } else {
+    toast.update(toastId, {
+      render: serverMessage || "فشل في حذف الدورة",
+      type: "error",
+      isLoading: false,
+      autoClose: 2000,
+    });
+  }
     } finally {
       setDeletingId(null);
     }

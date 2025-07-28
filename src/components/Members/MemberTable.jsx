@@ -77,7 +77,7 @@ useEffect(() => {
         },
         body: JSON.stringify({
           email: email,
-          voteUrl: `${process.env.REACT_APP_VOTE_URL}/vote`,
+          voteUrl: `${process.env.REACT_APP_VOTE_URL}/LoginAsMember`,
         }),
       });
 

@@ -206,21 +206,47 @@ const EditVote = () => {
       cycleId: Number(cycleId),
     };
 
-    try {
-      await axios.put(`${process.env.REACT_APP_API_URL}vote/${id}`, formPayload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Accept-Language": "en",
-          Accept: "application/json",
-        },
-      });
-      toast.success(" تم تعديل التصويت بنجاح");
-      navigate("/VotePageMain");
-    } catch {
-      toast.error(" فشل في تعديل التصويت");
-    } finally {
-      setSubmitting(false);
+try {
+  const response = await axios.put(
+    `${process.env.REACT_APP_API_URL}vote/${id}`,
+    formPayload,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Accept-Language": "en",
+        Accept: "application/json",
+      },
     }
+  );
+
+  const result = response.data;
+
+  if (result.message) {
+    switch (result.message) {
+      case "Minimum members voted cannot exceed total members count.":
+        toast.error("لا يمكن أن يكون الحد الأدنى للمصوتين أكبر من العدد الكلي للأعضاء");
+        break;
+      default:
+        toast.error(result.message);
+    }
+  } else {
+    toast.success("تم تعديل التصويت بنجاح");
+    navigate("/VotePageMain");
+  }
+} catch (error) {
+  // ✅ التعامل مع الخطأ القادم من السيرفر
+  const msg = error.response?.data?.message;
+  if (msg === "Minimum members voted cannot exceed total members count.") {
+    toast.error("لا يمكن أن يكون الحد الأدنى للمصوتين أكبر من العدد الكلي للأعضاء");
+  } else if (msg) {
+    toast.error(msg);
+  } else {
+    toast.error("فشل في تعديل التصويت");
+  }
+} finally {
+  setSubmitting(false);
+}
+
   };
 
   const handleDelete = async () => {

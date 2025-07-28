@@ -48,7 +48,7 @@ const handleSubmit = async (e) => {
         method: "POST",
         headers: {
           "Accept-Language": "en",
-           Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
 
         },
         body: formData,
@@ -119,12 +119,19 @@ const handleSubmit = async (e) => {
 
       navigate("/VotePageMain");
     } else {
-      if (result.msg) {
-        const messages = result.msg.split(" | ");
-        messages.forEach((m) => toast.error(m));
-      } else {
-        toast.error("حدث خطأ أثناء إنشاء التصويت");
-      }
+if (result.message) {
+  switch (result.message) {
+    case "Minimum members voted cannot exceed total members count":
+      toast.error("لا يمكن أن يكون الحد الأدنى للمصوتين أكبر من العدد الكلي للأعضاء");
+      break;
+    default:
+      toast.error(result.message);
+  }
+} else {
+  toast.error("حدث خطأ أثناء إنشاء التصويت");
+}
+
+
     }
   } catch (error) {
     toast.error("فشل الاتصال بالخادم");

@@ -24,6 +24,7 @@ const InputsVote = ({ title, setTitle, dscrp, setDscrp, file, setFile ,minMumber
     <label className="text-right w-full">أقل عدد للتصويت</label>
 <input
   type="number"
+  min={1}
   value={minMumbersVoted}
   onChange={(e) => setMinMumbersVoted(Number(e.target.value))}
   className="w-full p-2.5 border rounded-lg text-right"

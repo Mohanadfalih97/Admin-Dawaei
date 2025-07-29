@@ -54,6 +54,30 @@ const Sidbar = () => {
       >
         <LayoutDashboard /> لوحة التحكم
       </NavLink>
+        <NavLink
+        to="/Electoralcycles"
+        className={({ isActive }) =>
+          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
+            isActive
+              ? "bg-primary text-white shadow-lg"
+              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
+          }`
+        }
+      >
+        <CalendarDays /> الدورات الانتخابية
+      </NavLink>
+           <NavLink
+        to="/assign-members"
+        className={({ isActive }) =>
+          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
+            isActive
+              ? "bg-primary text-white shadow-lg"
+              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
+          }`
+        }
+      >
+        <ClipboardList /> إسناد الأعضاء
+      </NavLink>
 
       <NavLink
         to="/VotePageMain"
@@ -94,18 +118,7 @@ const Sidbar = () => {
         <Users /> الأعضاء
       </NavLink>
 
-      <NavLink
-        to="/Electoralcycles"
-        className={({ isActive }) =>
-          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
-            isActive
-              ? "bg-primary text-white shadow-lg"
-              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
-          }`
-        }
-      >
-        <CalendarDays /> الدورات الانتخابية
-      </NavLink>
+    
 
       <NavLink
         to="/UsersInfo"
@@ -146,18 +159,7 @@ const Sidbar = () => {
         <Building2 /> القطاعات
       </NavLink>
 
-      <NavLink
-        to="/assign-members"
-        className={({ isActive }) =>
-          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
-            isActive
-              ? "bg-primary text-white shadow-lg"
-              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
-          }`
-        }
-      >
-        <ClipboardList /> إسناد الأعضاء
-      </NavLink>
+ 
 
       <NavLink
         to={

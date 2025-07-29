@@ -105,13 +105,13 @@ const Topbar = () => {
           >
             {[
               { to: "/dashboard", icon: <LayoutDashboard />, label: "لوحة التحكم" },
+              { to: "/Electoralcycles", icon: <CalendarDays />, label: "الدورات الانتخابية" },
+              { to: "/assign-members", icon: <ClipboardList />, label: "إسناد الأعضاء" },
               { to: "/VotePageMain", icon: <Vote />, label: "التصويتات" },
               { to: "/reports", icon: <BarChart />, label: "التقارير" },
               { to: "/members", icon: <Users />, label: "الأعضاء" },
               { to: "/UsersInfo", icon: <UserCog />, label: "المستخدمين" },
-              { to: "/Electoralcycles", icon: <CalendarDays />, label: "الدورات الانتخابية" },
               { to: "/ElectionCycleDetails", icon: <CalendarDays />, label: "تفاصيل الدورات الانتخابية" },
-              { to: "/assign-members", icon: <ClipboardList />, label: "إسناد الأعضاء" },
               { to: "/Department", icon: <Building2 />, label: "القطاعات" },
               {
                 to: institution?.id

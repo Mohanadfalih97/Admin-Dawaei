@@ -6,13 +6,31 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Button } from "../Ui/Button";
 import { ScrollArea } from "../Ui/scroll-area";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "../Ui/table";
+import { format } from "date-fns"; // تأكد من أنك استوردت 'format' من 'date-fns'
+import { ar } from "date-fns/locale"; // استيراد اللغة العربية من 'date-fns/locale'
 
 const EditElectoralcycles = () => {
   const navigate = useNavigate();
-  const { id } = useParams(); // ✅ جلب ID من URL
+  const { id } = useParams(); // جلب ID من URL
   const location = useLocation();
   const { election: cycle } = location.state || {};
- // ✅ البيانات المرسلة من الجدول
+
+  // تعريف دالة formatDate
+  const formatDate = (date) => {
+    if (!date) return "—";
+    try {
+      const d = new Date(date);
+      const hours = d.getHours();
+      const minutes = d.getMinutes().toString().padStart(2, "0");
+      const ampm = hours >= 12 ? "مساءً" : "صباحًا";
+      const formattedTime = `${(hours % 12 || 12)}:${minutes} ${ampm}`;
+      const formattedDate = format(d, "EEEE، d MMMM yyyy", { locale: ar });
+
+      return `${formattedDate} في ${formattedTime}`;
+    } catch {
+      return "تاريخ غير صالح";
+    }
+  };
 
   const [form, setForm] = useState({
     dscrp: "",
@@ -22,17 +40,17 @@ const EditElectoralcycles = () => {
 
   const [loading, setLoading] = useState(false);
 
-  // ✅ تعبئة الحقول عند التحميل
+  // تعبئة الحقول عند التحميل
   useEffect(() => {
     if (cycle) {
       setForm({
         dscrp: cycle.dscrp || "",
-      startDate: cycle?.startDate
-    ? new Date(cycle.startDate).toISOString().slice(0, 16)
-    : "",
-  finishDate: cycle?.finishDate
-    ? new Date(cycle.finishDate).toISOString().slice(0, 16)
-    : ""
+        startDate: cycle?.startDate
+          ? new Date(cycle.startDate).toISOString().slice(0, 16)
+          : "",
+        finishDate: cycle?.finishDate
+          ? new Date(cycle.finishDate).toISOString().slice(0, 16)
+          : ""
       });
     }
   }, [cycle]);
@@ -63,7 +81,7 @@ const EditElectoralcycles = () => {
           headers: {
             "Accept-Language": "en",
             "Content-Type": "application/json",
-          Authorization: `Bearer ${Token}`,
+            Authorization: `Bearer ${Token}`,
           }
         }
       );
@@ -113,6 +131,10 @@ const EditElectoralcycles = () => {
                     onChange={handleChange}
                     className="w-full p-2 border rounded text-center"
                   />
+                  {/* عرض التاريخ المنسق أسفل الحقل */}
+                  <div className="text-sm text-gray-500 mt-1">
+                    {formatDate(form.startDate)} {/* عرض التاريخ بالتنسيق المحلي */}
+                  </div>
                 </TableCell>
               </TableRow>
 
@@ -126,6 +148,10 @@ const EditElectoralcycles = () => {
                     onChange={handleChange}
                     className="w-full p-2 border rounded text-center"
                   />
+                  {/* عرض التاريخ المنسق أسفل الحقل */}
+                  <div className="text-sm text-gray-500 mt-1">
+                    {formatDate(form.finishDate)} {/* عرض التاريخ بالتنسيق المحلي */}
+                  </div>
                 </TableCell>
               </TableRow>
             </TableBody>

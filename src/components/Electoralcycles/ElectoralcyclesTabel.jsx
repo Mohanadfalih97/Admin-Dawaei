@@ -17,14 +17,22 @@ const ElectionCyclesTable = ({ searchTerm }) => {
   const [deletingId, setDeletingId] = useState(null);
   const token = localStorage.getItem("token");
 
-  const formatDate = (date) => {
-    if (!date) return "—";
-    try {
-      return format(new Date(date), "EEEE، d MMMM yyyy 'في' hh:mm a", { locale: ar });
-    } catch {
-      return "تاريخ غير صالح";
-    }
-  };
+const formatDate = (date) => {
+  if (!date) return "—";
+  try {
+    const d = new Date(date);
+    const hours = d.getHours();
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "مساءً" : "صباحًا";
+    const formattedTime = `${(hours % 12 || 12)}:${minutes} ${ampm}`;
+    const formattedDate = format(d, "EEEE، d MMMM yyyy", { locale: ar });
+
+    return `${formattedDate} في ${formattedTime}`;
+  } catch {
+    return "تاريخ غير صالح";
+  }
+};
+
 
   useEffect(() => {
     const fetchElectionCycles = async () => {
@@ -162,7 +170,6 @@ const ElectionCyclesTable = ({ searchTerm }) => {
             <th className="px-4 py-2 border text-center">الوصف</th>
             <th className="px-4 py-2 border text-center">تاريخ البدء</th>
             <th className="px-4 py-2 border text-center">تاريخ الانتهاء</th>
-            <th className="px-4 py-2 border text-center">تاريخ الإنشاء</th>
             <th className="px-4 py-2 border text-center">الحالة</th>
             <th className="px-4 py-2 border text-center">تعديل</th>
             <th className="px-4 py-2 border text-center">حذف</th>
@@ -184,7 +191,6 @@ const ElectionCyclesTable = ({ searchTerm }) => {
                 <td className="px-4 py-2 border text-center text-gray-700">{e.dscrp || "بدون وصف"}</td>
                 <td className="px-4 py-2 border text-center text-gray-700">{formatDate(e.startDate)}</td>
                 <td className="px-4 py-2 border text-center text-gray-700">{formatDate(e.finishDate)}</td>
-                <td className="px-4 py-2 border text-center text-gray-700">{formatDate(e.createdAt)}</td>
                 <td className="px-4 py-2 border text-center text-gray-700">
                   <label className="flex items-center gap-2 justify-center">
                     <input

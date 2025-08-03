@@ -41,6 +41,8 @@ jobs:
 
       - name: Deploy to Linux server via rsync
         run: |
+          DATE_FOLDER=${{ steps.set_date.outputs.date }}
+          echo "Deploying to server in directory: $DATE_FOLDER"
           sshpass -p "${{ secrets.SSH_PASSWORD }}" rsync -avz --no-links --exclude '*.git' \
           build/ ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/var/www/node.js/vote-admin/$DATE_FOLDER/
 

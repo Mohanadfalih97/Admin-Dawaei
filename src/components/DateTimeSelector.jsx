@@ -26,19 +26,7 @@ const arabicWeekDays = {
   Sunday: "الأحد",
 };
 
-const formatDate = (datetime) => {
-  if (!datetime) return "—";
-  try {
-    const dt = DateTime.fromISO(datetime, { zone: "utc" }).setZone("Asia/Baghdad");
-    const englishMonth = dt.toFormat("LLLL");
-    const arabicMonth = arabicMonthNames[englishMonth] || englishMonth;
-    const arabicDay = arabicWeekDays[dt.toFormat("EEEE")] || dt.toFormat("EEEE");
-    const formatted = dt.toFormat(`d '${arabicMonth}' yyyy - hh:mm a`);
-    return `${arabicDay} ${formatted} (بغداد)`;
-  } catch {
-    return "تاريخ غير صالح";
-  }
-};
+
 
 const DateTimeSelector = ({
   startDate,
@@ -50,8 +38,7 @@ const DateTimeSelector = ({
   finishTime,
   setFinishTime,
 }) => {
-  const combinedStart = startDate && startTime ? `${startDate}T${startTime}` : null;
-  const combinedFinish = finishDate && finishTime ? `${finishDate}T${finishTime}` : null;
+
 
   return (
     <section className="grid grid-cols-2 gap-4 w-full" dir="rtl">

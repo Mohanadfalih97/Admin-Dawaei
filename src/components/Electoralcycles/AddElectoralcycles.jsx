@@ -38,16 +38,18 @@ const ElectoralCycleForm = () => {
   const [loading, setLoading] = useState(false);
 
   // ✅ إذا كنا نعدل دورة موجودة، نملأ النموذج بتواريخ محسوبة
-  useEffect(() => {
-    const existing = location.state?.election;
-    if (existing) {
-      setForm({
-        dscrp: existing.dscrp || "",
-        startDate: convertUtcToLocalDatetimeInput(existing.startDate),
-        finishDate: convertUtcToLocalDatetimeInput(existing.finishDate),
-      });
-    }
-  }, []);
+const election = location.state?.election;
+
+useEffect(() => {
+  if (election) {
+    setForm({
+      dscrp: election.dscrp || "",
+      startDate: convertUtcToLocalDatetimeInput(election.startDate),
+      finishDate: convertUtcToLocalDatetimeInput(election.finishDate),
+    });
+  }
+}, [election]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;

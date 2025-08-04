@@ -25,7 +25,6 @@ const EditVote = () => {
   const [cycleId, setCycleId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
   const [voteOptions, setVoteOptions] = useState([]);
   const [cycles, setCycles] = useState([]);
 
@@ -153,7 +152,6 @@ useEffect(() => {
 
   const handleUpdateOption = async (optionId, updatedDescription) => {
     try {
-      setIsUpdating(true);
       await axios.put(`${process.env.REACT_APP_API_URL}vote-options/${optionId}`, {
         voteId: id,
         voteDscrp: updatedDescription,
@@ -167,9 +165,7 @@ useEffect(() => {
       toast.success("تم تحديث الخيار");
     } catch {
       toast.error("فشل في تحديث الخيار");
-    } finally {
-      setIsUpdating(false);
-    }
+    } finally {    }
   };
 
 const handleSubmit = async (e) => {
@@ -240,7 +236,7 @@ const handleSubmit = async (e) => {
         Accept: "application/json",
       },
     });
-
+console.log("تعديل التصويت:", response.data);
     toast.success("تم تعديل التصويت بنجاح");
     navigate("/VotePageMain");
   } catch (error) {
@@ -254,6 +250,7 @@ const handleSubmit = async (e) => {
     setSubmitting(false);
   }
 };
+
 
 
   const handleDelete = async () => {

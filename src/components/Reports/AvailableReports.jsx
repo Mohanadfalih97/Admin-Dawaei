@@ -72,31 +72,33 @@ const AvailableReports = () => {
   const [selectedCycleId, setSelectedCycleId] = useState("");
 
   // ✅ تحميل الدورات الانتخابية عند فتح الصفحة
-  useEffect(() => {
-    const fetchCycles = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}elections-cycles`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Accept-Language": "ar",
-          },
-        });
+useEffect(() => {
+  const fetchCycles = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}elections-cycles`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Accept-Language": "ar",
+        },
+      });
 
-        const items = res.data?.data?.items || [];
-        setElectionCycles(items);
+      const items = res.data?.data?.items || [];
+      setElectionCycles(items);
 
-        // ✅ اختيار أول دورة تلقائياً إذا موجودة
-        if (items.length > 0) {
-          setSelectedCycleId(items[0].id);
-        }
-      } catch (err) {
-        console.error("Error fetching election cycles:", err);
+      // ✅ اختيار أول دورة نشطة تلقائياً
+      const activeCycle = items.find((cycle) => cycle.voteActveStatus === 1);
+      if (activeCycle) {
+        setSelectedCycleId(activeCycle.id);
       }
-    };
+    } catch (err) {
+      console.error("Error fetching election cycles:", err);
+    }
+  };
 
-    fetchCycles();
-  }, []);
+  fetchCycles();
+}, []);
+
 
   // ✅ تحميل التصويتات عند اختيار دورة أو تغيير الصفحة
   const { data, isLoading, isError } = useQuery({

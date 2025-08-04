@@ -1,59 +1,78 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 import { Button } from "../Ui/Button";
 import { ScrollArea } from "../Ui/scroll-area";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "../Ui/table";
-import { format } from "date-fns"; // تأكد من أنك استوردت 'format' من 'date-fns'
-import { ar } from "date-fns/locale"; // استيراد اللغة العربية من 'date-fns/locale'
+import { DateTime } from "luxon";
 
 const EditElectoralcycles = () => {
   const navigate = useNavigate();
-  const { id } = useParams(); // جلب ID من URL
+  const { id } = useParams();
   const location = useLocation();
   const { election: cycle } = location.state || {};
 
-  // تعريف دالة formatDate
-  const formatDate = (date) => {
-    if (!date) return "—";
-    try {
-      const d = new Date(date);
-      const hours = d.getHours();
-      const minutes = d.getMinutes().toString().padStart(2, "0");
-      const ampm = hours >= 12 ? "مساءً" : "صباحًا";
-      const formattedTime = `${(hours % 12 || 12)}:${minutes} ${ampm}`;
-      const formattedDate = format(d, "EEEE، d MMMM yyyy", { locale: ar });
-
-      return `${formattedDate} في ${formattedTime}`;
-    } catch {
-      return "تاريخ غير صالح";
-    }
+  const arabicMonthNames = {
+    January: "كانون الثاني",
+    February: "شباط",
+    March: "آذار",
+    April: "نيسان",
+    May: "أيار",
+    June: "حزيران",
+    July: "تموز",
+    August: "آب",
+    September: "أيلول",
+    October: "تشرين الأول",
+    November: "تشرين الثاني",
+    December: "كانون الأول"
   };
 
   const [form, setForm] = useState({
     dscrp: "",
     startDate: "",
-    finishDate: ""
+    startTime: "",
+    finishDate: "",
+    finishTime: "",
   });
 
   const [loading, setLoading] = useState(false);
 
-  // تعبئة الحقول عند التحميل
-  useEffect(() => {
-    if (cycle) {
-      setForm({
-        dscrp: cycle.dscrp || "",
-        startDate: cycle?.startDate
-          ? new Date(cycle.startDate).toISOString().slice(0, 16)
-          : "",
-        finishDate: cycle?.finishDate
-          ? new Date(cycle.finishDate).toISOString().slice(0, 16)
-          : ""
-      });
+  // ✅ دالة تنسيق الوقت لتوقيت بغداد بصيغة عربية
+  const formatDate = (datetime) => {
+    if (!datetime) return "—";
+
+    try {
+      const utcTime = DateTime.fromISO(datetime, { zone: "utc" });
+      const baghdadTime = utcTime.setZone("Asia/Baghdad").setLocale("ar");
+
+      const englishMonth = baghdadTime.toFormat("LLLL");
+      const arabicMonth = arabicMonthNames[englishMonth] || englishMonth;
+
+      const formatted = baghdadTime.toFormat(`cccc d '${arabicMonth}' yyyy، hh:mm a`);
+
+      return `${formatted} (بتوقيت بغداد)`;
+    } catch {
+      return "تاريخ غير صالح";
     }
-  }, [cycle]);
+  };
+
+useEffect(() => {
+  if (cycle) {
+    const start = DateTime.fromISO(cycle.startDate, { zone: "utc" }).setZone("Asia/Baghdad");
+    const finish = DateTime.fromISO(cycle.finishDate, { zone: "utc" }).setZone("Asia/Baghdad");
+
+    setForm({
+      dscrp: cycle.dscrp || "",
+      startDate: start.toFormat("yyyy-MM-dd"),
+      startTime: start.toFormat("HH:mm"),
+      finishDate: finish.toFormat("yyyy-MM-dd"),
+      finishTime: finish.toFormat("HH:mm"),
+    });
+  }
+}, [cycle]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,7 +80,7 @@ const EditElectoralcycles = () => {
   };
 
   const handleUpdate = async () => {
-    if (!form.dscrp || !form.startDate || !form.finishDate) {
+    if (!form.dscrp || !form.startDate || !form.startTime || !form.finishDate || !form.finishTime) {
       toast.error("يرجى ملء جميع الحقول");
       return;
     }
@@ -70,19 +89,32 @@ const EditElectoralcycles = () => {
 
     try {
       const Token = localStorage.getItem("token");
+
+      const start = DateTime.fromFormat(
+        `${form.startDate} ${form.startTime}`,
+        "yyyy-MM-dd HH:mm",
+        { zone: "Asia/Baghdad" }
+      ).toUTC().toISO();
+
+      const finish = DateTime.fromFormat(
+        `${form.finishDate} ${form.finishTime}`,
+        "yyyy-MM-dd HH:mm",
+        { zone: "Asia/Baghdad" }
+      ).toUTC().toISO();
+
       const response = await axios.put(
         `${process.env.REACT_APP_API_URL}elections-cycles/${id}`,
         {
           dscrp: form.dscrp,
-          startDate: new Date(form.startDate).toISOString(),
-          finishDate: new Date(form.finishDate).toISOString()
+          startDate: start,
+          finishDate: finish,
         },
         {
           headers: {
             "Accept-Language": "en",
             "Content-Type": "application/json",
             Authorization: `Bearer ${Token}`,
-          }
+          },
         }
       );
 
@@ -92,7 +124,30 @@ const EditElectoralcycles = () => {
       }
     } catch (err) {
       console.error("Error updating cycle:", err);
-      toast.error("حدث خطأ أثناء التحديث!");
+      const msg = err.response?.data?.msg;
+      let errorMessage = "حدث خطأ أثناء التحديث!";
+
+      switch (msg) {
+        case "Finish date cannot be before start date.":
+          errorMessage = "تاريخ الانتهاء لا يمكن أن يكون قبل تاريخ البداية.";
+          break;
+        case "The new election cycle must start after the previous one finishes":
+          errorMessage = "يجب أن تبدأ الدورة الجديدة بعد انتهاء الدورة السابقة.";
+          break;
+        case "Updated start date must be after the last cycle finishes":
+          errorMessage = "يجب أن يكون تاريخ بدء الدورة المعدّلة بعد انتهاء الدورة السابقة.";
+          break;
+        default:
+          if (
+            msg?.startsWith("Cannot create a new election cycle until the previous one finishes on")
+          ) {
+            const datePart = msg.split("on")[1]?.trim();
+            errorMessage = `لا يمكن إنشاء دورة جديدة حتى تنتهي الدورة السابقة في ${datePart}.`;
+          }
+          break;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -124,16 +179,32 @@ const EditElectoralcycles = () => {
               <TableRow>
                 <TableCell className="font-medium">تاريخ البداية</TableCell>
                 <TableCell>
-                  <input
-                    type="datetime-local"
-                    name="startDate"
-                    value={form.startDate}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded text-center"
-                  />
-                  {/* عرض التاريخ المنسق أسفل الحقل */}
-                  <div className="text-sm text-gray-500 mt-1">
-                    {formatDate(form.startDate)} {/* عرض التاريخ بالتنسيق المحلي */}
+                  <div className="flex flex-row gap-1">
+                    <input
+                      type="time"
+                      name="startTime"
+                      value={form.startTime}
+                      onChange={handleChange}
+                      className="w-60 p-2 border rounded text-center"
+                    />
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={form.startDate}
+                      onChange={handleChange}
+                      className="w-full p-2 border rounded text-center"
+                    />
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1 text-end">
+                    {
+                      formatDate(
+                        DateTime.fromFormat(
+                          `${form.startDate} ${form.startTime}`,
+                          "yyyy-MM-dd HH:mm",
+                          { zone: "Asia/Baghdad" }
+                        ).toUTC().toISO()
+                      )
+                    }
                   </div>
                 </TableCell>
               </TableRow>
@@ -141,16 +212,32 @@ const EditElectoralcycles = () => {
               <TableRow>
                 <TableCell className="font-medium">تاريخ الانتهاء</TableCell>
                 <TableCell>
-                  <input
-                    type="datetime-local"
-                    name="finishDate"
-                    value={form.finishDate}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded text-center"
-                  />
-                  {/* عرض التاريخ المنسق أسفل الحقل */}
-                  <div className="text-sm text-gray-500 mt-1">
-                    {formatDate(form.finishDate)} {/* عرض التاريخ بالتنسيق المحلي */}
+                  <div className="flex flex-row gap-1">
+                    <input
+                      type="time"
+                      name="finishTime"
+                      value={form.finishTime}
+                      onChange={handleChange}
+                      className="w-60 p-2 border rounded text-center"
+                    />
+                    <input
+                      type="date"
+                      name="finishDate"
+                      value={form.finishDate}
+                      onChange={handleChange}
+                      className="w-full p-2 border rounded text-center"
+                    />
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1 text-end">
+                    {
+                      formatDate(
+                        DateTime.fromFormat(
+                          `${form.finishDate} ${form.finishTime}`,
+                          "yyyy-MM-dd HH:mm",
+                          { zone: "Asia/Baghdad" }
+                        ).toUTC().toISO()
+                      )
+                    }
                   </div>
                 </TableCell>
               </TableRow>

@@ -12,68 +12,70 @@ const AssignMembersToElection = () => {
   const [electionCycles, setElectionCycles] = useState([]);
   const [selectedCycleId, setSelectedCycleId] = useState("");
   const [changes, setChanges] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1); // الصفحة الحالية
-  const [totalPages, setTotalPages] = useState(1); // عدد الصفحات الكلي
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
 
-
   useEffect(() => {
- const fetchMembers = async () => {
-  try {
-    setLoading(true);
-    const token = localStorage.getItem("token"); // ✅ اجلب التوكن من localStorage
+    const fetchMembers = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
 
-    const response = await axios.get(`${process.env.REACT_APP_API_URL}members`, {
-      params: {
-        pageNumber: currentPage,
-        pageSize: 10,
-      },
-      headers: {
-        Authorization: `Bearer ${token}`, // ✅ أضف التوكن هنا
-        Accept: "application/json",
-        "Accept-Language": "ar",
-      },
-    });
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}members`, {
+          params: { pageNumber: currentPage, pageSize: 10 },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+            "Accept-Language": "ar",
+          },
+        });
 
-    const items = response.data.data.items || [];
-    setMembers(items);
-    setTotalPages(response.data.data.totalPages);
+        const items = response.data.data.items || [];
+        setMembers(items);
+        setTotalPages(response.data.data.totalPages);
 
-    const assigned = items
-      .filter((member) => member.cycleId && member.cycleId !== 0)
-      .map((member) => member.id);
+        const assigned = items
+          .filter((member) => member.cycleId && member.cycleId !== 0)
+          .map((member) => member.id);
 
-    setSelectedMembers(assigned);
-  } catch (error) {
-    console.error("حدث خطأ أثناء جلب الأعضاء:", error);
-    toast.error("فشل في تحميل قائمة الأعضاء");
-  } finally {
-    setLoading(false);
-  }
-};
+        setSelectedMembers(assigned);
+      } catch (error) {
+        console.error("حدث خطأ أثناء جلب الأعضاء:", error);
+        toast.error("فشل في تحميل قائمة الأعضاء");
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchMembers();
-  }, [currentPage]); // التحديث عند تغيير رقم الصفحة
+  }, [currentPage]);
 
   useEffect(() => {
-const fetchCycles = async () => {
-  try {
-    const token = localStorage.getItem("token"); // ✅
-    const response = await axios.get(`${process.env.REACT_APP_API_URL}elections-cycles`, {
-      headers: {
-        Authorization: `Bearer ${token}`, // ✅
-        Accept: "application/json",
-        "Accept-Language": "ar",
-      },
-    });
-    setElectionCycles(response.data.data.items || []);
-  } catch (error) {
-    console.error("فشل في تحميل الدورات:", error);
-    toast.error("حدث خطأ أثناء جلب الدورات الانتخابية");
-  }
-};
+    const fetchCycles = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}elections-cycles`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+            "Accept-Language": "ar",
+          },
+        });
 
+        const cycles = response.data.data.items || [];
+        setElectionCycles(cycles);
+
+        const activeCycle = cycles.find((c) => c.voteActveStatus === 1);
+        if (activeCycle) {
+          setSelectedCycleId(activeCycle.id.toString());
+        }
+      } catch (error) {
+        console.error("فشل في تحميل الدورات:", error);
+        toast.error("حدث خطأ أثناء جلب الدورات الانتخابية");
+      }
+    };
 
     fetchCycles();
   }, []);
@@ -90,70 +92,63 @@ const fetchCycles = async () => {
       .map((member) => member.id);
 
     setSelectedMembers(membersInCycle);
-    setChanges([]); // لتفريغ التغييرات عند تغيير الدورة
+    setChanges([]);
   }, [selectedCycleId, members]);
 
   const toggleSelectMember = (memberId) => {
-    setChanges((prevChanges) => {
-      const isSelected = prevChanges.includes(memberId);
-      if (isSelected) {
-        return prevChanges.filter((id) => id !== memberId);
-      } else {
-        return [...prevChanges, memberId];
-      }
-    });
+    setChanges((prev) =>
+      prev.includes(memberId)
+        ? prev.filter((id) => id !== memberId)
+        : [...prev, memberId]
+    );
 
-    setSelectedMembers((prevSelected) => {
-      if (prevSelected.includes(memberId)) {
-        return prevSelected.filter((id) => id !== memberId);
-      } else {
-        return [...prevSelected, memberId];
-      }
-    });
+    setSelectedMembers((prev) =>
+      prev.includes(memberId)
+        ? prev.filter((id) => id !== memberId)
+        : [...prev, memberId]
+    );
   };
 
-const saveChanges = async () => {
-  if (!selectedCycleId) {
-    toast.warning("يرجى اختيار دورة انتخابية أولاً.");
-    return;
-  }
-
-  const token = localStorage.getItem("token");
-  setSaving(true); // ✅ بدأ الحفظ
-
-  try {
-    for (const memberId of changes) {
-      const member = members.find((m) => m.id === memberId);
-      if (!member) continue;
-
-      const updatedMember = {
-        ...member,
-        cycleId: parseInt(selectedCycleId),
-      };
-
-      await axios.put(`${process.env.REACT_APP_API_URL}members/${memberId}`, updatedMember, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-          "Accept-Language": "ar",
-        },
-      });
+  const saveChanges = async () => {
+    if (!selectedCycleId) {
+      toast.warning("يرجى اختيار دورة انتخابية أولاً.");
+      return;
     }
 
-    toast.success("تم حفظ التغييرات بنجاح.");
-    setChanges([]);
-    navigate("/assign-members");
-  } catch (error) {
-    console.error("خطأ أثناء التحديث:", error);
-    toast.error("فشل في تحديث بيانات الأعضاء.");
-  } finally {
-    setSaving(false); // ✅ انتهى الحفظ
-  }
-};
+    const token = localStorage.getItem("token");
+    setSaving(true);
 
+    try {
+      for (const memberId of changes) {
+        const member = members.find((m) => m.id === memberId);
+        if (!member) continue;
 
+        const isSelected = selectedMembers.includes(memberId);
+        const updatedMember = {
+          ...member,
+          cycleId: isSelected ? parseInt(selectedCycleId) : null,
+        };
 
-  // التحكم في التنقل بين الصفحات
+        await axios.put(`${process.env.REACT_APP_API_URL}members/${memberId}`, updatedMember, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+            "Accept-Language": "ar",
+          },
+        });
+      }
+
+      toast.success("تم حفظ التغييرات بنجاح.");
+      setChanges([]);
+      navigate("/assign-members");
+    } catch (error) {
+      console.error("خطأ أثناء التحديث:", error);
+      toast.error("فشل في تحديث بيانات الأعضاء.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const goToPage = (page) => {
     if (page > 0 && page <= totalPages) {
       setCurrentPage(page);
@@ -220,6 +215,7 @@ const saveChanges = async () => {
                     checked={selectedMembers.includes(member.id)}
                     onChange={() => toggleSelectMember(member.id)}
                     className="w-5 h-5"
+                    disabled={!selectedCycleId}
                   />
                 </td>
               </tr>
@@ -229,15 +225,14 @@ const saveChanges = async () => {
       </table>
 
       <div className="text-center mt-6 flex">
-<button
-  onClick={saveChanges}
-  disabled={loading || saving} // ✅ منع الضغط أثناء الحفظ أو التحميل
-  className={`w-3/12 text-white rounded py-2 transition
-    ${loading || saving ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary-dark"}`}
->
-  {saving ? "جارٍ الحفظ..." : "حفظ التغييرات"}
-</button>
-
+        <button
+          onClick={saveChanges}
+          disabled={loading || saving}
+          className={`w-3/12 text-white rounded py-2 transition
+            ${loading || saving ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary-dark"}`}
+        >
+          {saving ? "جارٍ الحفظ..." : "حفظ التغييرات"}
+        </button>
       </div>
 
       {totalPages > 1 && (

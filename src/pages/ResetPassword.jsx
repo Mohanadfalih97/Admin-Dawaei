@@ -50,6 +50,8 @@ const ResetPassword = () => {
           "Content-Type": "application/json",
           Accept: "application/json",
           "Accept-Language": "en",
+                      Authorization: `Bearer ${localStorage.getItem("token")}`,
+
         },
         body: JSON.stringify({ newPassword }),
       });

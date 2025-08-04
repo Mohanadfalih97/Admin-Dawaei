@@ -61,11 +61,17 @@ const InputsVote = ({ title, setTitle, dscrp, setDscrp, file, setFile ,minMumber
           accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
         />
         {/* ✅ عرض اسم الملف المختار */}
-        {file && (
-          <p className="text-sm text-gray-600 text-right mt-1">
-            الملف المختار: <span className="font-medium">{file.name}</span>
-          </p>
-        )}
+   {file && (
+  <p className="text-sm text-gray-600 text-right mt-1">
+    الملف المختار:{" "}
+    <span className="font-medium">
+      {file.name.length > 30
+        ? `${file.name.slice(0, 15)}...${file.name.slice(-10)}`
+        : file.name}
+    </span>
+  </p>
+)}
+
         <p className="text-xs font-normal text-gray-500 text-right">
           يمكنك رفع ملفات PDF، Word، Excel أو صور. الحد الأقصى 5 ميجابايت
         </p>

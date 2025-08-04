@@ -1,14 +1,33 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import { DateTime } from "luxon";
 import { Button } from "../Ui/Button";
 import { ScrollArea } from "../Ui/scroll-area";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "../Ui/table";
 
+// ✅ تحويل datetime-local (بتوقيت بغداد) إلى UTC ISO
+const convertToBaghdadISOString = (datetimeLocalString) => {
+  return DateTime
+    .fromFormat(datetimeLocalString, "yyyy-MM-dd'T'HH:mm", { zone: "Asia/Baghdad" })
+    .toUTC()
+    .toISO();
+};
+
+// ✅ تحويل UTC ISO إلى datetime-local بتوقيت بغداد لعرضه في input
+const convertUtcToLocalDatetimeInput = (utcDateString) => {
+  if (!utcDateString) return "";
+  return DateTime
+    .fromISO(utcDateString, { zone: 'utc' })
+    .setZone("Asia/Baghdad")
+    .toFormat("yyyy-MM-dd'T'HH:mm");
+};
+
 const ElectoralCycleForm = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [form, setForm] = useState({
     dscrp: "",
@@ -17,6 +36,18 @@ const ElectoralCycleForm = () => {
   });
 
   const [loading, setLoading] = useState(false);
+
+  // ✅ إذا كنا نعدل دورة موجودة، نملأ النموذج بتواريخ محسوبة
+  useEffect(() => {
+    const existing = location.state?.election;
+    if (existing) {
+      setForm({
+        dscrp: existing.dscrp || "",
+        startDate: convertUtcToLocalDatetimeInput(existing.startDate),
+        finishDate: convertUtcToLocalDatetimeInput(existing.finishDate),
+      });
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,8 +70,8 @@ const ElectoralCycleForm = () => {
         `${process.env.REACT_APP_API_URL}elections-cycles`,
         {
           dscrp: form.dscrp,
-          startDate: new Date(form.startDate).toISOString(),
-          finishDate: new Date(form.finishDate).toISOString()
+          startDate: convertToBaghdadISOString(form.startDate),
+          finishDate: convertToBaghdadISOString(form.finishDate),
         },
         {
           headers: {
@@ -61,29 +92,43 @@ const ElectoralCycleForm = () => {
         setTimeout(() => navigate("/Electoralcycles"), 1000);
       }
     } catch (err) {
-      console.error("Error creating electoral cycle:", err);
-      const msg = err.response?.data?.msg;
+  console.error("Error creating electoral cycle:", err);
+  const msg = err.response?.data?.msg;
+  let errorMessage = "حدث خطأ أثناء إنشاء الدورة!";
 
-      if (msg === "Cannot create a new election cycle while another one is still ongoing.") {
-        toast.update(toastId, {
-          render: "لا يمكن إنشاء دورة جديدة بينما توجد دورة مستمرة.",
-          type: "error",
-          isLoading: false,
-        });
-      } else if (msg === "Cannot create a new election cycle while another one is still marked as active.") {
-        toast.update(toastId, {
-          render: "لا يمكن إنشاء دورة جديدة بينما توجد دورة نشطة حاليًا.",
-          type: "error",
-          isLoading: false,
-        });
-      } else {
-        toast.update(toastId, {
-          render: "حدث خطأ أثناء إنشاء الدورة!",
-          type: "error",
-          isLoading: false,
-        });
+  switch (msg) {
+    case "Cannot create a new election cycle while another one is still ongoing.":
+      errorMessage = "لا يمكن إنشاء دورة جديدة بينما توجد دورة مستمرة.";
+      break;
+    case "Cannot create a new election cycle while another one is still marked as active.":
+      errorMessage = "لا يمكن إنشاء دورة جديدة بينما توجد دورة نشطة حاليًا.";
+      break;
+    case "Finish date cannot be before start date.":
+      errorMessage = "تاريخ الانتهاء لا يمكن أن يكون قبل تاريخ البداية.";
+      break;
+    case "The new election cycle must start after the previous one finishes":
+      errorMessage = "يجب أن تبدأ الدورة الجديدة بعد انتهاء الدورة السابقة.";
+      break;
+    case "Updated start date must be after the last cycle finishes":
+      errorMessage = "يجب أن يكون تاريخ بدء الدورة المعدّلة بعد انتهاء الدورة السابقة.";
+      break;
+    default:
+      // ✅ حالات تحتوي على تواريخ
+      if (msg?.startsWith("Cannot create a new election cycle until the previous one finishes on")) {
+       
+        errorMessage = `لا يمكن إنشاء دورة جديدة حتى تنتهي الدورة السابقة في نفس هذا التاريخ`;
       }
-    } finally {
+      break;
+  }
+
+  toast.update(toastId, {
+    render: errorMessage,
+    type: "error",
+    isLoading: false,
+    autoClose: 3000,
+  });
+}
+finally {
       setLoading(false);
     }
   };

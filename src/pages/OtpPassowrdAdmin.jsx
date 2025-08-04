@@ -2,14 +2,14 @@ import React, { useState } from "react";
 import { Home, MailCheck, ShieldCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Alert, AlertTitle, AlertDescription } from "../components/Ui/Alert";
-import OtpInput from "react-otp-input";
-
+import OtpInputManual from "../components/Ui/OtpInputManual"; 
 const ResetPasswordStepper = () => {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
+
 
   const handleSendEmail = async (e) => {
     e.preventDefault();
@@ -21,14 +21,12 @@ const ResetPasswordStepper = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
 
       const response = await fetch(`${process.env.REACT_APP_API_URL}otp/send`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept-Language": "ar",
-          Authorization: `Bearer ${token}`,
 
         },
         body: JSON.stringify({ email }),
@@ -59,14 +57,12 @@ const ResetPasswordStepper = () => {
     }
 
     try {
-        const token = localStorage.getItem("token");
 
       const response = await fetch(`${process.env.REACT_APP_API_URL}otp/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept-Language": "ar",
-          Authorization: `Bearer ${token}`,
 
         },
         body: JSON.stringify({ email: storedEmail, otpCode }),
@@ -132,22 +128,11 @@ const ResetPasswordStepper = () => {
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <p className="text-sm text-gray-600 mb-2">أدخل رمز التحقق المرسل إلى بريدك الإلكتروني</p>
             <div className="flex justify-center">
-              <OtpInput
-                value={otpCode}
-                onChange={setOtpCode}
-                numInputs={6}
-                isInputNum
-                shouldAutoFocus
-                containerStyle={{ direction: "ltr", gap: "0.5rem" }}
-                inputStyle={{
-                  width: "3rem",
-                  height: "3rem",
-                  fontSize: "1.5rem",
-                  borderRadius: "0.375rem",
-                  border: "1px solid #cbd5e0",
-                  textAlign: "center",
-                }}
-              />
+<OtpInputManual
+  length={6}
+  onChange={(val) => setOtpCode(val)}
+/>
+
             </div>
             <button type="submit" className="w-full bg-blue-800 text-white py-2 rounded hover:bg-blue-900 transition">
               تحقق من الرمز

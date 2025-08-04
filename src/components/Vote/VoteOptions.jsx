@@ -32,22 +32,27 @@ useEffect(() => {
       <div className="flex flex-row items-end gap-2 border p-4 rounded-md">
         <div className="w-full flex flex-col gap-3">
           <label className="text-right w-full">الدورة الانتخابية</label>
-        <select
+<select
   className="w-full p-2.5 border rounded-lg"
   style={{ direction: "rtl" }}
-  value={cycleId}
-  onChange={(e) => setCycleId(Number(e.target.value))}
+  value={cycleId || ""}
+  onChange={(e) => {
+    const value = e.target.value;
+    if (value === "") {
+      setCycleId(""); // لا يتم اختيار شيء
+    } else {
+      setCycleId(Number(value)); // يتم اختيار دورة فعليًا
+    }
+  }}
 >
-  {cycles.length === 0 ? (
-    <option value="">لا توجد دورات انتخابية نشطة</option>
-  ) : (
-    cycles.map((cycle) => (
-      <option key={cycle.id} value={cycle.id}>
-        {cycle.dscrp}
-      </option>
-    ))
-  )}
+  <option value="">اختر دورة انتخابية</option>
+  {cycles.map((cycle) => (
+    <option key={cycle.id} value={cycle.id}>
+      {cycle.dscrp}
+    </option>
+  ))}
 </select>
+
 
         </div>
 

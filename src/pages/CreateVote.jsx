@@ -10,15 +10,17 @@ const CreateVote = () => {
   const [voteTitle, setTitle] = useState("");
   const [dscrp, setDscrp] = useState("");
   const [file, setFile] = useState(null);
-  const [startDate, setStartDate] = useState("");
-  const [finishDate, setFinishDate] = useState("");
+
   const [minMumbersVoted, setMinMumbersVoted] = useState("");
   const [voteActveStatus, setVoteActveStatus] = useState(0);
   const [options, setOptions] = useState(["", ""]); // خيارات التصويت
   const [loading, setLoading] = useState(false);
   const [cycleId, setCycleId] = useState("");
-
-  const navigate = useNavigate();
+const [startDate, setStartDate] = useState("");
+const [startTime, setStartTime] = useState("");
+const [finishDate, setFinishDate] = useState("");
+const [finishTime, setFinishTime] = useState("");
+ const navigate = useNavigate();
 const onAddOption = () => setOptions([...options, ""]);
 const onOptionChange = (index, value) => {
   const updated = [...options];
@@ -35,9 +37,13 @@ const onRemoveOption = (index) => {
 const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
-
+  // 🔴 التحقق من الدورة الانتخابية
+  if (!cycleId || cycleId === "") {
+    toast.error("لا يمكن تعديل التصويت. لا توجد دورة انتخابية نشطة.");
+     setLoading(false);
+    return;
+  }
   let uploadedFileUrl = "string";
-
   try {
     // 1️⃣ رفع المرفق أولاً إذا كان موجودًا
     if (file) {
@@ -64,15 +70,22 @@ const handleSubmit = async (e) => {
 
       uploadedFileUrl = uploadResult.data;
     }
+const DateTime = require("luxon").DateTime;
+const fullStartDate = DateTime.fromFormat(`${startDate} ${startTime}`, "yyyy-MM-dd HH:mm", {
+  zone: "Asia/Baghdad"
+}).toUTC().toISO();
 
+const fullFinishDate = DateTime.fromFormat(`${finishDate} ${finishTime}`, "yyyy-MM-dd HH:mm", {
+  zone: "Asia/Baghdad"
+}).toUTC().toISO();
     // 2️⃣ إعداد البيانات لإرسال التصويت
     const payload = {
       voteTitle,
       dscrp,
       minMumbersVoted,
-      creationDate: new Date().toISOString(),
-      startDate,
-      finishDate,
+     creationDate: new Date().toISOString(),
+  startDate: fullStartDate,
+  finishDate: fullFinishDate,
       docUrl: uploadedFileUrl,
       voteInfo: 0,
       voteActveStatus,
@@ -162,10 +175,14 @@ if (result.message) {
         />
 
         <DateTimeSelector
-          startDate={startDate}
-          setStartDate={setStartDate}
-          finishDate={finishDate}
-          setFinishDate={setFinishDate}
+       startDate={startDate}
+  setStartDate={setStartDate}
+  startTime={startTime}
+  setStartTime={setStartTime}
+  finishDate={finishDate}
+  setFinishDate={setFinishDate}
+  finishTime={finishTime}
+  setFinishTime={setFinishTime}
         />
 
         <VoteOptions

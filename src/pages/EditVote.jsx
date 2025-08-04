@@ -5,6 +5,7 @@ import InputsVote from "../components/Vote/InputsVote";
 import DateTimeSelector from "../components/DateTimeSelector";
 import { toast } from "react-toastify";
 import VoteOptions from "../components/Vote/VoteOptions";
+import { DateTime } from "luxon";
 
 const EditVote = () => {
   const { id } = useParams();
@@ -16,7 +17,9 @@ const EditVote = () => {
   const [dscrp, setDscrp] = useState("");
   const [file, setFile] = useState(null);
   const [startDate, setStartDate] = useState("");
+  const [startTime, setStartTime] = useState("");
   const [finishDate, setFinishDate] = useState("");
+  const [finishTime, setFinishTime] = useState("");
   const [minMumbersVoted, setMinMumbersVoted] = useState(0);
   const [voteActveStatus, setVoteActveStatus] = useState(0);
   const [cycleId, setCycleId] = useState("");
@@ -28,62 +31,78 @@ const EditVote = () => {
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        if (voteData) {
-          setTitle(voteData.voteTitle || "");
-          setDscrp(voteData.dscrp || "");
-          setMinMumbersVoted(Number(voteData.minMumbersVoted) || 0);
-          setStartDate(voteData.startDate || "");
-          setFinishDate(voteData.finishDate || "");
-          setFile(voteData.docUrl ? { name: voteData.docUrl } : null);
-          setVoteActveStatus(voteData.voteActveStatus ?? 0);
-          setCycleId(voteData.cycleId ?? "");
-        } else {
-          const res = await axios.get(`${process.env.REACT_APP_API_URL}vote/${id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Accept-Language": "en",
-              Accept: "application/json",
-            },
-          });
-          const data = res.data.data.items[0];
-          setTitle(data.voteTitle || "");
-          setDscrp(data.dscrp || "");
-          setMinMumbersVoted(Number(data.minMumbersVoted) || 0);
-          setStartDate(data.startDate || "");
-          setFinishDate(data.finishDate || "");
-          setFile(data.docUrl ? { name: data.docUrl } : null);
-          setVoteActveStatus(data.voteActveStatus ?? 0);
-          setCycleId(data.cycleId ?? "");
-        }
+useEffect(() => {
+  const loadData = async () => {
+    try {
+      if (voteData) {
+        setTitle(voteData.voteTitle || "");
+        setDscrp(voteData.dscrp || "");
+        setMinMumbersVoted(Number(voteData.minMumbersVoted) || 0);
 
-        const cycleResponse = await axios.get(`${process.env.REACT_APP_API_URL}elections-cycles`, {
+        const start = DateTime.fromISO(voteData.startDate, { zone: 'utc' }).setZone('Asia/Baghdad');
+        const finish = DateTime.fromISO(voteData.finishDate, { zone: 'utc' }).setZone('Asia/Baghdad');
+
+        setStartDate(start.toISODate());
+        setStartTime(start.toFormat('HH:mm'));
+
+        setFinishDate(finish.toISODate());
+        setFinishTime(finish.toFormat('HH:mm'));
+
+        setFile(voteData.docUrl ? { name: voteData.docUrl } : null);
+        setVoteActveStatus(voteData.voteActveStatus ?? 0);
+        setCycleId(voteData.cycleId ?? "");
+      } else {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}vote/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Accept-Language": "en",
             Accept: "application/json",
           },
         });
-        setCycles(cycleResponse.data.data.items || []);
+        const data = res.data.data.items[0];
+        setTitle(data.voteTitle || "");
+        setDscrp(data.dscrp || "");
+        setMinMumbersVoted(Number(data.minMumbersVoted) || 0);
 
-        const optionsResponse = await axios.get(`${process.env.REACT_APP_API_URL}vote-options`, {
-          params: { VoteId: id },
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Accept-Language": "en",
-            Accept: "application/json",
-          },
-        });
-        setVoteOptions(optionsResponse.data.data.items || []);
-      } catch (err) {
-        toast.error(" فشل تحميل بيانات التصويت");
+        const start = DateTime.fromISO(data.startDate, { zone: 'utc' }).setZone('Asia/Baghdad');
+        const finish = DateTime.fromISO(data.finishDate, { zone: 'utc' }).setZone('Asia/Baghdad');
+
+        setStartDate(start.toISODate());
+        setStartTime(start.toFormat('HH:mm'));
+
+        setFinishDate(finish.toISODate());
+        setFinishTime(finish.toFormat('HH:mm'));
+
+        setFile(data.docUrl ? { name: data.docUrl } : null);
+        setVoteActveStatus(data.voteActveStatus ?? 0);
+        setCycleId(data.cycleId ?? "");
       }
-    };
 
-    loadData();
-  }, [voteData, id, token]);
+      const cycleResponse = await axios.get(`${process.env.REACT_APP_API_URL}elections-cycles`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Accept-Language": "en",
+          Accept: "application/json",
+        },
+      });
+      setCycles(cycleResponse.data.data.items || []);
+
+      const optionsResponse = await axios.get(`${process.env.REACT_APP_API_URL}vote-options`, {
+        params: { VoteId: id },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Accept-Language": "en",
+          Accept: "application/json",
+        },
+      });
+      setVoteOptions(optionsResponse.data.data.items || []);
+    } catch (err) {
+      toast.error("فشل تحميل بيانات التصويت");
+    }
+  };
+
+  loadData();
+}, [voteData, id, token]);
 
   const handleAddOption = async () => {
     try {
@@ -97,9 +116,9 @@ const EditVote = () => {
         },
       });
       setVoteOptions([...voteOptions, response.data.data]);
-      toast.success(" تم إضافة خيار التصويت");
+      toast.success("تم إضافة خيار التصويت");
     } catch {
-      toast.error(" فشل في إضافة خيار التصويت");
+      toast.error("فشل في إضافة خيار التصويت");
     } finally {
       setSubmitting(false);
     }
@@ -124,9 +143,9 @@ const EditVote = () => {
           Accept: "application/json",
         },
       });
-      toast.success(" تم حذف الخيار");
+      toast.success("تم حذف الخيار");
     } catch {
-      toast.error(" فشل في حذف الخيار");
+      toast.error("فشل في حذف الخيار");
     } finally {
       setDeleting(false);
     }
@@ -145,109 +164,97 @@ const EditVote = () => {
           Accept: "application/json",
         },
       });
-      toast.success(" تم تحديث الخيار");
+      toast.success("تم تحديث الخيار");
     } catch {
-      toast.error(" فشل في تحديث الخيار");
+      toast.error("فشل في تحديث الخيار");
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-   
+const handleSubmit = async (e) => {
+  setSubmitting(true);
+  e.preventDefault();
 
-    const today = new Date();
-    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const finish = new Date(finishDate);
-    const finishDateOnly = new Date(finish.getFullYear(), finish.getMonth(), finish.getDate());
+ if (!cycleId || cycleId === "") {
+    toast.error("لا يمكن تعديل التصويت. لا توجد دورة انتخابية نشطة.");
+      setSubmitting(false);
+    return;
+  }
 
-    if (voteActveStatus === 1 && finishDateOnly < todayDateOnly) {
-      toast.error("📅 تاريخ التصويت منتهي، يرجى تحديث تاريخ الانتهاء قبل تنشيط التصويت.");
+  const today = new Date();
+  const finish = new Date(`${finishDate}T${finishTime}`);
+  if (voteActveStatus === 1 && finish < today) {
+    toast.error("تاريخ التصويت منتهي، يرجى تحديث تاريخ الانتهاء قبل تنشيط التصويت.");
+    return;
+  }
+
+  setSubmitting(true);
+  let uploadedDocUrl = file?.name || "";
+
+  if (file && file instanceof File) {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await axios.post(`${process.env.REACT_APP_API_URL}attachments`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Accept-Language": "en",
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      uploadedDocUrl = uploadRes.data.data;
+    } catch {
+      toast.error("فشل في رفع المرفق الجديد");
+      setSubmitting(false);
       return;
     }
+  }
 
-    setSubmitting(true);
-    let uploadedDocUrl = file?.name || "";
+  const fullStartDate = DateTime.fromFormat(`${startDate} ${startTime}`, "yyyy-MM-dd HH:mm", {
+    zone: "Asia/Baghdad",
+  }).toUTC().toISO();
 
-    if (file && file instanceof File) {
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
+  const fullFinishDate = DateTime.fromFormat(`${finishDate} ${finishTime}`, "yyyy-MM-dd HH:mm", {
+    zone: "Asia/Baghdad",
+  }).toUTC().toISO();
 
-        const uploadRes = await axios.post(`${process.env.REACT_APP_API_URL}attachments`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Accept-Language": "en",
-            "Content-Type": "multipart/form-data",
-          },
-        });
+  const formPayload = {
+    voteTitle: title,
+    dscrp,
+    startDate: fullStartDate,
+    finishDate: fullFinishDate,
+    minMumbersVoted,
+    docUrl: uploadedDocUrl,
+    votecompletestatus: 0,
+    voteActveStatus,
+    voteInfo: 0,
+    cycleId: Number(cycleId),
+  };
 
-        uploadedDocUrl = uploadRes.data.data;
-      } catch {
-        toast.error("فشل في رفع المرفق الجديد");
-        setSubmitting(false);
-        return;
-      }
-    }
-
-    const finalVoteCompleteStatus = 0;
-
-    const formPayload = {
-      voteTitle: title,
-      dscrp,
-      startDate,
-      minMumbersVoted,
-      finishDate,
-      docUrl: uploadedDocUrl,
-      votecompletestatus: finalVoteCompleteStatus,
-      voteActveStatus,
-      voteInfo: 0,
-      cycleId: Number(cycleId),
-    };
-
-try {
-  const response = await axios.put(
-    `${process.env.REACT_APP_API_URL}vote/${id}`,
-    formPayload,
-    {
+  try {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}vote/${id}`, formPayload, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Accept-Language": "en",
         Accept: "application/json",
       },
-    }
-  );
+    });
 
-  const result = response.data;
-
-  if (result.message) {
-    switch (result.message) {
-      case "Minimum members voted cannot exceed total members count.":
-        toast.error("لا يمكن أن يكون الحد الأدنى للمصوتين أكبر من العدد الكلي للأعضاء");
-        break;
-      default:
-        toast.error(result.message);
-    }
-  } else {
     toast.success("تم تعديل التصويت بنجاح");
     navigate("/VotePageMain");
+  } catch (error) {
+    const msg = error.response?.data?.message;
+    if (msg === "Minimum members voted cannot exceed total members count.") {
+      toast.error("لا يمكن أن يكون الحد الأدنى للمصوتين أكبر من العدد الكلي للأعضاء");
+    } else {
+      toast.error(msg || "فشل في تعديل التصويت");
+    }
+  } finally {
+    setSubmitting(false);
   }
-} catch (error) {
-  // ✅ التعامل مع الخطأ القادم من السيرفر
-  const msg = error.response?.data?.message;
-  if (msg === "Minimum members voted cannot exceed total members count.") {
-    toast.error("لا يمكن أن يكون الحد الأدنى للمصوتين أكبر من العدد الكلي للأعضاء");
-  } else if (msg) {
-    toast.error(msg);
-  } else {
-    toast.error("فشل في تعديل التصويت");
-  }
-} finally {
-  setSubmitting(false);
-}
+};
 
-  };
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -259,10 +266,10 @@ try {
           Accept: "application/json",
         },
       });
-      toast.success(" تم حذف التصويت");
+      toast.success("تم حذف التصويت");
       navigate("/VotePageMain");
     } catch {
-      toast.error(" فشل في حذف التصويت");
+      toast.error("فشل في حذف التصويت");
     } finally {
       setDeleting(false);
     }
@@ -287,14 +294,9 @@ try {
           setMinMumbersVoted={setMinMumbersVoted}
         />
 
-        {file && file.name && typeof file.name === "string" && (
+        {file?.name && typeof file.name === "string" && (
           <div className="mt-2 text-right">
-            <a
-              href={file.name}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
+            <a href={file.name} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
               📎 تحميل المرفق الحالي
             </a>
           </div>
@@ -303,8 +305,12 @@ try {
         <DateTimeSelector
           startDate={startDate}
           setStartDate={setStartDate}
+          startTime={startTime}
+          setStartTime={setStartTime}
           finishDate={finishDate}
           setFinishDate={setFinishDate}
+          finishTime={finishTime}
+          setFinishTime={setFinishTime}
         />
 
         <VoteOptions
@@ -318,12 +324,7 @@ try {
         <div className="w-full flex flex-col items-end mt-6" style={{ direction: "rtl" }}>
           <div className="w-full flex justify-between items-center">
             <h3 className="text-xl font-semibold">خيارات التصويت</h3>
-            <button
-              type="button"
-              className="p-2.5 border rounded-lg bg-blue-500 text-white"
-              onClick={handleAddOption}
-              disabled={submitting || deleting || isUpdating}
-            >
+            <button type="button" className="p-2.5 border rounded-lg bg-blue-500 text-white" onClick={handleAddOption}>
               إضافة خيار
             </button>
           </div>
@@ -337,18 +338,10 @@ try {
                 className="p-2 w-full border rounded-lg"
                 placeholder={`الخيار ${index + 1}`}
               />
-              <button
-                type="button"
-                onClick={() => handleDeleteOption(index, option.id)}
-                className="p-2.5 border rounded-lg bg-red-500 text-white w-20"
-              >
+              <button type="button" onClick={() => handleDeleteOption(index, option.id)} className="p-2.5 border rounded-lg bg-red-500 text-white w-20">
                 حذف
               </button>
-              <button
-                type="button"
-                onClick={() => handleUpdateOption(option.id, option.voteDscrp)}
-                className="p-2.5 border rounded-lg bg-blue-600 text-white w-20"
-              >
+              <button type="button" onClick={() => handleUpdateOption(option.id, option.voteDscrp)} className="p-2.5 border rounded-lg bg-blue-600 text-white w-20">
                 تعديل
               </button>
             </div>
@@ -356,24 +349,11 @@ try {
         </div>
 
         <div className="w-full flex items-center justify-between mt-6" style={{ direction: "rtl" }}>
-          <button
-            type="submit"
-            disabled={submitting}
-            className={`p-2.5 border rounded-lg w-32 text-white ${
-              submitting ? "bg-gray-400 cursor-not-allowed" : "bg-priamy hover:bg-blue-800"
-            }`}
-          >
+          <button type="submit" disabled={submitting} className={`p-2.5 border rounded-lg w-32 text-white ${submitting ? "bg-gray-400 cursor-not-allowed" : "bg-priamy hover:bg-blue-800"}`}>
             {submitting ? "جاري التعديل..." : "تعديل التصويت"}
           </button>
 
-          <button
-            type="button"
-            disabled={deleting}
-            onClick={handleDelete}
-            className={`p-2.5 border rounded-lg w-32 text-white ${
-              deleting ? "bg-gray-400 cursor-not-allowed" : "bg-red-500 hover:bg-red-600"
-            }`}
-          >
+          <button type="button" disabled={deleting} onClick={handleDelete} className={`p-2.5 border rounded-lg w-32 text-white ${deleting ? "bg-gray-400 cursor-not-allowed" : "bg-red-500 hover:bg-red-600"}`}>
             {deleting ? "جارٍ الحذف..." : "حذف التصويت"}
           </button>
         </div>

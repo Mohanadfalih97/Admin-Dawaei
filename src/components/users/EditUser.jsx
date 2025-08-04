@@ -110,33 +110,32 @@ const UserEditDialog = ({ onOpenChange }) => {
                 </TableCell>
               </TableRow>
 
-              <TableRow>
-                <TableCell className="font-medium">رقم الهاتف</TableCell>
-                <TableCell>
-                  <input
-                    type="number"
-                    name="phone"
-                    value={editableUser.phone || ""}
-                    onChange={handleChange}
-                    disabled={isLocked}
-                    className="w-full p-2 border rounded text-center"
-                  />
-                </TableCell>
-              </TableRow>
+         <TableRow>
+  <TableCell className="font-medium">رقم الهاتف مع رمز البلد</TableCell>
+  <TableCell>
+    <div className="flex gap-1 justify-center items-center">
+            <input
+        type="text"
+        name="phone"
+        value={editableUser.phone || ""}
+        onChange={handleChange}
+        disabled={isLocked}
+        className="flex-1 p-2 border rounded text-center"
+      />
+      <input
+        type="text"
+        name="phoneCountryCode"
+        placeholder="+964"
+        value={editableUser.phoneCountryCode || ""}
+        onChange={handleChange}
+        disabled={isLocked}
+        className="w-[80px] p-2 border rounded text-center"
+      />
 
-              <TableRow>
-                <TableCell className="font-medium">رمز البلد للهاتف</TableCell>
-                <TableCell>
-                  <input
-                    type="text"
-                    name="phoneCountryCode"
-                    value={editableUser.phoneCountryCode || ""}
-                    onChange={handleChange}
-                    disabled={isLocked}
-                    className="w-full p-2 border rounded text-center"
-                  />
-                </TableCell>
-              </TableRow>
+    </div>
+  </TableCell>
+</TableRow>
+
 
               <TableRow>
                 <TableCell className="font-medium">تاريخ الإنشاء</TableCell>

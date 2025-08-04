@@ -103,7 +103,7 @@ const Registration = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-600 to-blue-800" style={{ direction: "rtl" }}>
-      <div className="w-full w-96 bg-white rounded-xl shadow-md p-8 text-center">
+      <div className="w-1/2 bg-white rounded-xl shadow-md p-8 text-center">
         <div className="text-blue-700 mb-4 text-3xl font-bold">
           <Link to="/dashboard" className="hover:text-blue-900 transition">
             <Home />
@@ -153,43 +153,43 @@ const Registration = () => {
                   />
                 </TableCell>
               </TableRow>
+<TableRow>
+  <TableCell className="font-medium text-center">رقم الهاتف   </TableCell>
+  <TableCell>
+    <div className="flex gap-2 items-center justify-center">
+   
 
-              <TableRow>
-                <TableCell className="font-medium text-center">رمز البلد</TableCell>
-                <TableCell>
-                  <select
-                    value={PhoneCountryCode}
-                    onChange={(e) => setPhoneCountryCode(e.target.value)}
-                    className="w-full px-3 py-2 border rounded text-center"
-                    required
-                  >
-                    <option value="">اختر رمز البلد</option>
-                    <option value="+964">العراق +964</option>
-                    <option value="+966">السعودية +966</option>
-                    <option value="+20">مصر +20</option>
-                    <option value="+971">الإمارات +971</option>
-                    <option value="+962">الأردن +962</option>
-                    <option value="+965">الكويت +965</option>
-                    <option value="+1">كندا +1</option>
-                  </select>
-                </TableCell>
-              </TableRow>
+      <input
+        ref={phoneRef}
+        type="number"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        className={`flex-1 px-3 py-2 border rounded text-center focus:outline-none focus:ring-2 ${
+          errorFields.phone
+            ? "border-red-500 focus:ring-red-500"
+            : "border-gray-300 focus:ring-blue-400"
+        }`}
+        required
+      />
+         <select
+        value={PhoneCountryCode}
+        onChange={(e) => setPhoneCountryCode(e.target.value)}
+        className="w-[120px] px-2 py-2 border rounded text-center"
+        required
+      >
+        <option value="">رمز</option>
+        <option value="+964">العراق +964</option>
+        <option value="+966">السعودية +966</option>
+        <option value="+20">مصر +20</option>
+        <option value="+971">الإمارات +971</option>
+        <option value="+962">الأردن +962</option>
+        <option value="+965">الكويت +965</option>
+        <option value="+1">كندا +1</option>
+      </select>
+    </div>
+  </TableCell>
+</TableRow>
 
-              <TableRow>
-                <TableCell className="font-medium text-center">رقم الهاتف</TableCell>
-                <TableCell>
-                  <input
-                    ref={phoneRef}
-                    type="number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded text-center focus:outline-none focus:ring-2 ${
-                      errorFields.phone ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-400"
-                    }`}
-                    required
-                  />
-                </TableCell>
-              </TableRow>
 
               <TableRow>
                 <TableCell className="font-medium text-center">كلمة المرور</TableCell>
@@ -203,19 +203,19 @@ const Registration = () => {
                 </TableCell>
               </TableRow>
 
-              <TableRow>
-                <TableCell className="font-medium text-center">الصلاحية</TableCell>
-                <TableCell>
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(Number(e.target.value))}
-                    className="w-full px-3 py-2 border rounded text-center"
-                  >
-                    <option value={0}>سوبر أدمن</option>
-                    <option value={1}>أدمن</option>
-                  </select>
-                </TableCell>
-              </TableRow>
+           <TableRow className="hidden">
+  <TableCell className="font-medium text-center">الصلاحية</TableCell>
+  <TableCell>
+    <select
+      value={role}
+      onChange={(e) => setRole(Number(e.target.value))}
+      className="w-full px-3 py-2 border rounded text-center"
+    >
+      <option value={0}>سوبر أدمن</option>
+    </select>
+  </TableCell>
+</TableRow>
+
             </TableBody>
           </Table>
 

@@ -4,8 +4,24 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import { Pencil, Trash2 } from "lucide-react";
-import { format } from "date-fns";
-import { ar } from "date-fns/locale";
+import { DateTime } from "luxon";
+
+// ✅ دالة تنسيق التاريخ بتوقيت بغداد وباللغة العربية
+const formatDate = (date) => {
+  if (!date) return "—";
+
+  try {
+    const baghdadTime = DateTime
+      .fromISO(date, { zone: "utc" })       // ✅ البيانات القادمة غالبًا بتوقيت UTC
+      .setZone("Asia/Baghdad")              // ✅ تحويل إلى توقيت بغداد
+      .setLocale("ar");                     // ✅ اللغة العربية
+
+    return `${baghdadTime.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)} (بتوقيت بغداد)`;
+  } catch (error) {
+    console.error("Date parsing error:", error);
+    return "تاريخ غير صالح";
+  }
+};
 
 const ElectionCyclesTable = ({ searchTerm }) => {
   const [elections, setElections] = useState([]);
@@ -16,23 +32,6 @@ const ElectionCyclesTable = ({ searchTerm }) => {
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState(null);
   const token = localStorage.getItem("token");
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  try {
-    const d = new Date(date);
-    const hours = d.getHours();
-    const minutes = d.getMinutes().toString().padStart(2, "0");
-    const ampm = hours >= 12 ? "مساءً" : "صباحًا";
-    const formattedTime = `${(hours % 12 || 12)}:${minutes} ${ampm}`;
-    const formattedDate = format(d, "EEEE، d MMMM yyyy", { locale: ar });
-
-    return `${formattedDate} في ${formattedTime}`;
-  } catch {
-    return "تاريخ غير صالح";
-  }
-};
-
 
   useEffect(() => {
     const fetchElectionCycles = async () => {
@@ -78,38 +77,30 @@ const formatDate = (date) => {
         },
       });
 
-      if (res.status === 204) {
-        toast.update(toastId, { render: "تم الحذف بنجاح", type: "success", isLoading: false, autoClose: 2000 });
+      if (res.status === 200) {
+        toast.update(toastId, {
+          render: "تم الحذف بنجاح",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
         setElections((prev) => prev.filter((e) => e.id !== id));
       } else {
-        toast.update(toastId, { render: "لم يتم الحذف، خطأ غير متوقع", type: "error", isLoading: false ,autoClose: 2000 });
+        toast.update(toastId, {
+          render: "لم يتم الحذف، خطأ غير متوقع",
+          type: "error",
+          isLoading: false,
+          autoClose: 2000,
+        });
       }
     } catch (error) {
-     console.error("Error deleting election cycle:", error);
-  const serverMessage = error.response?.data?.msg;
-
-  if (serverMessage === "Cannot delete this cycle. One or more members are assigned to it.") {
-    toast.update(toastId, {
-      render: "لا يمكن حذف هذه الدورة، هناك أعضاء مرتبطون بها.",
-      type: "error",
-      isLoading: false,
-      autoClose: 2000,
-    });
-  } else if (serverMessage === "Cycle not found or already deleted.") {
-    toast.update(toastId, {
-      render: "لم يتم العثور على الدورة أو تم حذفها مسبقًا.",
-      type: "error",
-      isLoading: false,
-      autoClose: 2000,
-    });
-  } else {
-    toast.update(toastId, {
-      render: serverMessage || "فشل في حذف الدورة",
-      type: "error",
-      isLoading: false,
-      autoClose: 2000,
-    });
-  }
+      const msg = error.response?.data?.msg;
+      toast.update(toastId, {
+        render: msg || "فشل في حذف الدورة",
+        type: "error",
+        isLoading: false,
+        autoClose: 2000,
+      });
     } finally {
       setDeletingId(null);
     }
@@ -122,8 +113,8 @@ const formatDate = (date) => {
         `${process.env.REACT_APP_API_URL}elections-cycles/${cycle.id}`,
         {
           dscrp: cycle.dscrp,
-          startDate: cycle.startDate,
-          finishDate: cycle.finishDate,
+          startDate: new Date(cycle.startDate).toISOString(),
+          finishDate: new Date(cycle.finishDate).toISOString(),
           [field]: value,
         },
         {
@@ -136,23 +127,58 @@ const formatDate = (date) => {
         }
       );
 
-      toast.update(toastId, { render: "تم تحديث حالة الدورة", type: "success", isLoading: false, autoClose: 2000 });
+      toast.update(toastId, {
+        render: "تم تحديث حالة الدورة",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      });
+
       setElections((prev) =>
         prev.map((item) =>
           item.id === cycle.id ? { ...item, [field]: value } : item
         )
       );
-    } catch (error) {
-      console.error("فشل في تحديث حالة الدورة:", error);
-      const msg = error.response?.data?.msg;
+    } catch (err) {
+      const msg = err.response?.data?.msg;
+      let errorMessage = "حدث خطأ أثناء التحديث!";
 
-      if (msg === "Election cycle not found.") {
-        toast.update(toastId, { render: "لم يتم العثور على الدورة", type: "error", isLoading: false });
-      } else if (msg === "Another active election cycle already exists. You cannot activate this one.") {
-        toast.update(toastId, { render: "يوجد دورة نشطة بالفعل، لا يمكنك تفعيل أخرى", type: "error", isLoading: false });
-      } else {
-        toast.update(toastId, { render: "فشل في تحديث الحالة", type: "error", isLoading: false });
+      switch (msg) {
+        case "Finish date cannot be before start date.":
+          errorMessage = "تاريخ الانتهاء لا يمكن أن يكون قبل تاريخ البداية.";
+          break;
+
+        case "The new election cycle must start after the previous one finishes":
+          errorMessage = "يجب أن تبدأ الدورة الجديدة بعد انتهاء الدورة السابقة.";
+          break;
+
+        case "Updated start date must be after the last cycle finishes":
+          errorMessage = "يجب أن يكون تاريخ بدء الدورة المعدّلة بعد انتهاء الدورة السابقة.";
+          break;
+
+        case "Election cycle updated successfully.":
+          errorMessage = "تم تحديث بيانات الدورة الانتخابية بنجاح.";
+          break;
+
+        default:
+          if (msg?.startsWith("Cannot create a new election cycle until the previous one finishes on")) {
+            const date = msg.split("on")[1]?.trim();
+            errorMessage = `لا يمكن إنشاء دورة جديدة حتى تنتهي الدورة السابقة في ${date}.`;
+          } else if (msg?.startsWith("Cannot update the election cycle while another is active until")) {
+            const date = msg.split("until")[1]?.trim();
+            errorMessage = `لا يمكن تعديل الدورة الانتخابية بينما هناك دورة نشطة حتى ${date}.`;
+          } else {
+            errorMessage = "حدث خطأ غير معروف أثناء معالجة الدورة الانتخابية.";
+          }
+          break;
       }
+
+      toast.update(toastId, {
+        render: errorMessage,
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
     }
   };
 
@@ -177,13 +203,9 @@ const formatDate = (date) => {
         </thead>
         <tbody>
           {loading ? (
-            <tr>
-              <td colSpan="8" className="text-center py-4">جاري التحميل...</td>
-            </tr>
+            <tr><td colSpan="8" className="text-center py-4">جاري التحميل...</td></tr>
           ) : elections.length === 0 ? (
-            <tr>
-              <td colSpan="8" className="text-center text-red-500 py-4">لا توجد نتائج مطابقة.</td>
-            </tr>
+            <tr><td colSpan="8" className="text-center text-red-500 py-4">لا توجد نتائج مطابقة.</td></tr>
           ) : (
             elections.map((e, index) => (
               <tr key={e.id} className="hover:bg-gray-100">
@@ -233,14 +255,7 @@ const formatDate = (date) => {
       {/* ✅ Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center mt-6 gap-2 flex-wrap">
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            السابق
-          </button>
-
+          <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 border rounded disabled:opacity-50">السابق</button>
           {(() => {
             const visiblePages = 5;
             const currentGroup = Math.floor((currentPage - 1) / visiblePages);
@@ -257,14 +272,7 @@ const formatDate = (date) => {
               </button>
             ));
           })()}
-
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            التالي
-          </button>
+          <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1 border rounded disabled:opacity-50">التالي</button>
         </div>
       )}
     </div>

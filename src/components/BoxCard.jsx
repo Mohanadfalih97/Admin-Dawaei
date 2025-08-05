@@ -1,10 +1,13 @@
 import { Calendar } from "lucide-react";
 import React from "react";
 
-
 const BoxCard = ({ votes }) => {
   const formatDate = (date) => {
-    return date.toLocaleDateString("ar-EG", {
+    if (!date) return "—";
+    const parsedDate = new Date(date);
+    if (isNaN(parsedDate)) return "تاريخ غير صالح";
+
+    return parsedDate.toLocaleDateString("ar-EG", {
       weekday: "long",
       year: "numeric",
       month: "long",
@@ -22,28 +25,19 @@ const BoxCard = ({ votes }) => {
           key={vote.id}
           className="border-2 rounded-lg shadow-sm p-3 bg-white flex flex-col justify-between hover:border-priamy duration-300"
         >
-          {/* العنوان والوصف */}
           <div className="flex items-center justify-between gap-2" style={{ direction: "ltr" }}>
             <div className="flex justify-between">
               {vote.status === "نشط" && (
-                <span className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  نشط
-                </span>
+                <span className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">نشط</span>
               )}
               {vote.status === "مكتمل" && (
-                <span className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  مكتمل
-                </span>
+                <span className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">مكتمل</span>
               )}
-                  {vote.status === "غير نشط" && (
-                <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  غير نشط
-                </span>
+              {vote.status === "غير نشط" && (
+                <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">غير نشط</span>
               )}
               {vote.status === "غير مكتمل" && (
-                <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  غير مكتمل
-                </span>
+                <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">غير مكتمل</span>
               )}
             </div>
             <h2 className="text-xl text-center font-bold text-priamy">
@@ -61,10 +55,9 @@ const BoxCard = ({ votes }) => {
             </div>
             <div className="flex items-center">
               <Calendar className="w-4 h-4 ml-2" />
-              <span>ينتهي: {formatDate(vote.endDate)}</span>
+<span>ينتهي: {formatDate(vote.endDate)}</span>
             </div>
           </div>
-      
         </div>
       ))}
     </div>

@@ -16,16 +16,23 @@ import {
   TableHead,
   TableCell,
 } from "../Ui/table";
-import { format } from "date-fns";
-import { ar } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { DateTime } from "luxon";
 
+// ✅ دالة تنسيق الوقت إلى توقيت بغداد بالعربية
+const formatDateBaghdad = (isoDate) => {
+  return DateTime
+    .fromISO(isoDate, { zone: "utc" })
+    .setZone("Asia/Baghdad")
+    .setLocale("ar")
+    .toFormat("cccc d LLLL yyyy - hh:mm a");
+};
 
+// ✅ جلب تفاصيل التصويت
 const fetchVoteDetails = async (voteId) => {
   const token = localStorage.getItem("token");
 
-  // جلب نتائج التصويت العامة
   const resultRes = await axios.get(
     `${process.env.REACT_APP_API_URL}vote/calculate-result/${voteId}`,
     {
@@ -38,7 +45,6 @@ const fetchVoteDetails = async (voteId) => {
 
   const data = resultRes.data?.data || {};
 
-  // جلب المصوتين من تنفيذات التصويت
   const execRes = await axios.get(
     `${process.env.REACT_APP_API_URL}vote-excution?voteId=${voteId}`,
     {
@@ -48,7 +54,6 @@ const fetchVoteDetails = async (voteId) => {
 
   const allExecutions = execRes.data?.data?.items || [];
 
-  // فقط من صوت فعليًا، ومنع التكرار
   const votedOnly = allExecutions
     .filter((e) => e.voteResultId && e.voteId === voteId)
     .reduce((acc, curr) => {
@@ -58,7 +63,6 @@ const fetchVoteDetails = async (voteId) => {
       return acc;
     }, []);
 
-  // تحميل أسماء المصوتين
   const memberCache = {};
   const executionsWithNames = await Promise.all(
     votedOnly.map(async (exec) => {
@@ -88,7 +92,8 @@ const fetchVoteDetails = async (voteId) => {
   };
 };
 
-const VoteReportDialog = ({ open, onOpenChange, report }) => {
+// ✅ المكون الرئيسي
+const VoteReportDialog = ({ open, onOpenChange, report, memberCount }) => {
   const { data, isLoading } = useQuery({
     queryKey: ["voteDetails", report?.id],
     queryFn: () => fetchVoteDetails(report.id),
@@ -96,9 +101,6 @@ const VoteReportDialog = ({ open, onOpenChange, report }) => {
   });
 
   if (!report) return null;
-
-  const formatDate = (date) =>
-    format(new Date(date), "EEEE d MMMM yyyy", { locale: ar });
 
   const handlePrint = () => {
     const printContent = document.getElementById("print-section").innerHTML;
@@ -177,15 +179,19 @@ const VoteReportDialog = ({ open, onOpenChange, report }) => {
                   <TableBody>
                     <TableRow>
                       <TableCell className="font-medium">تاريخ التصويت</TableCell>
-                      <TableCell>{formatDate(report.startDate)}</TableCell>
+                      <TableCell>{formatDateBaghdad(report.startDate)}</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-medium">عدد المصوتين</TableCell>
-                      <TableCell>{data.actualVoters}</TableCell>
+                      <TableCell className="font-medium">عدد الأعضاء الكلي في الدورة</TableCell>
+                      <TableCell>{memberCount}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">أقل نصاب مطلوب</TableCell>
                       <TableCell>{data.minMembersRequired}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">عدد المصوتين</TableCell>
+                      <TableCell>{data.actualVoters}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">حالة النصاب</TableCell>
@@ -230,7 +236,7 @@ const VoteReportDialog = ({ open, onOpenChange, report }) => {
                 {/* جدول المصوتين */}
                 {data.voters?.length > 0 && (
                   <div className="pb-4">
-                    <h4 className="text-lg font-semibold mb-3"> عدد النصاب</h4>
+                    <h4 className="text-lg font-semibold mb-3">عدد النصاب</h4>
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -242,11 +248,7 @@ const VoteReportDialog = ({ open, onOpenChange, report }) => {
                         {data.voters.map((voter, i) => (
                           <TableRow key={i}>
                             <TableCell>{voter.fullName}</TableCell>
-                            <TableCell>
-                              {format(new Date(voter.createdAt), "yyyy/MM/dd HH:mm", {
-                                locale: ar,
-                              })}
-                            </TableCell>
+                            <TableCell>{formatDateBaghdad(voter.createdAt)}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

@@ -11,6 +11,7 @@ import {
   UserCog,
   Building2,
   ClipboardList,
+  Book,
 } from "lucide-react";
 
 const Sidbar = () => {
@@ -103,6 +104,18 @@ const Sidbar = () => {
         }
       >
         <BarChart /> التقارير
+      </NavLink>
+         <NavLink
+        to="/Agenda"
+        className={({ isActive }) =>
+          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
+            isActive
+              ? "bg-primary text-white shadow-lg"
+              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
+          }`
+        }
+      >
+        <Book />جدول الاعمال
       </NavLink>
 
       <NavLink

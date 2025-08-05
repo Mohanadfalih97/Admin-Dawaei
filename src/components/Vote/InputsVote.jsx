@@ -21,7 +21,7 @@ const InputsVote = ({ title, setTitle, dscrp, setDscrp, file, setFile ,minMumber
 
   {/* أقل عدد للتصويت */}
   <div className="flex flex-col w-1/2 items-end py-2 gap-2">
-    <label className="text-right w-full">أقل عدد للتصويت</label>
+    <label className="text-right w-full">أقل عدد للنصاب</label>
 <input
   type="number"
   min={1}

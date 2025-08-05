@@ -7,7 +7,7 @@ import * as Tabs from "@radix-ui/react-tabs";
 const Dashboard = () => {
   return (
     <div className="flex">
-      <section className="flex-1 w-full lg:w-[80%]">
+      <section className="flex-1 w-full lg:w-[80%] mt-5 p-3 md:p-6 border rounded-lg shadow-md overflow-x-auto">
         <Navbar />
 
         <Tabs.Root defaultValue="cards" className="w-full mt-6"  style={{ direction: "rtl" }}>

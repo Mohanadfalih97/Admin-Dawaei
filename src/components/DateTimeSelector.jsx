@@ -1,30 +1,5 @@
 
-import { DateTime } from "luxon";
-
-const arabicMonthNames = {
-  January: "كانون الثاني",
-  February: "شباط",
-  March: "آذار",
-  April: "نيسان",
-  May: "أيار",
-  June: "حزيران",
-  July: "تموز",
-  August: "آب",
-  September: "أيلول",
-  October: "تشرين الأول",
-  November: "تشرين الثاني",
-  December: "كانون الأول",
-};
-
-const arabicWeekDays = {
-  Monday: "الاثنين",
-  Tuesday: "الثلاثاء",
-  Wednesday: "الأربعاء",
-  Thursday: "الخميس",
-  Friday: "الجمعة",
-  Saturday: "السبت",
-  Sunday: "الأحد",
-};
+import React from "react";
 
 
 

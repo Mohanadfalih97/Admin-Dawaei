@@ -16,13 +16,9 @@ const UserEditDialog = ({ onOpenChange }) => {
   const [editableUser, setEditableUser] = useState(user || {});
   const [loading, setLoading] = useState(false);
 
-  const isLocked = editableUser.staticRole === 0;
 
   const handleChange = (e) => {
-    if (isLocked) {
-      toast.warn("لا يمكن تعديل بيانات هذا المستخدم.");
-      return;
-    }
+  
 
     const { name, value } = e.target;
     setEditableUser((prevUser) => ({
@@ -32,10 +28,7 @@ const UserEditDialog = ({ onOpenChange }) => {
   };
 
   const handleSave = async () => {
-    if (!editableUser || isLocked) {
-      toast.warn("لا يمكن حفظ التعديلات لهذا المستخدم.");
-      return;
-    }
+  
 
     setLoading(true);
 
@@ -90,7 +83,6 @@ const UserEditDialog = ({ onOpenChange }) => {
                     name="name"
                     value={editableUser.name || ""}
                     onChange={handleChange}
-                    disabled={isLocked}
                     className="w-full px-3 py-2 border rounded text-center"
                   />
                 </TableCell>
@@ -104,7 +96,7 @@ const UserEditDialog = ({ onOpenChange }) => {
                     name="email"
                     value={editableUser.email || ""}
                     onChange={handleChange}
-                    disabled={isLocked}
+                  
                     className="w-full p-2 border rounded text-center"
                   />
                 </TableCell>
@@ -119,7 +111,6 @@ const UserEditDialog = ({ onOpenChange }) => {
         name="phone"
         value={editableUser.phone || ""}
         onChange={handleChange}
-        disabled={isLocked}
         className="flex-1 p-2 border rounded text-center"
       />
       <input
@@ -128,7 +119,6 @@ const UserEditDialog = ({ onOpenChange }) => {
         placeholder="+964"
         value={editableUser.phoneCountryCode || ""}
         onChange={handleChange}
-        disabled={isLocked}
         className="w-[80px] p-2 border rounded text-center"
       />
 
@@ -153,12 +143,11 @@ const UserEditDialog = ({ onOpenChange }) => {
             <Button
               className="bg-primary text-white"
               onClick={handleSave}
-              disabled={loading || isLocked}
+              disabled={loading}
             >
               {loading
                 ? "جاري الحفظ..."
-                : isLocked
-                ? "لا يمكن التعديل"
+               
                 : "حفظ التعديلات"}
             </Button>
           </div>

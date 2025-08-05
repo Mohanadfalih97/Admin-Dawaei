@@ -70,6 +70,9 @@ const AvailableReports = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [electionCycles, setElectionCycles] = useState([]);
   const [selectedCycleId, setSelectedCycleId] = useState("");
+const [activeCycle, setActiveCycle] = useState(null);
+const [cycleMemberCount, setCycleMemberCount] = useState(0);
+const token = localStorage.getItem("token");
 
   // ✅ تحميل الدورات الانتخابية عند فتح الصفحة
 useEffect(() => {
@@ -87,10 +90,12 @@ useEffect(() => {
       setElectionCycles(items);
 
       // ✅ اختيار أول دورة نشطة تلقائياً
-      const activeCycle = items.find((cycle) => cycle.voteActveStatus === 1);
-      if (activeCycle) {
-        setSelectedCycleId(activeCycle.id);
-      }
+  const activeCycle = items.find((cycle) => cycle.voteActveStatus === 1);
+if (activeCycle) {
+  setSelectedCycleId(activeCycle.id);
+  setActiveCycle(activeCycle); // ✅ ضروري لتفعيل useEffect الخاص بعدد الأعضاء
+}
+
     } catch (err) {
       console.error("Error fetching election cycles:", err);
     }
@@ -99,6 +104,31 @@ useEffect(() => {
   fetchCycles();
 }, []);
 
+useEffect(() => {
+  const fetchCycleMemberCount = async () => {
+    if (!activeCycle?.id) return;
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}members`, {
+        params: {
+          CycleId: activeCycle.id,
+          PageNumber: 1,
+          PageSize: 1,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Accept-Language": "ar",
+        },
+      });
+
+      setCycleMemberCount(res.data?.data?.totalCount || 0);
+    } catch (err) {
+      console.error("Error fetching cycle member count", err);
+    }
+  };
+
+  fetchCycleMemberCount();
+}, [activeCycle, token]);
 
   // ✅ تحميل التصويتات عند اختيار دورة أو تغيير الصفحة
   const { data, isLoading, isError } = useQuery({
@@ -137,15 +167,19 @@ useEffect(() => {
           <label htmlFor="cycleSelect" className="block mb-2 font-semibold">
             اختر الدورة الانتخابية:
           </label>
-          <select
-            id="cycleSelect"
-            value={selectedCycleId}
-            onChange={(e) => {
-              setSelectedCycleId(e.target.value);
-              setPage(1);
-            }}
-            className="border rounded px-3 py-2 w-full md:w-1/3"
-          >
+  <select
+  id="cycleSelect"
+  value={selectedCycleId}
+  onChange={(e) => {
+    const selectedId = e.target.value;
+    setSelectedCycleId(selectedId);
+    setPage(1);
+    const selected = electionCycles.find((c) => c.id === parseInt(selectedId));
+    setActiveCycle(selected || null); // ✅ تعيين الدورة المختارة لحساب عدد الأعضاء
+  }}
+  className="border rounded px-3 py-2 w-full md:w-1/3"
+>
+
             <option value="">-- اختر الدورة --</option>
             {electionCycles.map((cycle) => (
               <option key={cycle.id} value={cycle.id}>
@@ -173,6 +207,7 @@ useEffect(() => {
                     <th className="p-3 border">عنوان التصويت</th>
                     <th className="p-3 border">الوصف</th>
                     <th className="p-3 border">تاريخ التصويت</th>
+                      <th className="p-3 border">عدد الاعضاء</th>
                     <th className="p-3 border">اقل عدد للنصاب</th>
                     <th className="p-3 border">عدد المصوتين</th>
                     <th className="p-3 border">حالة النصاب</th>
@@ -189,6 +224,8 @@ useEffect(() => {
                       <td className="p-3 border">
 {format(new Date(vote.startDate), "eeee، dd MMMM yyyy", { locale: ar })}
                       </td>
+<td className="p-3 border">{cycleMemberCount}</td>
+
                       <td className="p-3 border">{vote.minMumbersVoted}</td>
                       <td className="p-3 border">{vote.voteCount}</td>
                       <td className="p-3 border">
@@ -278,11 +315,13 @@ useEffect(() => {
           if (!val) setSelectedReport(null);
         }}
       >
-        <VoteReportDialog
-          open={open}
-          onOpenChange={setOpen}
-          report={selectedReport}
-        />
+      <VoteReportDialog
+  open={open}
+  onOpenChange={setOpen}
+  report={selectedReport}
+  memberCount={cycleMemberCount} // ✅ تمرير عدد الأعضاء
+/>
+
       </Dialog.Root>
     </section>
   );

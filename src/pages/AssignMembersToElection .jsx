@@ -16,41 +16,70 @@ const AssignMembersToElection = () => {
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
+const [searchQuery, setSearchQuery] = useState("");
+const [assignmentFilter, setAssignmentFilter] = useState("all");
 
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
 
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}members`, {
-          params: { pageNumber: currentPage, pageSize: 10 },
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-            "Accept-Language": "ar",
-          },
-        });
 
-        const items = response.data.data.items || [];
-        setMembers(items);
-        setTotalPages(response.data.data.totalPages);
+const fetchMembers = async () => {
+  try {
+    setLoading(true);
+    const token = localStorage.getItem("token");
 
-        const assigned = items
-          .filter((member) => member.cycleId && member.cycleId !== 0)
-          .map((member) => member.id);
-
-        setSelectedMembers(assigned);
-      } catch (error) {
-        console.error("حدث خطأ أثناء جلب الأعضاء:", error);
-        toast.error("فشل في تحميل قائمة الأعضاء");
-      } finally {
-        setLoading(false);
-      }
+    const params = {
+      pageNumber: currentPage,
+      pageSize: 10,
     };
 
+    if (searchQuery.trim() !== "") {
+      params.FullName = searchQuery.trim();
+    }
+
+    if (assignmentFilter === "assigned" && selectedCycleId) {
+      params.CycleId = parseInt(selectedCycleId);
+    }
+
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}members`, {
+      params,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        "Accept-Language": "ar",
+      },
+    });
+
+    let items = response.data.data.items || [];
+
+    // فلترة غير المسندين يدويًا
+    if (assignmentFilter === "unassigned") {
+      items = items.filter((m) => m.cycleId === null);
+    }
+
+    setMembers(items);
+    setTotalPages(response.data.data.totalPages);
+
+    const assigned = items
+      .filter((m) => m.cycleId && m.cycleId !== 0)
+      .map((m) => m.id);
+
+    setSelectedMembers(assigned);
+  } catch (error) {
+    console.error("فشل في تحميل الأعضاء:", error);
+    toast.error("حدث خطأ أثناء جلب الأعضاء");
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  if (selectedCycleId) {
     fetchMembers();
-  }, [currentPage]);
+  }
+}, [currentPage, assignmentFilter, selectedCycleId,]);
+
+
+
+
 
   useEffect(() => {
     const fetchCycles = async () => {
@@ -179,6 +208,57 @@ const AssignMembersToElection = () => {
           ))}
         </select>
       </div>
+  {selectedCycleId && (
+  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+    <div className="w-full md:w-1/3 flex gap-2">
+      <input
+        type="text"
+        placeholder="ابحث عن اسم العضو..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="border rounded px-3 py-2 w-full"
+      />
+      <button
+        onClick={() => fetchMembers()}
+        className="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition "
+      >
+        بحث
+      </button>
+    </div>
+
+    <div className="flex gap-4 items-center text-sm">
+      <label className="flex items-center gap-1">
+        <input
+          type="radio"
+          value="all"
+          checked={assignmentFilter === "all"}
+          onChange={() => setAssignmentFilter("all")}
+        />
+        الكل
+      </label>
+      <label className="flex items-center gap-1">
+        <input
+          type="radio"
+          value="assigned"
+          checked={assignmentFilter === "assigned"}
+          onChange={() => setAssignmentFilter("assigned")}
+        />
+        المسندون
+      </label>
+      <label className="flex items-center gap-1">
+        <input
+          type="radio"
+          value="unassigned"
+          checked={assignmentFilter === "unassigned"}
+          onChange={() => setAssignmentFilter("unassigned")}
+        />
+        غير المسندون
+      </label>
+    </div>
+  </div>
+)}
+
+
 
       <table className="min-w-full table-auto border-collapse">
         <thead className="bg-gray-200">

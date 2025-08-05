@@ -25,6 +25,9 @@ import AssignMembersToElection  from "./pages/AssignMembersToElection ";
 
 import LoginAsMember from "./pages/loginAsMember";
 import RestAccesscode from "./pages/RestAccesscode";
+import Agenda from "./pages/Agenda";
+import AddAgenda from "./components/Agenda/AddAgenda";
+import EditAgenda from "./components/Agenda/EditAgenda";
 import OtpPassowrdAdmin from "./pages/OtpPassowrdAdmin";
 import RestAccesscodeByAdmin from "./pages/RestAccesscodeByAdmin";
 import ResetPassword from "./pages/ResetPassword";
@@ -79,6 +82,12 @@ const App = () => {
             <Route path="/institution/edit/:id" element={<InstitutionForm />} /> 
             <Route path="Add-Department" element={<AddDepartment />} />
             <Route path="Add-institution" element={<Addinstitution/>} />
+            <Route path="Agenda" element={<Agenda/>} />
+
+            <Route path="Add-Agenda" element={<AddAgenda/>} />
+
+            <Route path="EditAgenda/:id" element={<EditAgenda/>} />
+
 
 
 

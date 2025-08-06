@@ -95,7 +95,7 @@ useEffect(() => {
                   <td className="px-4 py-2">{item.cycleId}</td>
                   <td className="px-4 py-2">{item.memberName}</td>
                   <td className="px-4 py-2">
-             {format(new Date(item.createdAt), "eeee، dd MMMM yyyy", { locale: ar })}
+             {format(new Date(item.createdAt), "cccc dd-MM-yyyy", { locale: ar })}
 
                   </td>
                 </tr>

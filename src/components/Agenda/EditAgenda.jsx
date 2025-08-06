@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import { CloudUpload } from "lucide-react";
 import { Button } from "../Ui/Button";
 import { ScrollArea } from "../Ui/scroll-area";
 import {
@@ -22,84 +23,171 @@ const EditAgenda = () => {
 
   const [description, setDescription] = useState("");
   const [agendaDate, setAgendaDate] = useState("");
-  const [file, setFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState("");
-  const [existingFileUrl, setExistingFileUrl] = useState("");
+
+  const [inFile, setInFile] = useState(null);
+  const [outFile, setOutFile] = useState(null);
+
+  const [inPreviewUrl, setInPreviewUrl] = useState("");
+  const [outPreviewUrl, setOutPreviewUrl] = useState("");
+
+  const [existingInUrl, setExistingInUrl] = useState("");
+  const [existingOutUrl, setExistingOutUrl] = useState("");
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (agendaData) {
       setDescription(agendaData.dscrp || "");
-      setAgendaDate(agendaData.date?.split("T")[0] || ""); // date in yyyy-MM-dd
-      setExistingFileUrl(agendaData.pdfUrl || "");
+      setAgendaDate(agendaData.date?.split("T")[0] || "");
+      setExistingInUrl(agendaData.inUrl || "");
+      setExistingOutUrl(agendaData.outUrl || "");
     } else {
-      // Fetch from API in case user refreshed the page
       axios
-        .get(`${process.env.REACT_APP_API_URL}agendas/${id}`, {
+        .get(`${process.env.REACT_APP_API_URL}document/${id}`, {
           headers: {
-            Accept: "application/json",
             "Accept-Language": "ar",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         })
         .then((res) => {
           const data = res.data.data;
           setDescription(data.dscrp || "");
           setAgendaDate(data.date?.split("T")[0] || "");
-          setExistingFileUrl(data.pdfUrl || "");
+          setExistingInUrl(data.inUrl || "");
+          setExistingOutUrl(data.outUrl || "");
         })
-        .catch(() => toast.error("فشل في تحميل بيانات جدول الأعمال"));
+        .catch(() => toast.error("فشل في تحميل البيانات"));
     }
   }, [agendaData, id]);
 
-  const handleFileChange = (e) => {
+  const handleInFileChange = (e) => {
     const selected = e.target.files[0];
     if (selected && selected.type === "application/pdf") {
-      setFile(selected);
-      setPreviewUrl(URL.createObjectURL(selected));
+      setInFile(selected);
+      setInPreviewUrl(URL.createObjectURL(selected));
     } else {
-      toast.error("يرجى اختيار ملف PDF فقط");
-      setFile(null);
-      setPreviewUrl("");
+      toast.error("يرجى اختيار ملف PDF فقط للمرفق الوارد");
+      setInFile(null);
+      setInPreviewUrl("");
+    }
+  };
+
+  const handleOutFileChange = (e) => {
+    const selected = e.target.files[0];
+    if (selected && selected.type === "application/pdf") {
+      setOutFile(selected);
+      setOutPreviewUrl(URL.createObjectURL(selected));
+    } else {
+      toast.error("يرجى اختيار ملف PDF فقط للمرفق الصادر");
+      setOutFile(null);
+      setOutPreviewUrl("");
     }
   };
 
   const handleSubmit = async () => {
     if (!description || !agendaDate) {
-      toast.error("يرجى ملء جميع الحقول المطلوبة");
+      toast.error("يرجى ملء جميع الحقول");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("dscrp", description);
-    formData.append("date", agendaDate);
-    if (file) formData.append("pdfFile", file);
-
     setLoading(true);
     try {
-      const res = await axios.put(
-        `${process.env.REACT_APP_API_URL}agendas/${id}`,
-        formData,
-        {
+      let uploadedInUrl = existingInUrl;
+      let uploadedOutUrl = existingOutUrl;
+
+      if (inFile) {
+        const form = new FormData();
+        form.append("file", inFile);
+        const res = await axios.post(`${process.env.REACT_APP_API_URL}attachments`, form, {
           headers: {
             "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Accept-Language": "ar",
+          },
+        });
+        uploadedInUrl = res.data?.data;
+      }
+
+      if (outFile) {
+        const form = new FormData();
+        form.append("file", outFile);
+        const res = await axios.post(`${process.env.REACT_APP_API_URL}attachments`, form, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Accept-Language": "ar",
+          },
+        });
+        uploadedOutUrl = res.data?.data;
+      }
+
+      const updatePayload = {
+        dscrp: description,
+        date: new Date(agendaDate).toISOString(),
+        inUrl: uploadedInUrl,
+        outUrl: uploadedOutUrl,
+      };
+
+      const updateRes = await axios.put(
+        `${process.env.REACT_APP_API_URL}document/${id}`,
+        updatePayload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
             "Accept-Language": "ar",
           },
         }
       );
 
-      if (res.status === 200) {
+      if (updateRes.status === 200) {
         toast.success("تم تحديث جدول الأعمال بنجاح");
         navigate("/Agenda");
       } else {
-        toast.error("حدث خطأ أثناء التحديث");
+        toast.error("فشل في التحديث");
       }
     } catch (err) {
       console.error(err);
-      toast.error("فشل في تحديث جدول الأعمال");
+      toast.error("حدث خطأ أثناء التحديث");
     } finally {
       setLoading(false);
     }
   };
+
+  const FileUploadBox = ({ label, file, previewUrl, existingUrl, onChange }) => (
+    <div className="flex flex-col items-center">
+      <label
+        htmlFor={label}
+        className="flex flex-col items-center justify-center w-64 h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors"
+      >
+        <CloudUpload className="w-10 h-10 text-gray-400 mb-2" />
+        <span className="text-sm text-gray-500 text-center">
+          {file ? "تم اختيار ملف جديد" : `رفع ملف PDF ${label === 'inFile' ? 'جدول الاعمال ' : 'مخرجات الجلسة'}`}
+        </span>
+      </label>
+      <input
+        id={label}
+        type="file"
+        accept="application/pdf"
+        onChange={onChange}
+        className="hidden"
+      />
+      {(file || existingUrl) && (
+        <div className="mt-2 text-sm text-gray-600 text-center">
+          <div className="truncate max-w-[200px] mx-auto">
+            📄 {file ? (file.name.length > 30 ? file.name.slice(0, 30) + "..." : file.name) : "ملف محفوظ مسبقاً"}
+          </div>
+          <button
+            type="button"
+            onClick={() => window.open(file ? previewUrl : existingUrl, "_blank")}
+            className="mt-1 text-blue-600 hover:underline text-sm"
+          >
+            عرض الملف
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="mt-5 p-5 border rounded-lg shadow-md">
@@ -121,7 +209,6 @@ const EditAgenda = () => {
                   <textarea
                     className="w-full p-2 border rounded text-right"
                     rows={3}
-                    placeholder="أدخل وصف جدول الأعمال"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   />
@@ -141,26 +228,29 @@ const EditAgenda = () => {
               </TableRow>
 
               <TableRow>
-                <TableCell className="font-medium">تحديث الملف (PDF)</TableCell>
-                <TableCell>
-                  <input type="file" accept="application/pdf" onChange={handleFileChange} />
-                </TableCell>
+                <TableCell className="font-medium">المرفقات  </TableCell>
+       <TableCell>
+  <div className="flex flex-col md:flex-row justify-center items-center gap-6">
+    <FileUploadBox
+      label="inFile"
+      file={inFile}
+      previewUrl={inPreviewUrl}
+      existingUrl={existingInUrl}
+      onChange={handleInFileChange}
+    />
+    <FileUploadBox
+      label="outFile"
+      file={outFile}
+      previewUrl={outPreviewUrl}
+      existingUrl={existingOutUrl}
+      onChange={handleOutFileChange}
+    />
+  </div>
+</TableCell>
+
               </TableRow>
 
-              {(previewUrl || existingFileUrl) && (
-                <TableRow>
-                  <TableCell className="font-medium">عرض الملف</TableCell>
-                  <TableCell>
-                    <iframe
-                      src={previewUrl || existingFileUrl}
-                      title="preview"
-                      width="100%"
-                      height="400px"
-                      className="border"
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
+           
             </TableBody>
           </Table>
 

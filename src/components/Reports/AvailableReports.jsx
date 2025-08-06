@@ -222,7 +222,7 @@ useEffect(() => {
                       <td className="p-3 border">{vote.voteTitle}</td>
                       <td className="p-3 border">{vote.dscrp}</td>
                       <td className="p-3 border">
-{format(new Date(vote.startDate), "eeee، dd MMMM yyyy", { locale: ar })}
+{format(new Date(vote.startDate), "cccc dd-MM-yyyy", { locale: ar })}
                       </td>
 <td className="p-3 border">{cycleMemberCount}</td>
 

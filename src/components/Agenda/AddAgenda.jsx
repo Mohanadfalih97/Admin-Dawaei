@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { Button } from "../Ui/Button";
 import { ScrollArea } from "../Ui/scroll-area";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../Ui/table";
-import "react-toastify/dist/ReactToastify.css";
+import { CloudUpload } from "lucide-react";
 
 const AddAgenda = () => {
   const [description, setDescription] = useState("");
@@ -27,39 +27,73 @@ const AddAgenda = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!description || !agendaDate || !file) {
-      toast.error("يرجى ملء جميع الحقول وإرفاق ملف");
-      return;
-    }
+const handleSubmit = async () => {
+  if (!description || !agendaDate || !file) {
+    toast.error("يرجى ملء جميع الحقول وإرفاق ملف");
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append("dscrp", description);
-    formData.append("date", agendaDate);
-    formData.append("pdfFile", file);
+  setLoading(true);
+  try {
+    const token = localStorage.getItem("token");
 
-    setLoading(true);
-    try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}agendas`, formData, {
+    // 1️⃣ رفع الملف أولاً إلى /api/attachments
+    const uploadFormData = new FormData();
+    uploadFormData.append("file", file);
+
+    const uploadRes = await axios.post(
+      `${process.env.REACT_APP_API_URL}attachments`,
+      uploadFormData,
+      {
         headers: {
           "Content-Type": "multipart/form-data",
           "Accept-Language": "ar",
+          Authorization: `Bearer ${token}`,
         },
-      });
-
-      if (res.status === 200) {
-        toast.success("تم حفظ جدول الأعمال بنجاح");
-        navigate("/Agenda");
-      } else {
-        toast.error("حدث خطأ أثناء الحفظ");
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("فشل الحفظ، تحقق من الاتصال أو البيانات");
-    } finally {
+    );
+
+    const fileUrl = uploadRes.data?.data;
+    if (!fileUrl) {
+      toast.error("فشل في رفع الملف");
       setLoading(false);
+      return;
     }
-  };
+
+    // 2️⃣ إرسال بيانات الوثيقة إلى /api/document
+    const documentPayload = {
+      dscrp: description,
+      date: new Date(agendaDate).toISOString(),
+      inUrl: fileUrl,
+      outUrl: "",
+    };
+
+    const docRes = await axios.post(
+      `${process.env.REACT_APP_API_URL}document`,
+      documentPayload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Accept-Language": "ar",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (docRes.status === 200) {
+      toast.success("تم حفظ الوثيقة بنجاح");
+      navigate("/Agenda");
+    } else {
+      toast.error("حدث خطأ أثناء الحفظ");
+    }
+  } catch (err) {
+    console.error(err);
+    toast.error("فشل الحفظ، تحقق من الاتصال أو البيانات");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="mt-5 p-5 border rounded-lg shadow-md">
@@ -69,10 +103,7 @@ const AddAgenda = () => {
 
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-[200px]">البيان</TableHead>
-                <TableHead>القيمة</TableHead>
-              </TableRow>
+             
             </TableHeader>
             <TableBody>
               <TableRow>
@@ -100,31 +131,47 @@ const AddAgenda = () => {
                 </TableCell>
               </TableRow>
 
-              <TableRow>
-                <TableCell className="font-medium">رفع الملف (PDF)</TableCell>
-                <TableCell>
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handleFileChange}
-                  />
-                </TableCell>
-              </TableRow>
+            <TableRow>
+  <TableCell className="font-medium">رفع الملف (PDF)</TableCell>
+  <TableCell>
+    <div className="flex justify-center">
+      <label
+        htmlFor="file-upload"
+        className="flex flex-col items-center justify-center w-64 h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors"
+      >
+        <CloudUpload className="w-10 h-10 text-gray-400 mb-2" />
+        <span className="text-sm text-gray-500 text-center">
+ارفع ملف الخاص بالجدول        </span>
+      </label>
+      <input
+        id="file-upload"
+        type="file"
+        accept="application/pdf"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+    </div>
+    {file && (
+  <div className="mt-2 text-sm text-gray-600 text-center">
+    <div className="truncate max-w-[200px] mx-auto">
+      📄 {file.name.length > 30 ? file.name.slice(0, 30) + "..." : file.name}
+    </div>
+    <button
+      type="button"
+      onClick={() => window.open(previewUrl, "_blank")}
+      className="mt-1 text-blue-600 hover:underline text-sm"
+    >
+      عرض الملف
+    </button>
+  </div>
+)}
 
-              {previewUrl && (
-                <TableRow>
-                  <TableCell className="font-medium">عرض الملف</TableCell>
-                  <TableCell>
-                    <iframe
-                      src={previewUrl}
-                      title="preview"
-                      width="100%"
-                      height="400px"
-                      className="border"
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
+  </TableCell>
+  
+</TableRow>
+
+
+          
             </TableBody>
           </Table>
 

@@ -10,7 +10,7 @@ const BoxCard = ({ votes }) => {
     return parsedDate.toLocaleDateString("ar-EG", {
       weekday: "long",
       year: "numeric",
-      month: "long",
+      month: "numeric",
       day: "numeric",
       hour: "numeric",
       minute: "numeric",

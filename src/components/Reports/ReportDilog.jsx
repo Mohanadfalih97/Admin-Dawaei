@@ -26,7 +26,7 @@ const formatDateBaghdad = (isoDate) => {
     .fromISO(isoDate, { zone: "utc" })
     .setZone("Asia/Baghdad")
     .setLocale("ar")
-    .toFormat("cccc d LLLL yyyy - hh:mm a");
+    .toFormat("cccc dd-MM-yyyy - hh:mm a");
 };
 
 // ✅ جلب تفاصيل التصويت

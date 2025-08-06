@@ -218,7 +218,6 @@ const sendResetEmailMessage = async (email) => {
         <thead>
           <tr className="bg-gray-100 text-gray-700">
             <th  className="px-2 md:px-6 py-3 text-center border-b">الإجراءات</th>
-            <th  className="px-2 md:px-6 py-3 text-center border-b">تاريخ التعديل</th>
             <th  className="px-2 md:px-6 py-3 text-center border-b">تاريخ الإنشاء</th>
             <th  className="px-2 md:px-6 py-3 text-center border-b">رقم WhatsApp</th>
             <th  className="px-2 md:px-6 py-3 text-center border-b">رقم الهاتف</th>
@@ -244,7 +243,6 @@ const sendResetEmailMessage = async (email) => {
                     <button title="إرسال رابط التصويت" className="text-purple-600" onClick={() => sendVoteLink(member.eMail)}><Send size={18} /></button>
                   </div>
                 </td>
-                <td className="text-center">{formatDateArabic(member.updatedAt)}</td>
                 <td className="text-center">{formatDateArabic(member.createdAt)}</td>
                 <td className="text-center">{member.watsApp || "—"}</td>
                 <td className="text-center">{member.phone1 || "—"}</td>

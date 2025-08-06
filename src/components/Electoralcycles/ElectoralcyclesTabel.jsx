@@ -12,16 +12,18 @@ const formatDate = (date) => {
 
   try {
     const baghdadTime = DateTime
-      .fromISO(date, { zone: "utc" })       // ✅ البيانات القادمة غالبًا بتوقيت UTC
-      .setZone("Asia/Baghdad")              // ✅ تحويل إلى توقيت بغداد
-      .setLocale("ar");                     // ✅ اللغة العربية
+      .fromISO(date, { zone: "utc" })
+      .setZone("Asia/Baghdad")
+      .setLocale("ar");
 
-    return `${baghdadTime.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)} (بتوقيت بغداد)`;
+    // ✅ مثل: الخميس 07-08-2025، 10:30 ص (بتوقيت بغداد)
+    return `${baghdadTime.toFormat("cccc dd-MM-yyyy، hh:mm a")} (بتوقيت بغداد)`;
   } catch (error) {
     console.error("Date parsing error:", error);
     return "تاريخ غير صالح";
   }
 };
+
 
 const ElectionCyclesTable = ({ searchTerm }) => {
   const [elections, setElections] = useState([]);

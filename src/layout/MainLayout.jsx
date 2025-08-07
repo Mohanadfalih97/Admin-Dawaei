@@ -90,33 +90,18 @@ const MainLayout = () => {
 
   return (
     <section className="">
-      <Topbar />
       <div className="flex">
  {/* الوقت والدورة */}
-        <section className="flex-1 w-full  px-5 py-4">
-        <h1 className="text-center text-blue-900 text-xl font-semibold flex items-center justify-center gap-2 flex-wrap">
-  {activeCycle ? (
-    <>
-      ( {activeCycle.dscrp} )
-      <span className="flex items-center gap-1 text-sm text-gray-700 bg-gray-100 px-2 py-1 rounded-full ">
-        <Users size={16} className="text-blue-900" />
-        {cycleMemberCount} 
-      </span>
-    </>
-  ) : (
-    "(لا توجد دورة نشطة حالياً)"
-  )}
-</h1>
+        <section className="flex-1 w-full  px-2 py-4">
+      <Topbar />
 
-          <p className="text-center text-gray-600 mt-1 flex justify-center items-center gap-2">
-            <Clock size={18} className="text-blue-800" />
-            {currentBaghdadTime}
-          </p>
+
+       
             {/* المكون الفرعي */}
       <Outlet />
         </section>
 
-        <section className="hidden md:flex md:w-[25%] px-5 py-4 mt-5" >
+        <section className="hidden md:flex   mt-5" >
           <Sidbar />
         </section>
       </div>

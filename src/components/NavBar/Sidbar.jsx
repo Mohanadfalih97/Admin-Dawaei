@@ -1,197 +1,73 @@
-import { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
-import axios from "axios";
-
+// src/components/Sidebar.jsx
 import {
   LayoutDashboard,
-  BarChart,
-  CalendarDays,
   Users,
-  Vote,
-  UserCog,
-  Building2,
-  ClipboardList,
-  Book,
+  User,
+  Pill,
+  Plus,
+  LogOut,
 } from "lucide-react";
+import logo from "../../asset/Imge/logo.png"; // ضع شعارك هنا
+import userImg from "../../asset/Imge/profiledefautimg.png"; // صورة المستخدم
 
-const Sidbar = () => {
-  const [institution, setInstitution] = useState(null);
-
-  useEffect(() => {
-    const fetchInstitution = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}institution`, {
-          headers: {
-           
-            "Accept-Language": "en",
-             Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const items = response.data?.data?.items;
-        if (items && items.length > 0) {
-          setInstitution(items[0]);
-        }
-      } catch (error) {
-        console.error("حدث خطأ أثناء جلب بيانات المؤسسة", error);
-      }
-    };
-
-    fetchInstitution();
-  }, []);
-
+const Sidebar = () => {
   return (
-    <div className="flex flex-col bg-white shadow-lg h-full w-[300px] py-10 px-4 gap-4 rounded-lg">
-      <NavLink
-        to="/dashboard"
-        className={({ isActive }) =>
-          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
-            isActive
-              ? "bg-primary text-white shadow-lg"
-              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
-          }`
-        }
-      >
-        <LayoutDashboard /> لوحة التحكم
-      </NavLink>
-        <NavLink
-        to="/Electoralcycles"
-        className={({ isActive }) =>
-          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
-            isActive
-              ? "bg-primary text-white shadow-lg"
-              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
-          }`
-        }
-      >
-        <CalendarDays /> الدورات الانتخابية
-      </NavLink>
-           <NavLink
-        to="/assign-members"
-        className={({ isActive }) =>
-          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
-            isActive
-              ? "bg-primary text-white shadow-lg"
-              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
-          }`
-        }
-      >
-        <ClipboardList /> إسناد الأعضاء
-      </NavLink>
+    <aside className="w-64 h-screen bg-white shadow flex flex-col justify-between">
+      {/* Header */}
+      <div>
+        <div className="p-6 flex items-center gap-2">
+          <img src={logo} alt="Logo" className="w-8 h-8" />
+          <h1 className="text-2xl font-bold text-green-600">Dawaei</h1>
+        </div>
 
-      <NavLink
-        to="/VotePageMain"
-        className={({ isActive }) =>
-          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
-            isActive
-              ? "bg-primary text-white shadow-lg"
-              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
-          }`
-        }
-      >
-        <Vote /> التصويتات
-      </NavLink>
+        {/* Navigation */}
+        <nav className="mt-4 px-4 space-y-4 text-gray-500">
+          <SidebarLink icon={LayoutDashboard} label="الصفحة الرئيسية" active />
+          <SidebarLink icon={Users} label="قائمة الصيدليات" />
+          <SidebarLink icon={User} label="قائمة المستخدمين" />
+          <SidebarLink icon={Pill} label="قائمة الدوية" />
+        </nav>
+      </div>
 
-      <NavLink
-        to="/reports"
-        className={({ isActive }) =>
-          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
-            isActive
-              ? "bg-primary text-white shadow-lg"
-              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
-          }`
-        }
-      >
-        <BarChart /> التقارير
-      </NavLink>
-         <NavLink
-        to="/Agenda"
-        className={({ isActive }) =>
-          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
-            isActive
-              ? "bg-primary text-white shadow-lg"
-              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
-          }`
-        }
-      >
-        <Book />جدول الاعمال
-      </NavLink>
+      {/* Bottom Actions */}
+      <div className="p-4">
+        {/* Add Button */}
+        <div className="bg-green-100 rounded-xl p-6 flex flex-col items-center justify-center mb-6">
+          <button className="bg-green-400 text-white p-3 rounded-full">
+            <Plus />
+          </button>
+          <span className="mt-2 text-green-800 font-medium">إضافة</span>
+        </div>
 
-      <NavLink
-        to="/members"
-        className={({ isActive }) =>
-          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
-            isActive
-              ? "bg-primary text-white shadow-lg"
-              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
-          }`
-        }
-      >
-        <Users /> الأعضاء
-      </NavLink>
+        {/* Profile and Logout */}
+        <div className="flex items-center justify-center gap-4">
+          <img
+            src={userImg}
+            alt="User"
+            className="w-10 h-10 rounded-full border border-gray-300"
+          />
+          <button className="text-red-500 bg-red-100 p-2 rounded-full">
+            <LogOut />
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+};
 
-    
-
-      <NavLink
-        to="/UsersInfo"
-        className={({ isActive }) =>
-          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
-            isActive
-              ? "bg-primary text-white shadow-lg"
-              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
-          }`
-        }
-      >
-        <UserCog /> المستخدمين
-      </NavLink>
-
-      <NavLink
-        to="/ElectionCycleDetails"
-        className={({ isActive }) =>
-          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
-            isActive
-              ? "bg-primary text-white shadow-lg"
-              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
-          }`
-        }
-      >
-        <CalendarDays /> تفاصيل الدورات الانتخابيه
-      </NavLink>
-
-      <NavLink
-        to="/Department"
-        className={({ isActive }) =>
-          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
-            isActive
-              ? "bg-primary text-white shadow-lg"
-              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
-          }`
-        }
-      >
-        <Building2 /> القطاعات
-      </NavLink>
-
- 
-
-      <NavLink
-        to={
-          institution?.id
-            ? `/institution/edit/${institution.id}`
-            : `/institution/create`
-        }
-        className={({ isActive }) =>
-          `flex items-center gap-2 p-3 rounded-lg text-md transition-all duration-300 ${
-            isActive
-              ? "bg-primary text-white shadow-lg"
-              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
-          }`
-        }
-      >
-        <Building2 /> تفاصيل المؤسسة
-      </NavLink>
+const SidebarLink = ({ icon: Icon, label, active }) => {
+  return (
+    <div
+      className={`flex items-center gap-3 px-4 py-2 rounded-md ${
+        active
+          ? "text-green-600 bg-green-50 font-bold"
+          : "hover:bg-gray-100 text-gray-500"
+      }`}
+    >
+      <Icon size={20} />
+      <span>{label}</span>
     </div>
   );
 };
 
-export default Sidbar;
+export default Sidebar;

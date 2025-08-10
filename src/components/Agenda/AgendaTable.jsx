@@ -1,222 +1,150 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { toast } from "react-toastify";
-import { FileText,Pencil, Trash2  } from "lucide-react";
-import { DateTime } from "luxon";
-import { Link ,useNavigate} from "react-router-dom";
+import React, { useMemo, useState } from "react";
+import { Plus, Pencil, Trash2, MoreHorizontal, FileText } from "lucide-react";
 
+const mockPharmacies = [
+  { id: 1, serial: 2, name: "صيدلية الشفاء", manager: "بها محمد كاظم", phone: "+96478XXXXXXXX", address: "بغداد - المنصور", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "معلقة" },
+  { id: 2, serial: 4, name: "صيدلية النبل", manager: "مصطفى محمد عبد", phone: "+96478XXXXXXXX", address: "بغداد - الحرية", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "معلقة" },
+  { id: 3, serial: 7, name: "صيدلية النبل", manager: "مصطفى محمد عبد", phone: "+96478XXXXXXXX", address: "بغداد - الحرية", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "معلقة" },
+  { id: 4, serial: 9, name: "صيدلية النبل", manager: "مصطفى محمد عبد", phone: "+96478XXXXXXXX", address: "بغداد - الحرية", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "معلقة" },
+  { id: 5, serial: 13, name: "صيدلية النبل", manager: "مصطفى محمد عبد", phone: "+96478XXXXXXXX", address: "بغداد - الحرية", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "معلقة" },
+  { id: 6, serial: 1, name: "صيدلية الحياة", manager: "حسن عباس كاظم", phone: "+96478XXXXXXXX", address: "بغداد - الجامعة", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "نشطة" },
+  { id: 7, serial: 14, name: "صيدلية النبل", manager: "مصطفى محمد عبد", phone: "+96478XXXXXXXX", address: "بغداد - الحرية", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "نشطة" },
+  { id: 8, serial: 10, name: "صيدلية النبل", manager: "مصطفى محمد عبد", phone: "+96478XXXXXXXX", address: "بغداد - الحرية", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "نشطة" },
+  { id: 9, serial: 6, name: "صيدلية النبل", manager: "مصطفى محمد عبد", phone: "+96478XXXXXXXX", address: "بغداد - الحرية", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "نشطة" },
+  { id: 10, serial: 3, name: "صيدلية الشمس", manager: "نور محمد عبد", phone: "+96478XXXXXXXX", address: "بغداد - الكاظمية", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "مرفوضة" },
+  { id: 11, serial: 5, name: "صيدلية النبل", manager: "مصطفى محمد عبد", phone: "+96478XXXXXXXX", address: "بغداد - الحرية", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "مرفوضة" },
+  { id: 12, serial: 8, name: "صيدلية النبل", manager: "مصطفى محمد عبد", phone: "+96478XXXXXXXX", address: "بغداد - الحرية", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "مرفوضة" },
+  { id: 13, serial: 11, name: "صيدلية النبل", manager: "مصطفى محمد عبد", phone: "+96478XXXXXXXX", address: "بغداد - الحرية", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "مرفوضة" },
+  { id: 14, serial: 12, name: "صيدلية النبل", manager: "مصطفى محمد عبد", phone: "+96478XXXXXXXX", address: "بغداد - الحرية", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "مرفوضة" },
+  { id: 15, serial: 15, name: "صيدلية النبل", manager: "مصطفى محمد عبد", phone: "+96478XXXXXXXX", address: "بغداد - الحرية", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "مرفوضة" },
+];
 
-
-
-
-
-
-
-const DocumentTable = () => {
-  const [documents, setDocuments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-  const [deletingId, setDeletingId] = useState(null);
-  const navigate = useNavigate();
-
-// إعداد دالة عرض التاريخ بالعربية
-const formatDate = (date) => {
-  if (!date) return "—";
-  try {
-    return DateTime
-      .fromISO(date, { zone: "utc" })
-      .setZone("Asia/Baghdad")
-      .setLocale("ar")
-      .toFormat("cccc dd-MM-yyyy"); // يوم الأسبوع + يوم + شهر + سنة بصيغة رقمية
-  } catch (error) {
-    return "تاريخ غير صالح";
-  }
-};
-
-
-  const token = localStorage.getItem("token");
-
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}document`, {
-          params: {
-            PageNumber: currentPage,
-            PageSize: pageSize,
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Accept-Language": "ar",
-          },
-        });
-
-        const data = res.data.data;
-        setDocuments(data.items || []);
-        setTotalPages(data.totalPages || 1);
-        setPageSize(data.pageSize || 10);
-      } catch (err) {
-        toast.error("فشل تحميل الوثائق");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDocuments();
-  }, [currentPage, pageSize]);
-
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+const StatusBadge = ({ value }) => {
+  const map = {
+    "معلقة": "bg-amber-100 text-amber-700",
+    "نشطة": "bg-emerald-100 text-emerald-700",
+    "مرفوضة": "bg-rose-100 text-rose-700",
   };
-const deleteDocument = async (id) => {
-
-
-  try {
-    setDeletingId(id);
-
-    await axios.delete(`${process.env.REACT_APP_API_URL}document/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Accept-Language": "ar",
-      },
-    });
-
-    toast.success("تم حذف الجدول بنجاح");
-
-    // إعادة تحميل البيانات بعد الحذف
-    setDocuments((prev) => prev.filter((doc) => doc.id !== id));
-  } catch (error) {
-    toast.error("فشل في حذف الجدول");
-  } finally {
-    setDeletingId(null);
-  }
+  return (
+    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${map[value] || "bg-gray-100 text-gray-700"}`}>
+      {value}
+    </span>
+  );
 };
+
+export default function PharmaciesTableMock() {
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  const totalPages = Math.ceil(mockPharmacies.length / pageSize);
+
+  const pageData = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return mockPharmacies.slice(start, start + pageSize);
+  }, [page]);
 
   return (
-    <div className="mt-5 p-3 md:p-6 border rounded-lg shadow-md overflow-x-auto" style={{ direction: "rtl" }}>
-       <div className="flex flex-col-reverse md:flex-row  md:items-center justify-between gap-4 mb-4" style={{ direction: "ltr" }}>
-        <Link
-          to="/add-Agenda"
-          className="bg-primary text-center py-2 px-4 text-white rounded-md hover:bg-primary-dark transition duration-300 w-full md:w-auto"
-        >
-             أضافة جدول اعمال
-        </Link>
-        <h1 className="text-2xl md:text-3xl text-primary font-semibold text-center md:text-right">
-           جداول الاعمال 
-        </h1>
-      </div>
-      <h2 className="text-xl font-semibold mb-4"> قائمه الجداول</h2>
+    <div className="mt-6">
+         {/* Header */}
+        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+        
+          <button
+            className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-white shadow hover:bg-emerald-600 transition"
+            onClick={() => alert("تسجيل صيدلية (وهمي)")}
+            style={{ direction: "ltr" }}
+          >
+            <Plus size={18} />
+            <span>تسجيل صيدلية</span>
+          </button>
+        </div>
+      <div className="w-full overflow-hidden  " style={{ direction: "rtl" }}>
+     
 
-      <table className="min-w-full table-auto border-collapse">
-        <thead className="bg-gray-200">
-          <tr>
-            <th className="px-4 py-2 border">#</th>
-            <th className="px-4 py-2 border text-center">تاريخ الجدول</th>
-            <th className="px-4 py-2 border text-center">الوصف</th>
-            <th className="px-4 py-2 border text-center"> ملف جدول الاعمال </th>
-                        <th className="px-4 py-2 border text-center">  ملف مخرجات الجلسة</th>
+        {/* Table */}
+        <div className="w-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <table className="min-w-[980px] w-full text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="py-3 pe-3 ps-4 text-center font-medium">التسلسل</th>
+                <th className="py-3 px-3 text-center font-medium">اسم الصيدلية</th>
+                <th className="py-3 px-3 text-center font-medium">اسم المدير</th>
+                <th className="py-3 px-3 text-center font-medium">رقم الهاتف</th>
+                <th className="py-3 px-3 text-center font-medium">العنوان</th>
+                <th className="py-3 px-3 text-center font-medium">تاريخ الانضمام</th>
+                <th className="py-3 px-3 text-center font-medium">عدد الدواء</th>
+                <th className="py-3 px-3 text-center font-medium">عدد الطلبات</th>
+                <th className="py-3 px-3 text-center font-medium">حالة الحساب</th>
+                <th className="py-3 ps-3 pe-4 text-center font-medium">إجراءات</th>
+              </tr>
+            </thead>
 
-                          <th className="px-4 py-2 border">إجراءات</th>
-
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr><td colSpan="4" className="text-center py-4">جاري التحميل...</td></tr>
-          ) : documents.length === 0 ? (
-            <tr><td colSpan="4" className="text-center text-red-500 py-4">لا توجد نتائج.</td></tr>
-          ) : (
-            documents.map((doc, index) => (
-              <tr key={doc.id} className="hover:bg-gray-100">
-                <td className="px-4 py-2 border text-center">{(currentPage - 1) * pageSize + index + 1}</td>
-                <td className="px-4 py-2 border text-center">{formatDate(doc.date)}</td>
-                <td className="px-4 py-2 border text-center">{doc.dscrp || "بدون وصف"}</td>
-                <td className="px-4 py-2 border text-center  ">
-                  <a
-                    href={doc.inUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 flex items-center justify-center"
-                  >
-                    <FileText size={18} />
-                  </a>
-                </td>
-                 <td className="px-4 py-2 border text-center">
-  {doc.outUrl ? (
-    <a
-      href={doc.outUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-blue-600 hover:text-blue-800 flex items-center justify-center"
-    >
-      <FileText size={18} />
-    </a>
-  ) : (
-    <span className="text-gray-400 flex items-center justify-center cursor-not-allowed">
-      <FileText size={18} />
-    </span>
-  )}
-</td>
-
-                    <td className="px-4 py-2 border text-center">
-        <div className="flex items-center justify-center gap-2">
-                    <button
-                    className="text-blue-600 hover:text-blue-800"
-onClick={() => navigate(`/EditAgenda/${doc.id}`, { state: { agenda: doc } })}
-                  >
-                    <Pencil size={18} />
-                  </button>
-              <button
-  onClick={() => deleteDocument(doc.id)}
-  disabled={deletingId === doc.id}
-  className="text-red-600 hover:text-red-800 ml-2"
->
-  {deletingId === doc.id ? "..." : <Trash2 size={18} />}
-</button>
+            <tbody className="divide-y divide-gray-100">
+              {pageData.map((p) => (
+                <tr key={p.id} className="hover:bg-gray-50 transition border-b">
+                  <td className="py-3 pe-3 ps-4 text-center text-gray-700">{p.serial}</td>
+                  <td className="py-3 px-3 text-center text-gray-900">{p.name}</td>
+                  <td className="py-3 px-3 text-center text-gray-900">{p.manager}</td>
+                  <td className="py-3 px-3 text-center text-gray-700">{p.phone}</td>
+                  <td className="py-3 px-3 text-center text-gray-700">{p.address}</td>
+                  <td className="py-3 px-3 text-center">
+                    <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
+                      {p.joinDate}
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-center text-gray-900">{p.drugs}</td>
+                  <td className="py-3 px-3 text-center text-gray-900">{p.orders}</td>
+                  <td className="py-3 px-3 text-center">
+                    <StatusBadge value={p.status} />
+                  </td>
+                  <td className="py-3 ps-3 pe-4">
+                    <div className="flex items-center justify-center gap-2" style={{ direction: "ltr" }}>
+                
+                      <button
+                        className="inline-flex items-center justify-center   border-gray-200 bg-white p-2 text-gray-600 hover:bg-gray-50"
+                        title="المزيد"
+                        onClick={() => alert(`المزيد عن ${p.name} (وهمي)`)}
+                      >
+                        <MoreHorizontal size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6 gap-2 flex-wrap">
+        {/* Pagination */}
+        <div className="flex flex-wrap items-center justify-center gap-2 p-4">
           <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="rounded-full border border-gray-200 px-3 py-1 text-sm hover:bg-gray-50 disabled:opacity-50"
           >
             السابق
           </button>
 
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
             <button
-              key={pageNum}
-              onClick={() => goToPage(pageNum)}
-              className={`px-3 py-1 border rounded ${pageNum === currentPage ? 'bg-blue-600 text-white' : 'hover:bg-gray-200'}`}
+              key={n}
+              onClick={() => setPage(n)}
+              className={`rounded-full px-3 py-1 text-sm transition ${
+                n === page ? "bg-emerald-500 text-white shadow" : "border border-gray-200 hover:bg-gray-50"
+              }`}
             >
-              {pageNum}
+              {n}
             </button>
           ))}
 
           <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="rounded-full border border-gray-200 px-3 py-1 text-sm hover:bg-gray-50 disabled:opacity-50"
           >
             التالي
           </button>
         </div>
-      )}
+      </div>
     </div>
   );
-};
-
-export default DocumentTable;
+}

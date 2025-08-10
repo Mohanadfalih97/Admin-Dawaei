@@ -92,7 +92,7 @@ const MainLayout = () => {
     <section className="">
       <div className="flex">
  {/* الوقت والدورة */}
-        <section className="flex-1 w-full  px-2 py-4">
+        <section className="flex-1 w-full  px-2 py-4 "style={{backgroundColor: "#F8FCFB"}}>
       <Topbar />
 
 

@@ -1,323 +1,222 @@
-import React, { useEffect, useState } from "react";
-import MembersDilog from "./MembersDilog";
-import { format } from "date-fns";
-import { ar } from "date-fns/locale";
-import { FileText, RefreshCw, Send } from "lucide-react";
-import { toast } from "react-toastify";
-import * as AlertDialog from "@radix-ui/react-alert-dialog";
+import React, { useMemo, useState } from "react";
+import {
+  Filter,
+  Plus,
+  MoreHorizontal,
+  Search as SearchIcon,
+} from "lucide-react";
 
-const MemberTable = ({ searchTerm }) => {
-  const [members, setMembers] = useState([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedReport, setSelectedReport] = useState(null);
-  const [open, setOpen] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [institutionId, setInstitutionId] = useState(null);
-  const [selectedResetMember, setSelectedResetMember] = useState(null);
-
-const sendResetEmailMessage = async (email) => {
-  try {
-    const Token = localStorage.getItem("token");
-
-    const response = await fetch(`${process.env.REACT_APP_API_URL}otp/send-message-reset`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "Accept-Language": "ar",
-        Authorization: `Bearer ${Token}`,
-      },
-      body: JSON.stringify({
-        email: email,
-        voteUrl: `${process.env.REACT_APP_VOTE_URL}/LoginAsMember`
-      }),
-    });
-
-    if (!response.ok) {
-      const result = await response.json();
-      console.error("فشل في إرسال الإشعار:", result?.error || result);
-      toast.warn("تم تغيير الرمز السري، لكن تعذر إرسال الإشعار عبر البريد.");
-    }
-  } catch (err) {
-    console.error("خطأ أثناء إرسال الإشعار:", err);
-    toast.warn("تم تغيير الرمز السري، لكن تعذر إرسال الإشعار عبر البريد.");
-  }
+const badgeCls = {
+  متوفرة:
+    "bg-green-100 text-green-700 border border-green-200 px-3  py-1 rounded-xl flex items-center justify-center",
+  "غير متوفر":
+    "bg-red-100 text-red-700 border border-red-200 px-3 py-1 rounded-xl flex items-center justify-center",
 };
 
+// بيانات وهمية تطابق الصورة
+const MOCK = Array.from({ length: 15 }).map((_, i) => ({
+  id: i + 1,
+  name: i === 0 ? "Panadol" : "Amoxicillin",
+  category: i === 0 ? "مسكن" : "مضاد حيوي",
+  itemName: i === 0 ? "Panadol" : "Amoxicillin",
+  availableQty: i === 0 ? "عبوة 120" : "عبوة 80",
+  usedQty: i === 0 ? "—" : "عبوة 80",
+  price: i === 0 ? "1500 دينار عراقي" : "3500 دينار عراقي",
+  prodDate: "2023/7/7",
+  expDate: "2026/6/8",
+  status:
+    [3, 7, 11, 13].includes(i + 1) // عشوائيًا لإظهار الأحمر مثل التصميم
+      ? "غير متوفر"
+      : "متوفرة",
+}));
 
-  useEffect(() => {
-    const fetchInstitution = async () => {
-      const token = localStorage.getItem("token");
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}institution`, {
-          headers: {
-            "Accept-Language": "en",
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const result = await response.json();
-        if (response.ok && result.data?.items?.length > 0) {
-          setInstitutionId(result.data.items[0].id);
-        }
-      } catch (err) {
-        console.error("Institution fetch error:", err);
-      }
-    };
+export default function MedicinesTable() {
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
-    fetchInstitution();
-  }, []);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return MOCK;
+    return MOCK.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        r.category.toLowerCase().includes(q) ||
+        r.itemName.toLowerCase().includes(q)
+    );
+  }, [query]);
 
-  const formatDateArabic = (dateStr) => {
-    if (!dateStr) return "—";
-    try {
-      return format(new Date(dateStr), "yyyy/MM/dd", { locale: ar });
-    } catch {
-      return "—";
-    }
-  };
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const clampedPage = Math.min(page, totalPages);
+  const pageItems = filtered.slice(
+    (clampedPage - 1) * pageSize,
+    clampedPage * pageSize
+  );
 
-  const sendVoteLink = async (email) => {
-    if (!email) {
-      toast.error("البريد الإلكتروني غير متوفر");
-      return;
-    }
-    try {
-      const Token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.REACT_APP_API_URL}otp/send-member-link`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept-Language": "ar",
-          Accept: "application/json",
-          Authorization: `Bearer ${Token}`,
-        },
-        body: JSON.stringify({
-          email,
-          voteUrl: `${process.env.REACT_APP_VOTE_URL}/LoginAsMember`,
-        }),
-      });
-      if (!response.ok) {
-        const text = await response.text();
-        toast.error(`فشل الإرسال: ${text}`);
-      }
-    } catch (err) {
-      console.error("Error:", err);
-      toast.error("حدث خطأ أثناء إرسال الرابط.");
-    }
-  };
-
-  const handleSubmit = async (memberId) => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.REACT_APP_API_URL}auth/reset-member-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "Accept-Language": "ar",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ memberId: memberId.trim() }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        toast.success("تم تغيير الرمز السري بنجاح");
-
-        const emailResponse = await fetch(`${process.env.REACT_APP_API_URL}members?MemberId=${encodeURIComponent(memberId.trim())}`, {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            "Accept-Language": "ar",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const emailResult = await emailResponse.json();
-        const member = emailResult?.data?.items?.[0];
-
-        if (member?.eMail) {
-          await sendResetEmailMessage(member.eMail);
-        }
-      } else {
-        const msg = result.msg || "فشل تغيير الرمز السري";
-        toast.error(msg);
-      }
-    } catch (error) {
-      console.error("Reset error:", error);
-      toast.error("حدث خطأ أثناء الاتصال بالخادم.");
-    } finally {
-      setLoading(false);
-      setSelectedResetMember(null);
-    }
-  };
-
-  useEffect(() => {
-    const fetchMembers = async () => {
-      const token = localStorage.getItem("token");
-      try {
-        setLoading(true);
-        const response = await fetch(`${process.env.REACT_APP_API_URL}members?PageNumber=${currentPage}&PageSize=${pageSize}`,
-          {
-            headers: {
-              Accept: "application/json",
-              "Accept-Language": "en",
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-        const result = await response.json();
-        if (response.ok && result.data?.items) {
-          setMembers(result.data.items);
-          setTotalPages(result.data.totalPages || 1);
-          setPageSize(result.data.pageSize || 10);
-          setError("");
-        } else {
-          setError(result.msg || "فشل في جلب البيانات");
-        }
-      } catch (err) {
-        console.error("Fetch error:", err);
-        setError("حدث خطأ أثناء الاتصال بالخادم.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMembers();
-  }, [currentPage, pageSize]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
-
-  const openDialog = (member) => {
-    setSelectedReport(member);
-    setOpen(true);
-  };
-
-  const filteredMembers = members.filter((member) => {
-    const search = searchTerm.trim().toLowerCase();
-    return member.fullName?.toLowerCase().includes(search);
-  });
-
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
-  };
+  const go = (p) => p >= 1 && p <= totalPages && setPage(p);
 
   return (
-    <div className="mt-5 p-3 md:p-6 border rounded-lg shadow-md overflow-x-auto" style={{ direction: "rtl" }}>
-      <h1 className="text-xl md:text-2xl font-semibold text-right mb-4">قائمة الأعضاء</h1>
-      {error && <p className="text-red-600 text-right mb-4">{error}</p>}
-      <table className="min-w-full table-auto" style={{ direction: "ltr" }}>
-        <thead>
-          <tr className="bg-gray-100 text-gray-700">
-            <th  className="px-2 md:px-6 py-3 text-center border-b">الإجراءات</th>
-            <th  className="px-2 md:px-6 py-3 text-center border-b">تاريخ الإنشاء</th>
-            <th  className="px-2 md:px-6 py-3 text-center border-b">رقم WhatsApp</th>
-            <th  className="px-2 md:px-6 py-3 text-center border-b">رقم الهاتف</th>
-            <th  className="px-2 md:px-6 py-3 text-center border-b">البريد الإلكتروني</th>
-            <th  className="px-2 md:px-6 py-3 text-center border-b">القسم</th>
-            <th  className="px-2 md:px-6 py-3 text-center border-b">المنصب</th>
-            <th  className="px-2 md:px-6 py-3 text-center border-b">الاسم</th>
-            <th  className="px-2 md:px-6 py-3 text-center border-b">الرمز التعريفي</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr><td colSpan="10" className="text-center">جاري التحميل...</td></tr>
-          ) : filteredMembers.length === 0 ? (
-            <tr><td colSpan="10" className="text-center text-red-500">لا توجد نتائج مطابقة.</td></tr>
-          ) : (
-            filteredMembers.map((member) => (
-              <tr key={member.id} className="hover:bg-gray-100">
-                <td className="text-center">
-                  <div className="flex gap-3 justify-center py-2">
-                    <button title="عرض التقرير" className="text-blue-600" onClick={() => openDialog(member)}><FileText size={18} /></button>
-                    <button title="إعادة تعيين الرمز" className="text-green-600" onClick={() => setSelectedResetMember(member)}><RefreshCw size={18} /></button>
-                    <button title="إرسال رابط التصويت" className="text-purple-600" onClick={() => sendVoteLink(member.eMail)}><Send size={18} /></button>
-                  </div>
-                </td>
-                <td className="text-center">{formatDateArabic(member.createdAt)}</td>
-                <td className="text-center">{member.watsApp || "—"}</td>
-                <td className="text-center">{member.phone1 || "—"}</td>
-                <td className="text-center">{member.eMail || "—"}</td>
-                <td className="text-center">{member.department || "—"}</td>
-                <td className="text-center">{member.position || "—"}</td>
-                <td className="text-center">{member.fullName}</td>
-                <td className="text-center">{member.memberId}</td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+    <div className="w-full" style={{ direction: "rtl" }}>
+      {/* شريط علوي */}
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <button
+            className="h-10 w-10 rounded-full bg-white text-gray-700 shadow border hover:bg-gray-50 flex items-center justify-center"
+            title="فلترة"
+          >
+            <Filter size={18} />
+          </button>
 
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6 gap-2 flex-wrap">
-          <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 border rounded disabled:opacity-50">السابق</button>
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((pageNum) => (
-            <button key={pageNum} onClick={() => goToPage(pageNum)} className={`px-3 py-1 border rounded ${pageNum === currentPage ? 'bg-blue-600 text-white' : 'hover:bg-gray-200'}`}>{pageNum}</button>
-          ))}
-          <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1 border rounded disabled:opacity-50">التالي</button>
+          <div className="relative">
+            <input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setPage(1);
+              }}
+              placeholder="ابحث عن علاج"
+              className="h-10 w-[300px] md:w-[420px] rounded-full bg-white shadow border pl-4 pr-10 outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+            <SearchIcon
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
+          </div>
         </div>
-      )}
 
-      <MembersDilog
-        open={open}
-        onOpenChange={setOpen}
-        member={selectedReport}
-        memberId={selectedReport?.memberId}
-        fullName={selectedReport?.fullName}
-        department={selectedReport?.department}
-        position={selectedReport?.position}
-        imgUrl={selectedReport?.imgUrl}
-        phone1={selectedReport?.phone1}
-        phone2={selectedReport?.phone2}
-        watsApp={selectedReport?.watsApp}
-        eMail={selectedReport?.eMail}
-        cycleId={selectedReport?.cycleId}
-        createdAt={selectedReport?.createdAt}
-        updatedAt={selectedReport?.updatedAt}
-        institutionId={institutionId}
-      />
+        <button
+          className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-full shadow"
+          onClick={() => alert("فتح نموذج تسجيل علاج")}
+        >
+          تسجيل علاج <Plus size={18} />
+        </button>
+      </div>
 
-      {selectedResetMember && (
-        <AlertDialog.Root open={true} onOpenChange={() => setSelectedResetMember(null)}>
-          <AlertDialog.Portal>
-            <AlertDialog.Overlay className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" />
-            <AlertDialog.Content className="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 shadow-lg w-7/12 max-w-md">
-              <AlertDialog.Title className="text-lg font-semibold text-gray-800 mb-2 text-center">
-                تأكيد إعادة تعيين الرمز
-              </AlertDialog.Title>
-              <AlertDialog.Description className="text-sm text-gray-600 mb-4">
-                هل أنت متأكد أنك تريد إعادة تعيين الرمز السري لهذا العضو ({selectedResetMember.fullName})؟
-              </AlertDialog.Description>
-              <div className="flex justify-center gap-3">
-                <AlertDialog.Cancel asChild>
-                  <button className="px-4 py-1 bg-gray-200 rounded hover:bg-gray-300">
-                    إلغاء
-                  </button>
-                </AlertDialog.Cancel>
-                <AlertDialog.Action asChild>
-                  <button
-                    className="px-4 py-1 bg-blue-800 text-white rounded hover:bg-blue-700"
-                    onClick={() => handleSubmit(selectedResetMember.memberId)}
+      {/* الجدول */}
+      <div className="bg-white rounded-2xl shadow border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm" style={{ direction: "rtl" }}>
+            <thead className="bg-gray-50 text-gray-600">
+              <tr>
+                <Th>الإجراءات</Th>
+                <Th>حالة الحساب</Th>
+                <Th>تاريخ الانتهاء</Th>
+                <Th>تاريخ الإنتاج</Th>
+                <Th>السعر</Th>
+                <Th>الكمية المصروفة</Th>
+                <Th>الكمية المتوفرة</Th>
+                <Th>الفئة</Th>
+                <Th>اسم الصنف</Th>
+                <Th>اسم العلاج</Th>
+                <Th>التسلسل</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {pageItems.map((row) => (
+                <tr
+                  key={row.id}
+                  className="border-t hover:bg-gray-50/60 transition-colors"
+                >
+                  <Td center>
+                    <button
+                      className="h-8 w-8 rounded-full border flex items-center justify-center hover:bg-gray-100"
+                      title="المزيد"
+                    >
+                      <MoreHorizontal size={18} />
+                    </button>
+                  </Td>
+                  <Td  center>
+                    <span className={badgeCls[row.status]}>{row.status}</span>
+                  </Td>
+                  <Td center>{row.expDate}</Td>
+                  <Td center>{row.prodDate}</Td>
+                  <Td center>{row.price}</Td>
+                  <Td center>{row.usedQty}</Td>
+                  <Td center>{row.availableQty}</Td>
+                  <Td center>{row.category}</Td>
+                  <Td center>{row.itemName}</Td>
+                  <Td center className="font-medium">
+                    {row.name}
+                  </Td>
+                  <Td center className="text-gray-500">
+                    {row.id}
+                  </Td>
+                </tr>
+              ))}
+
+              {pageItems.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={11}
+                    className="text-center py-8 text-red-500 font-medium"
                   >
-                    تأكيد
-                  </button>
-                </AlertDialog.Action>
-              </div>
-            </AlertDialog.Content>
-          </AlertDialog.Portal>
-        </AlertDialog.Root>
-      )}
+                    لا توجد نتائج مطابقة.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+   
+      </div>
+           {/* الترقيم */}
+        <div className="flex items-center justify-between px-4 py-3">
+          <button
+            onClick={() => go(page - 1)}
+            disabled={page === 1}
+            className="px-3 py-1 rounded border bg-white disabled:opacity-50"
+          >
+            السابق
+          </button>
+
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }).map((_, i) => {
+              const n = i + 1;
+              return (
+                <button
+                  key={n}
+                  onClick={() => go(n)}
+                  className={`h-8 w-8 rounded-full border flex items-center justify-center ${
+                    n === page
+                      ? "bg-emerald-500 text-white border-emerald-500"
+                      : "bg-white hover:bg-gray-100"
+                  }`}
+                >
+                  {n}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => go(page + 1)}
+            disabled={page === totalPages}
+            className="px-3 py-1 rounded border bg-white disabled:opacity-50"
+          >
+            التالي
+          </button>
+        </div>
     </div>
   );
-};
+}
 
-export default MemberTable;
+/* عناصر مساعدة لرأس الجدول والخلايا */
+function Th({ children }) {
+  return (
+    <th className="px-4 py-3 text-center font-medium whitespace-nowrap">
+      {children}
+    </th>
+  );
+}
+function Td({ children, center }) {
+  return (
+    <td
+      className={`px-4 py-3 whitespace-nowrap ${
+        center ? "text-center" : "text-right"
+      }`}
+    >
+      {children}
+    </td>
+  );
+}

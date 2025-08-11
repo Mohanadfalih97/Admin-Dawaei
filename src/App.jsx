@@ -47,17 +47,17 @@ import InstitutionForm from "./pages/InstitutionForm";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { AuthProvider } from "./AuthContext";
-
+/* import { AuthProvider } from "./AuthContext";
+ */
 
 const App = () => {
   return (
 
     <Router>
-      <AuthProvider>
-        <Routes>
+{/*       <AuthProvider>
+ */}        <Routes>
           <Route path="/" element={<MainLayout />}>
-            <Route index element={<Navigate to="/login" replace />} />
+            <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="votes/create" element={<CreateVote />} />
             <Route path="votes/:id" element={<VoteDetails />} />
@@ -113,8 +113,8 @@ const App = () => {
         </Routes>
 
         <ToastContainer position="top-center" rtl />
-      </AuthProvider>
-    </Router>
+{/*       </AuthProvider>
+ */}    </Router>
   );
 };
 

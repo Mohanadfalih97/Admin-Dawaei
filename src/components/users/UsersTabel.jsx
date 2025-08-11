@@ -1,30 +1,43 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { Alert, AlertTitle, AlertDescription } from "../Ui/Alert";
-import { Pencil, Trash2 } from "lucide-react";
+import { Search, SlidersHorizontal, MoreHorizontal, Pencil, Trash2, Plus } from "lucide-react";
 
-const UsersTable = () => {
+const badgeCls = {
+  active: "bg-green-100 text-green-700 border-green-200",
+  pending: "bg-amber-100 text-amber-700 border-amber-200",
+  blocked: "bg-red-100 text-red-700 border-red-200",
+};
+
+function StatusBadge({ status }) {
+  const key = status === 1 || status === true ? "active" : status === -1 ? "blocked" : "pending";
+  const text = key === "active" ? "نشطة" : key === "blocked" ? "موقوفة" : "معلقة";
+  return (
+    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs border ${badgeCls[key]}`}>
+      {text}
+    </span>
+  );
+}
+
+export default function UsersTable() {
   const [users, setUsers] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [showSuperAdminAlert, setShowSuperAdminAlert] = useState(false);
+  const [pageSize, setPageSize] = useState(15);
   const [deletingUserId, setDeletingUserId] = useState(null);
 
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const token = useMemo(() => localStorage.getItem("token"), []);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}auth/get-all-users`, {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}auth/get-all-users`, {
           params: {
             name: searchQuery,
             PageNumber: currentPage,
@@ -34,194 +47,212 @@ const UsersTable = () => {
             IsDeleted: false,
           },
           headers: {
-            Authorization: `Bearer ${token}`, // ✅ إضافة التوكن
-            "Accept-Language": "en",
+            Authorization: `Bearer ${token}`,
+            "Accept-Language": "ar",
             Accept: "application/json",
           },
         });
-
-        const data = response.data.data;
+        const data = res.data?.data ?? {};
         setUsers(data.items || []);
         setTotalPages(data.totalPages || 1);
-        setPageSize(data.pageSize || 10);
-      } catch (error) {
-        console.error("Error fetching users:", error);
+        setPageSize(data.pageSize || pageSize);
+      } catch (e) {
+        console.error(e);
         toast.error("حدث خطأ أثناء تحميل المستخدمين.");
       } finally {
         setLoading(false);
       }
     };
-
     fetchUsers();
   }, [searchQuery, currentPage, pageSize, token]);
 
-  const openDialog = (user) => {
-    navigate(`/user/${user.id}`, { state: { user } });
-  };
+  const openDialog = (user) => navigate(`/user/${user.id}`, { state: { user } });
 
   const deleteUser = async (user) => {
-    if (user.staticRole === 0) {
-      setShowSuperAdminAlert(true);
+    if (user?.staticRole === 0) {
+      toast.info("لا يمكنك حذف مستخدم بصلاحية سوبر أدمن.");
       return;
     }
-
     setDeletingUserId(user.id);
-
     try {
-      const response = await axios.delete(`${process.env.REACT_APP_API_URL}auth/${user.id}`, {
+      await axios.delete(`${process.env.REACT_APP_API_URL}auth/${user.id}`, {
         headers: {
-          Authorization: `Bearer ${token}`, // ✅ إضافة التوكن
-          "Accept-Language": "en",
+          Authorization: `Bearer ${token}`,
+          "Accept-Language": "ar",
           Accept: "application/json",
         },
       });
-
-      if (response.status === 200) {
-        toast.success("تم حذف المستخدم بنجاح!");
-        setUsers(users.filter((u) => u.id !== user.id));
-      }
-    } catch (error) {
-      console.error("Error deleting user:", error);
+      toast.success("تم حذف المستخدم بنجاح!");
+      setUsers((prev) => prev.filter((u) => u.id !== user.id));
+    } catch {
       toast.error("حدث خطأ أثناء الحذف!");
     } finally {
       setDeletingUserId(null);
     }
   };
 
-  useEffect(() => {
-    if (showSuperAdminAlert) {
-      const timeout = setTimeout(() => setShowSuperAdminAlert(false), 4000);
-      return () => clearTimeout(timeout);
-    }
-  }, [showSuperAdminAlert]);
-
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
-  };
+  const goToPage = (p) => p >= 1 && p <= totalPages && setCurrentPage(p);
 
   return (
-    <div className="mt-5 p-3 md:p-6 border rounded-lg shadow-md overflow-x-auto" style={{ direction: "rtl" }}>
-      <div className="flex flex-col-reverse md:flex-row md:items-center justify-between gap-4 mb-4" style={{ direction: "ltr" }}>
-        <Link
-          to="/Registration"
-          className="bg-primary text-center py-2 px-4 text-white rounded-md hover:bg-primary-dark transition duration-300 w-full md:w-auto"
-        >
-          انشاء مستخدم
-        </Link>
-        <h1 className="text-2xl md:text-3xl text-primary font-semibold text-center md:text-right">
-          المستخدمين
-        </h1>
-      </div>
+    <div className="p" >
+      {/* شريط علوي */}
+      <div className=" px-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+          {/* بحث + فلترة */}
+          <div className="flex w-full md:w-auto items-center gap-3">
+            <button
+              type="button"
+              className="h-10 w-12 rounded-full bg-white  border border-gray-300 flex items-center justify-center hover:bg-#D9D9D9/15 transition"
+              title="فلترة"
+            >
+              <SlidersHorizontal className="size-5 text-gray-500 border-gray-300" />
+            </button>
 
-      <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
-        <input
-          type="text"
-          placeholder="ابحث عن الاسم الكامل..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          className="border rounded px-4 py-2 w-full md:flex-1"
-        />
-        <button
-          onClick={() => {
-            setSearchQuery(searchInput);
-            setCurrentPage(1);
-          }}
-          className="bg-blue-600 text-white px-4 py-2 w-40 rounded hover:bg-blue-700 transition"
-        >
-          بحث
-        </button>
-      </div>
-
-      <table className="min-w-full table-auto border-collapse">
-        <thead className="bg-gray-200">
-          <tr>
-            <th className="px-2 md:px-4 py-2 border">العدد</th>
-            <th className="px-2 md:px-4 py-2 border text-center">الاسم الكامل</th>
-            <th className="px-2 md:px-4 py-2 border text-center">البريد الكتروني</th>
-            <th className="px-2 md:px-4 py-2 border text-center">رمز البلد</th>
-            <th className="px-2 md:px-4 py-2 border text-center">تعديل</th>
-            <th className="px-2 md:px-4 py-2 border text-center">حذف</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr><td colSpan="6" className="text-center py-4">جاري التحميل...</td></tr>
-          ) : users.length === 0 ? (
-            <tr><td colSpan="6" className="text-center text-red-500 py-4">لا توجد نتائج مطابقة.</td></tr>
-          ) : (
-            users.map((user, index) => (
-              <tr key={user.id} className="hover:bg-gray-100">
-                <td className="px-2 md:px-4 py-2 border text-center">{(currentPage - 1) * pageSize + index + 1}</td>
-                <td className="px-2 md:px-4 py-2 border text-center text-gray-700">{user.name}</td>
-                <td className="px-2 md:px-4 py-2 border text-center text-gray-700">{user.email}</td>
-                <td className="px-2 md:px-4 py-2 border text-center text-gray-700">{user.phoneCountryCode}</td>
-                <td className="px-2 md:px-4 py-2 border text-center">
-                  <button className="text-blue-600 hover:text-blue-800" onClick={() => openDialog(user)}>
-                    <Pencil size={18} />
-                  </button>
-                </td>
-                <td className="px-2 md:px-4 py-2 border text-center">
-                  <button
-                    onClick={() => deleteUser(user)}
-                    disabled={deletingUserId === user.id}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-
-      {showSuperAdminAlert && (
-        <Alert variant="destructive" className="mt-4">
-          <AlertTitle>تنبيه</AlertTitle>
-          <AlertDescription>
-            لا يمكنك حذف مستخدم بصلاحية <strong>سوبر أدمن</strong>.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center mt-6 gap-2 flex-wrap">
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            السابق
-          </button>
-
-          {(() => {
-            const visiblePages = 5;
-            const currentGroup = Math.floor((currentPage - 1) / visiblePages);
-            const startPage = currentGroup * visiblePages + 1;
-            const endPage = Math.min(startPage + visiblePages - 1, totalPages);
-
-            return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((pageNum) => (
+            <div className="flex-1 md:w-[420px] h-10 rounded-full  border border-gray-300 backdrop-blur-sm overflow-hidden flex items-center">
+              <Search className="mx-3 size-5 text-gray-500" />
+              <input
+                className="flex-1 bg-transparent bg-white text-gray-500 placeholder-gray-500 focus:outline-none"
+                placeholder="ابحث عن مستخدم"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && (setSearchQuery(searchInput), setCurrentPage(1))}
+              />
               <button
-                key={pageNum}
-                onClick={() => goToPage(pageNum)}
-                className={`px-3 py-1 border rounded ${pageNum === currentPage ? "bg-blue-600 text-white" : "hover:bg-gray-200"}`}
+                onClick={() => { setSearchQuery(searchInput); setCurrentPage(1); }}
+                className="px-4 h-full text-white/90 hover:bg-white/10"
               >
-                {pageNum}
+                بحث
               </button>
-            ));
-          })()}
+            </div>
+          </div>
 
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+          {/* زر إنشاء */}
+          <Link
+            to="/Registration"
+            className="inline-flex items-center gap-2 h-11 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow"
           >
-            التالي
-          </button>
+            <span>تسجيل مستخدم</span>
+            <Plus className="size-5" />
+          </Link>
         </div>
-      )}
+
+        {/* بطاقة الجدول */}
+        <div className="rounded-2xl bg-white shadow-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full whitespace-nowrap">
+              <thead  className=" text-gray-600 text-sm ">
+                <tr>
+                  <Th className="text-center "></Th>
+                  <Th className="text-center ">حالة الحساب</Th>
+                  <Th className="text-center ">عدد الطلبات</Th>
+                  <Th className="text-center ">تاريخ الانضمام</Th>
+                  <Th className="text-center ">العنوان</Th>
+                  <Th className="text-center ">رقم الهاتف</Th>
+                  <Th className="text-center">البريد الإلكتروني</Th>
+                  <Th className="text-center ">اسم المستخدم</Th>
+                  <Th className="text-center">الترتيب</Th>
+                </tr>
+              </thead>
+
+              <tbody className="text-sm">
+                {loading ? (
+                  [...Array(10)].map((_, i) => (
+                    <tr key={i} className="border-t">
+                      <Td colSpan={9}>
+                        <div className="h-5 w-full animate-pulse bg-gray-100 rounded" />
+                      </Td>
+                    </tr>
+                  ))
+                ) : users.length === 0 ? (
+                  <tr className="border-t">
+                    <Td colSpan={9} className="text-center py-8 text-gray-500">لا توجد نتائج مطابقة.</Td>
+                  </tr>
+                ) : (
+                  users.map((u, i) => {
+                    const rowIndex = (currentPage - 1) * pageSize + i + 1;
+                    return (
+                      <tr key={u.id} className="border-t hover:bg-gray-50">
+                        <Td>
+                          <button className="p-2 rounded hover:bg-gray-100 " title="إجراءات">
+                            <MoreHorizontal className="size-5 text-gray-500 " />
+                          </button>
+                        </Td>
+                        <Td className="text-center">
+                          {/* حاول جلب حالة فعلية من API: u.accountStatus / u.isActive / u.isBlocked */}
+                          <StatusBadge status={u.isActive ?? 1} />
+                        </Td>
+                        <Td className="text-gray-700 text-center">{u.ordersCount ?? 1000}</Td>
+                        <Td className="text-gray-700 text-center">{(u.createdAt ?? "").toString().slice(0, 10).replaceAll("-", "/")}</Td>
+                        <Td className="text-gray-700 text-center">{u.address ?? "بغداد - السعدون"}</Td>
+                        <Td className="text-gray-700 text-center">
+                          {`${u.phoneCountryCode ?? "+964"}${u.phone?.replace(/\d(?=\d{4})/g, "X") ?? "7XXXXXXXX"}`}
+                        </Td>
+                        <Td className="text-gray-700 text-center">{u.email}</Td>
+                        <Td className="text-gray-900 font-medium text-center">{u.name}</Td>
+                        <Td className="text-gray-500 text-center">{rowIndex}</Td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* شريط الإجراءات السفلي (تعديل/حذف) مشابه للصورة يمكن فتحه عند النقر من عمود … */}
+          {/* ترقيم الصفحات */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t bg-white">
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded-full border text-gray-700 disabled:opacity-40"
+              >
+                السابق
+              </button>
+
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalPages }, (_, k) => k + 1)
+                  .slice(Math.max(0, currentPage - 3), Math.max(0, currentPage - 3) + 5)
+                  .map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => goToPage(p)}
+                      className={`h-9 min-w-9 px-3 rounded-full border ${
+                        p === currentPage ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+              </div>
+
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 rounded-full border text-gray-700 disabled:opacity-40"
+              >
+                التالي
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
-};
+}
 
-export default UsersTable;
+/* صغائح خلايا الجدول المختصرة */
+function Th({ children }) {
+  return (
+    <th className="px-4 py-3 font-semibold ">
+      {children}
+    </th>
+  );
+}
+function Td({ children, className = "", ...rest }) {
+  return (
+    <td className={`px-4 py-3 align-middle ${className}`} {...rest}>
+      {children}
+    </td>
+  );
+}

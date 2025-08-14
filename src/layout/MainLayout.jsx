@@ -101,7 +101,7 @@ const MainLayout = () => {
       <Outlet />
         </section>
 
-        <section className="hidden md:flex   mt-5" >
+        <section className="w-64 h-screen" >
           <Sidbar />
         </section>
       </div>

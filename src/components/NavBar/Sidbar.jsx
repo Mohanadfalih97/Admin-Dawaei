@@ -8,20 +8,20 @@ import {
   LogOut,
 } from "lucide-react";
 import logo from "../../asset/Imge/logo.png"; // ضع شعارك هنا
-import userImg from "../../asset/Imge/profiledefautimg.png"; // صورة المستخدم
+import userImg from "../../asset/Imge/profilepic.jpg"; // صورة المستخدم
 
 const Sidebar = () => {
   return (
     <aside className="w-64 h-screen bg-white shadow flex flex-col justify-between">
       {/* Header */}
       <div>
-        <div className="p-6 flex items-center gap-2">
-          <img src={logo} alt="Logo" className="w-8 h-8" />
-          <h1 className="text-2xl font-bold text-green-600">Dawaei</h1>
+        <div className="px-3 py-3 flex items-center gap-4 justify-center" style={{direction:"rtl"}}>
+          <img src={logo} alt="Logo" className="w-11 h-11" />
+          <h1 className="text-4xl font-bold text-green-600">Dawaei</h1>
         </div>
-
+<hr className="mt-1"/>
         {/* Navigation */}
-        <nav className="mt-4 px-4 space-y-4 text-gray-500">
+        <nav className="mt-6 pl-2 space-y-4 text-gray-500 rounded-md " style={{direction:"rtl"}}>
           <SidebarLink icon={LayoutDashboard} label="الصفحة الرئيسية" active />
           <SidebarLink icon={Users} label="قائمة الصيدليات" />
           <SidebarLink icon={User} label="قائمة المستخدمين" />
@@ -30,17 +30,22 @@ const Sidebar = () => {
       </div>
 
       {/* Bottom Actions */}
-      <div className="p-4">
+
+      <div className="p-4 flex justify-center items-center gap-6 flex-col">
         {/* Add Button */}
-        <div className="bg-green-100 rounded-xl p-6 flex flex-col items-center justify-center mb-6">
-          <button className="bg-green-400 text-white p-3 rounded-full">
+<div className="flex justify-center items-center">
+        <hr className="mt-1 w-40"/>
+
+</div>
+        <div className="bg-green-100 rounded-xl p-6 flex flex-col items-center justify-center mb-6 w-40">
+          <button className="bg-green-400 text-white p-3 rounded-xl">
             <Plus />
           </button>
           <span className="mt-2 text-green-800 font-medium">إضافة</span>
         </div>
 
         {/* Profile and Logout */}
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-4 p-1 rounded-full bg-[#DAF1EA]">
           <img
             src={userImg}
             alt="User"
@@ -58,9 +63,9 @@ const Sidebar = () => {
 const SidebarLink = ({ icon: Icon, label, active }) => {
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-2 rounded-md ${
+      className={`flex items-center gap-3 px-4 py-2 ${
         active
-          ? "text-green-600 bg-green-50 font-bold"
+          ? "text-green-600 bg-green-50 font-bold border-r-4 border-[#54BEA0]"
           : "hover:bg-gray-100 text-gray-500"
       }`}
     >

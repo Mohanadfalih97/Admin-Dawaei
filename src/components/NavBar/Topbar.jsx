@@ -1,6 +1,7 @@
 import React from "react";
 import { Bell } from "lucide-react";
 import { CalendarDays } from "lucide-react";
+import profilpic from "../../asset/Imge/profilepic.jpg"
 
 const Navbar = () => {
   return (
@@ -21,12 +22,12 @@ const Navbar = () => {
       </div>
 
       {/* الإشعارات والمستخدم */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4 border  border-gray-300 bg-white rounded-full p-2">
         <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-300 shadow-sm hover:bg-gray-100">
           <Bell className="w-5 h-5 text-gray-600" />
         </button>
         <img
-          src="/assets/user.png" // ✅ ضع الصورة المناسبة هنا
+          src= {profilpic}// ✅ ضع الصورة المناسبة هنا
           alt="User"
           className="w-10 h-10 rounded-full border border-gray-300 object-cover"
         />

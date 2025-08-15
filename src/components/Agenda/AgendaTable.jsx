@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, MoreHorizontal, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, MoreHorizontal, FileText, Search, SlidersHorizontal,Filter } from "lucide-react";
+import UserHead from "../profile/UserHead"
 
 const mockPharmacies = [
   { id: 1, serial: 2, name: "صيدلية الشفاء", manager: "بها محمد كاظم", phone: "+96478XXXXXXXX", address: "بغداد - المنصور", joinDate: "2025/7/8", drugs: 1000, orders: 1000, status: "معلقة" },
@@ -46,10 +47,33 @@ export default function PharmaciesTableMock() {
   return (
     <div className="mt-6">
          {/* Header */}
-        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+           <div className=" h-[50px] flex justify-between items-center px-5 opacity-100" style={{direction:"rtl"}}> 
+  <UserHead  style={{direction:"ltr"}}/>
+      {/* حقل البحث */}
+<div className="flex justify-center items-center gap-1">
+  
+        <div className="flex items-center bg-white h-[45px] px-3 rounded-[16px] shadow border w-[300px] gap-1">
+                  <Search size={18} className="text-gray-400" />
+
+        <input
+          type="text"
+          placeholder="ابحث عن صيدلية"
+          className="flex-1 outline-none text-sm text-right placeholder-gray-400"
+        />
+      </div>
+            <div className="flex items-center bg-white h-[45px] px-3 rounded-[16px] shadow border w-[80px]">
+        <Filter
+     
+          className="flex-1 outline-none text-sm text-right placeholder-gray-400"
+        />
+      </div>
+ 
+</div>
+            </div>
+        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between "  style={{ direction: "rtl" }}>
         
           <button
-            className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-white shadow hover:bg-emerald-600 transition"
+            className="inline-flex items-center h-[45px]  gap-2 rounded-full bg-emerald-500 px-4 py-2 text-white shadow hover:bg-emerald-600 transition"
             onClick={() => alert("تسجيل صيدلية (وهمي)")}
             style={{ direction: "ltr" }}
           >

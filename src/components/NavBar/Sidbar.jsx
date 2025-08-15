@@ -38,10 +38,10 @@ const Sidebar = () => {
 
 </div>
         <div className="bg-green-100 rounded-xl p-6 flex flex-col items-center justify-center mb-6 w-40">
-          <button className="bg-green-400 text-white p-3 rounded-xl">
+          <button className="bg-[#54BEA0] text-white p-3 rounded-xl">
             <Plus />
           </button>
-          <span className="mt-2 text-green-800 font-medium">إضافة</span>
+          <span className="mt-2 text-[#54BEA0] font-medium">إضافة</span>
         </div>
 
         {/* Profile and Logout */}

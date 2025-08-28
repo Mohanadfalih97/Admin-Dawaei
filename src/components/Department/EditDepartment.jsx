@@ -1,133 +1,118 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { useNavigate, useParams } from "react-router-dom";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "../Ui/table";
+import React, { useState } from "react";
+import { Plus, ChevronLeft } from "lucide-react";
 
-const EditDepartment = () => {
-  const { id } = useParams();
-  const [name, setName] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
+/**
+ * PharmacyDetailsPanel
+ * - تصميم مستوحى من الصورة المرفقة
+ * - مكتوب بـ TailwindCSS فقط (بدون تبعيات خارجية)
+ * - يدعم RTL بالكامل
+ */
+export default function PharmacyDetailsPanel() {
+  // بيانات تجريبية — يمكنك تمريرها كـ props لاحقًا إذا أردت
+  const [pharmacy, setPharmacy] = useState({
+    name: "صيدلية الحياة",
+    owner: "الدكتور احمد عباس علي محمد",
+    phone: "+9647700000000",
+    email: "Ahmedmo@gmail.com",
+    active: true,
+    locked: false, // حالة قفل الصلاحية
+  });
 
-  useEffect(() => {
-    const fetchDepartment = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}department/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Accept-Language": "en",
-              Accept: "application/json",
-            },
-          }
-        );
-
-        const data = response.data.data;
-        setName(data.departmentName || "");
-      } catch (error) {
-        toast.error("فشل تحميل بيانات القطاع");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDepartment();
-  }, [id]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!name.trim()) {
-      toast.error("يرجى إدخال اسم القطاع");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      await axios.put(
-        `${process.env.REACT_APP_API_URL}department/${id}`,
-        {
-          departmentName: name.trim(),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Accept-Language": "en",
-            Accept: "application/json",
-          },
-        }
-      );
-
-      toast.success("تم تحديث القطاع بنجاح");
-      navigate("/Department");
-    } catch (error) {
-      toast.error("حدث خطأ أثناء التحديث");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const toggleActive = () => setPharmacy(p => ({ ...p, active: !p.active }));
+  const toggleLocked = () => setPharmacy(p => ({ ...p, locked: !p.locked }));
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 border p-6 rounded-lg shadow-md space-y-6" style={{ direction: "rtl" }}>
-      <h2 className="text-2xl font-semibold text-center text-primary">تعديل بيانات القطاع</h2>
+    <div className="min-h-screen bg-[#e9eaec] flex" dir="rtl">
+      {/* فراغ يسار مثل المعاينة */}
+      <div className="hidden lg:block flex-1" />
 
-      {loading ? (
-        <p className="text-center text-gray-600">جاري تحميل البيانات...</p>
-      ) : (
-        <form onSubmit={handleSubmit}>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-center">الخاصية</TableHead>
-                <TableHead className="text-center">القيمة</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>اسم القطاع</TableCell>
-                <TableCell>
+      {/* اللوحة اليمنى */}
+      <aside className="w-full lg:max-w-[520px] bg-white shadow-sm rounded-3xl m-4 lg:mx-6 overflow-hidden border border-zinc-100">
+        {/* شريط علوي */}
+        <div className="p-4 flex items-center justify-between">
+          <button
+            className="px-3 py-1.5 text-sm rounded-full border border-zinc-200 hover:bg-zinc-50 transition flex items-center gap-1"
+            onClick={() => alert("عرض الصيدلية")}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>عرض الصيدلية</span>
+          </button>
+
+          <h2 className="font-semibold text-zinc-800">{pharmacy.name}</h2>
+
+          <div className="flex items-center gap-2">
+            {/* حالة النشاط */}
+            <button
+              onClick={toggleActive}
+              className={`px-3 py-1.5 text-xs rounded-full transition border ${
+                pharmacy.active
+                  ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                  : "text-zinc-700 bg-zinc-50 border-zinc-200"
+              }`}
+            >
+              {pharmacy.active ? "نشط" : "غير نشط"}
+            </button>
+
+            {/* أفاتار */}
+            <div className="w-12 h-12 rounded-full border border-zinc-200 grid place-items-center relative">
+              <Plus className="w-5 h-5 text-zinc-400" />
+            </div>
+          </div>
+        </div>
+
+        <hr className="border-zinc-100" />
+
+        {/* معلومات الصيدلي */}
+        <section className="p-4">
+          <div className="space-y-1 text-sm">
+            <div className="grid grid-cols-3 items-center">
+              <span className="text-zinc-500">اسم الصيدلي</span>
+              <span className="col-span-2 text-zinc-800">{pharmacy.owner}</span>
+            </div>
+            <div className="grid grid-cols-3 items-center">
+              <span className="text-zinc-500">رقم الهاتف</span>
+              <span className="col-span-2 text-zinc-800">{pharmacy.phone}</span>
+            </div>
+            <div className="grid grid-cols-3 items-center">
+              <span className="text-zinc-500">البريد الالكتروني</span>
+              <span className="col-span-2 text-zinc-800 truncate">{pharmacy.email}</span>
+            </div>
+          </div>
+        </section>
+
+        {/* الصلاحيات */}
+        <section className="p-4">
+          <div className="rounded-2xl border border-zinc-200 bg-white">
+            <header className="p-4 border-b border-zinc-200">
+              <h3 className="font-medium text-zinc-800">الصلاحيات</h3>
+            </header>
+
+            <div className="p-4">
+              <div className="flex items-start gap-3">
+                {/* Toggle */}
+                <label className="relative inline-flex items-center cursor-pointer select-none">
                   <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="border px-4 py-2 rounded w-full text-center"
-                    disabled={isSubmitting}
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={pharmacy.locked}
+                    onChange={toggleLocked}
                   />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell colSpan={2} className="text-center">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className={`bg-blue-600 w-full text-white px-6 py-2 mt-4 rounded hover:bg-blue-700 transition ${
-                      isSubmitting ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {isSubmitting ? "جارٍ التحديث..." : "تحديث"}
-                  </button>
-               
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </form>
-      )}
+                  <div className="w-12 h-7 bg-zinc-200 rounded-full peer-checked:bg-zinc-300 transition-all relative">
+                    <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-all ${pharmacy.locked ? 'translate-x-5' : ''}`} />
+                  </div>
+                </label>
+
+                <div className="space-y-0.5">
+                  <div className="font-medium text-zinc-800">قفل الصلاحية</div>
+                  <p className="text-xs text-zinc-500">
+                    لن يعد بالإمكان الاستفادة من خدمات التطبيق
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </aside>
     </div>
   );
-};
-
-export default EditDepartment;
+}

@@ -1,163 +1,98 @@
 import React, { useState } from "react";
-// import { User,Home } from "lucide-react";
-import { User } from "lucide-react";
-import { useNavigate , Link } from "react-router-dom";
-import { PasswordInput } from "../components/Ui/password-input";
-import { toast } from "react-toastify";
+import { User2, Mail, Lock, Phone } from "lucide-react";
 
+export default function LoginCard() {
+  const [form, setForm] = useState({
+    username: "",
+    email: "",
+    phone: "",
+    country: "IQ",
+    password: "",
+  });
 
-const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errorMsg] = useState("");
-  const navigate = useNavigate();
+  const countries = [
+    { code: "IQ", name: "العراق", dial: "+964", flag: "🇮🇶" },
+    { code: "SA", name: "السعودية", dial: "+966", flag: "🇸🇦" },
+    { code: "EG", name: "مصر", dial: "+20", flag: "🇪🇬" },
+  ];
 
-const translateMessage = (msg) => {
-  if (!msg) return "حدث خطأ غير متوقع";
-
-  const lowerMsg = msg.toLowerCase();
-
-  if (lowerMsg.includes("invalid") || lowerMsg.includes("incorrect")) {
-    return "البريد الإلكتروني أو كلمة المرور غير صحيحة";
-  }
-
-  if (lowerMsg.includes("not found")) {
-    return "المستخدم غير موجود";
-  }
-
-  if (lowerMsg.includes("required")) {
-    return "جميع الحقول مطلوبة";
-  }
-
-  if (lowerMsg.includes("unauthorized")) {
-    return "غير مصرح بالدخول، يرجى التحقق من البيانات";
-  }
-
-  if (lowerMsg.includes("password must")) {
-    return "كلمة المرور لا تلبي المتطلبات الأمنية";
-  }
-
-  return msg; // إذا لم يتم التعرف على الرسالة، يتم عرضها كما هي
-};
-
-const handleLogin = async (e) => {
-  e.preventDefault();
-
-  try {
-    const response = await fetch(`${process.env.REACT_APP_API_URL}auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "Accept-Language": "en",
-      },
-      body: JSON.stringify({
-        email: email,
-        password: password,
-      }),
-    });
-
-    const result = await response.json();
-
-if (response.ok && result.data?.token) {
-  localStorage.setItem("token", result.data.token);
-  localStorage.setItem("userId", result.data.userId);
-  localStorage.setItem("userName", result.data.name);
-  localStorage.setItem("userRole", result.data.role);
-
-  toast.success("تم تسجيل الدخول بنجاح ");
-  navigate("/dashboard");
-} else {
-  const errorMessage = translateMessage(result.msg || result.message || result.error);
-  toast.error(errorMessage);
-}
-
-  } catch (error) {
-    console.error("Login error:", error);
-    toast.error("حدث خطأ أثناء الاتصال بالخادم.");
-  }
-};
-
+  const handleChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-600 to-blue-800"
-      style={{ direction: "rtl" }}
-    >
-      <div className="w-full max-w-sm bg-white rounded-xl shadow-md p-8 text-center"
-       style={{ maxWidth: "50rem", width: "100%", maxHeight: "1123px" }}>
-           <div className="text-blue-700 mb-4 text-3xl font-bold">
-       {/*    <Link to="/LoginAsMember" className="hover:text-blue-900 transition">
-            <Home />
-          </Link> */}
-        </div>
-        <div className="flex flex-col items-center justify-center gap-2">
-       
-          <User />
-          <h2 className="text-xl font-bold text-gray-800 mb-2 ">تسجيل الدخول</h2>
-          <p className="text-sm text-gray-500 mb-6">
-            أدخل بيانات الدخول الخاصة بك للوصول إلى منصة التصويت
-          </p>
+    <div className="flex items-center justify-center min-h-screen bg-[#b8e0d4]">
+      <div className="relative bg-white shadow-lg rounded-xl w-[350px] p-6 text-right">
+        {/* العنوان */}
+        <h2 className="text-xl font-bold text-gray-800 mb-2">مرحباً بك في بورتال !</h2>
+        <p className="text-gray-500 text-sm mb-6">ادخل البيانات لتسجيل الدخول</p>
+
+        {/* حقل اسم المستخدم */}
+        <div className="flex items-center border rounded-lg px-3 mb-3">
+          <User2 className="w-5 h-5 text-gray-400 ml-2" />
+          <input
+            type="text"
+            placeholder="اسم المستخدم"
+            value={form.username}
+            onChange={(e) => handleChange("username", e.target.value)}
+            className="w-full py-2 outline-none text-sm"
+          />
         </div>
 
-        {errorMsg && (
-          <p className="text-red-500 text-sm mb-4">{errorMsg}</p>
-        )}
+        {/* حقل البريد الإلكتروني */}
+        <div className="flex items-center border rounded-lg px-3 mb-3">
+          <Mail className="w-5 h-5 text-gray-400 ml-2" />
+          <input
+            type="email"
+            placeholder="البريد الإلكتروني"
+            value={form.email}
+            onChange={(e) => handleChange("email", e.target.value)}
+            className="w-full py-2 outline-none text-sm"
+          />
+        </div>
 
-        <form className="space-y-4" onSubmit={handleLogin}>
-          <div className="text-right">
-            <label className="block mb-1 text-sm font-semibold text-gray-700">
-              اسم البريد الكتروني
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="اسم البريد الكتروني"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
-          </div>
-
-          <div className="text-right w-full">
-            <label className="block mb-1 text-sm font-semibold text-gray-700">
-              كلمة المرور
-            </label>
-            <PasswordInput
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input type="checkbox" className="form-checkbox" />
-              تذكرني
-            </label>
-<Link
-  to="/Otp-password"
-  className="text-sm text-blue-600 hover:underline"
->
-  نسيت كلمة المرور؟
-</Link>
-
-
-          </div>
-
-          <button
-            type="submit"
-            className="block w-full text-center bg-blue-800 text-white py-2 rounded-md hover:bg-blue-900 transition"
+        {/* حقل رقم الهاتف مع الدولة */}
+        <div className="flex items-center border rounded-lg px-3 mb-3">
+          <Phone className="w-5 h-5 text-gray-400 ml-2" />
+          <select
+            value={form.country}
+            onChange={(e) => handleChange("country", e.target.value)}
+            className="outline-none text-sm bg-transparent px-1"
           >
-            تسجيل الدخول
-          </button>
-        </form>
-      </div>
-      <div className="absolute bottom-6 text-white text-sm text-center">
-        منصة آمنة للتصويت الإلكتروني       
+            {countries.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.flag} {c.dial}
+              </option>
+            ))}
+          </select>
+          <input
+            type="tel"
+            placeholder="رقم الهاتف"
+            value={form.phone}
+            onChange={(e) => handleChange("phone", e.target.value)}
+            className="w-full py-2 outline-none text-sm"
+          />
+        </div>
+
+        {/* كلمة المرور */}
+        <div className="flex items-center border rounded-lg px-3 mb-5">
+          <Lock className="w-5 h-5 text-gray-400 ml-2" />
+          <input
+            type="password"
+            placeholder="كلمة المرور"
+            value={form.password}
+            onChange={(e) => handleChange("password", e.target.value)}
+            className="w-full py-2 outline-none text-sm"
+          />
+        </div>
+
+        {/* زر تسجيل الدخول */}
+        <button
+          className="w-full bg-gray-400 text-white py-2 rounded-lg font-semibold cursor-pointer hover:bg-gray-500 transition"
+        >
+          تسجيل الدخول
+        </button>
       </div>
     </div>
   );
-};
-
-export default Login;
+}

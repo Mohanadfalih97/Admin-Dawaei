@@ -28,6 +28,7 @@ import RestAccesscode from "./pages/RestAccesscode";
 import Agenda from "./pages/Agenda";
 import AddAgenda from "./components/Agenda/AddAgenda";
 import EditAgenda from "./components/Agenda/EditAgenda";
+import EditUser from "./components/users/EditUser";
 import OtpPassowrdAdmin from "./pages/OtpPassowrdAdmin";
 import RestAccesscodeByAdmin from "./pages/RestAccesscodeByAdmin";
 import ResetPassword from "./pages/ResetPassword";
@@ -36,14 +37,16 @@ import UserEditDialog from "./pages/UserEditDialog";
 import Electoralcycles from "./pages/Electoralcycles";
 import Candidates from "./pages/Candidates";
 import AddElectoralcycles from "./components/Electoralcycles/AddElectoralcycles";
-import EditElectoralcycles from "./components/Electoralcycles/EditElectoralcycles";
+import Notifacation from "./components/notifacation/notifacation";
 import AddCandidates from "./components/Candidates/AddCandidates";
 import EditCandidates from "./components/Candidates/EditCandidates";
 import ElectionCycleDetails from "./components/Electoralcycles/ElectionCycleDetails";
 import AddDepartment from "./components/Department/AddDepartment";
-import EditDepartment from "./components/Department/EditDepartment";
+import ProfileEditPanel from "./components/profile/profilepanel";
 import Addinstitution from "./components/institution/Addinstitution";
 import InstitutionForm from "./pages/InstitutionForm"; 
+import AddUser from "./components/users/AddUser"; 
+
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -65,11 +68,10 @@ const App = () => {
             <Route path="reports" element={<Reports />} />
             <Route path="members" element={<Members />} />
             <Route path="UsersInfo" element={<UsersInfo />} />
-            <Route path="VotePageMain" element={<VotePageMain />} />
-            <Route path="EditVote/:id" element={<EditVote />} />
-            <Route path="EditElectoralcycles/:id" element={<EditElectoralcycles />} />
+            <Route path="EditUser" element={<EditUser />} />
+            <Route path="notifacation" element={<Notifacation />} />
             <Route path="EditCandidates/:id" element={<EditCandidates />} />
-            <Route path="Electoralcycles" element={<Electoralcycles />} />
+            <Route path="ProfileEditPanel" element={<ProfileEditPanel />} />
             <Route path="AddElectoralcycles" element={<AddElectoralcycles />} />
             <Route path="AddCandidates" element={<AddCandidates />} />
             <Route path="Candidates" element={<Candidates />} />
@@ -77,16 +79,16 @@ const App = () => {
             <Route path="Department" element={<Department />} />
             <Route path="InstitutionDetails" element={<InstitutionDetails />} />
             <Route path="/assign-members" element={<AssignMembersToElection />} />
-            <Route path="EditDepartment/:id" element={<EditDepartment />} />
-            <Route path="/institution/create" element={<InstitutionForm />} />
+                  <Route path="/institution/create" element={<InstitutionForm />} />
             <Route path="/institution/edit/:id" element={<InstitutionForm />} /> 
             <Route path="Add-Department" element={<AddDepartment />} />
             <Route path="Add-institution" element={<Addinstitution/>} />
             <Route path="Agenda" element={<Agenda/>} />
+                  <Route path="AddUser" element={<AddUser/>} />
 
             <Route path="Add-Agenda" element={<AddAgenda/>} />
 
-            <Route path="EditAgenda/:id" element={<EditAgenda/>} />
+            <Route path="EditAgenda" element={<EditAgenda/>} />
 
 
 

@@ -1,160 +1,130 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { Button } from "../Ui/Button";
-import { ScrollArea } from "../Ui/scroll-area";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../Ui/table";
-import { format } from "date-fns";
-import { ar } from "date-fns/locale";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+// components/UserInfoSheet.jsx
+import React from "react";
 
-const UserEditDialog = ({ onOpenChange }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user } = location.state || {};
-  const [editableUser, setEditableUser] = useState(user || {});
-  const [loading, setLoading] = useState(false);
-
-
-  const handleChange = (e) => {
-  
-
-    const { name, value } = e.target;
-    setEditableUser((prevUser) => ({
-      ...prevUser,
-      [name]: value,
-    }));
-  };
-
-  const handleSave = async () => {
-  
-
-    setLoading(true);
-
-    try {
-      const response = await axios.put(
-        `${process.env.REACT_APP_API_URL}auth/${editableUser.id}`,
-        {
-          staticRole: editableUser.staticRole,
-          email: editableUser.email,
-          phone: editableUser.phone,
-          phoneCountryCode: editableUser.phoneCountryCode,
-          name: editableUser.name,
-        }
-      );
-
-      if (response.status === 200) {
-        toast.success("تم تحديث بيانات المستخدم بنجاح!");
-        setTimeout(() => {
-          navigate("/UsersInfo");
-        }, 1000);
-      }
-    } catch (err) {
-      console.error("Error updating user:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDate = (date) => {
-    return format(new Date(date), "EEEE d MMMM yyyy", { locale: ar });
-  };
-
+export default function UserInfoSheet({
+  dir = "rtl",
+  name = "سارة سعد كاظم",
+  status = "نشط",
+  phone = "+964 780XXXXXXX",
+  email = "Ahmedmo@gmail.com",
+  avatar =
+    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256&auto=format&fit=crop",
+  locked = false,
+  onLockedChange = () => {},
+  onClose = () => {},
+  onOpenProfile = () => {},
+}) {
   return (
-    <div className="mt-5 p-5 border rounded-lg shadow-md">
-      <ScrollArea className="max-h-[100vh] overflow-auto" dir="rtl">
-        <div className="mt-4 space-y-6 px-1">
-          <h3 className="text-lg font-semibold">معلومات المستخدم</h3>
+    <div
+      dir={dir}
+      className="w-[420px] max-w-full bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between p-4">
+        <button
+          onClick={onOpenProfile}
+          className="text-sm px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 transition"
+        >
+          عرض الملف الشخصي
+        </button>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[200px]">البيان</TableHead>
-                <TableHead>التفاصيل</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell className="font-medium">الاسم</TableCell>
-                <TableCell>
-                  <input
-                    type="text"
-                    name="name"
-                    value={editableUser.name || ""}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border rounded text-center"
-                  />
-                </TableCell>
-              </TableRow>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold">سارة سعد كاظم</h2>
+          <button
+            onClick={onClose}
+            aria-label="إغلاق"
+            className="size-8 grid place-items-center rounded-full hover:bg-gray-100"
+          >
+            ×
+          </button>
+        </div>
+      </div>
 
-              <TableRow>
-                <TableCell className="font-medium">البريد الإلكتروني</TableCell>
-                <TableCell>
-                  <input
-                    type="email"
-                    name="email"
-                    value={editableUser.email || ""}
-                    onChange={handleChange}
-                  
-                    className="w-full p-2 border rounded text-center"
-                  />
-                </TableCell>
-              </TableRow>
+      {/* Body */}
+      <div className="px-6 pb-6">
+        {/* Profile header */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="text-xl font-bold">{name}</div>
 
-         <TableRow>
-  <TableCell className="font-medium">رقم الهاتف مع رمز البلد</TableCell>
-  <TableCell>
-    <div className="flex gap-1 justify-center items-center">
-            <input
-        type="text"
-        name="phone"
-        value={editableUser.phone || ""}
-        onChange={handleChange}
-        className="flex-1 p-2 border rounded text-center"
-      />
-      <input
-        type="text"
-        name="phoneCountryCode"
-        placeholder="+964"
-        value={editableUser.phoneCountryCode || ""}
-        onChange={handleChange}
-        className="w-[80px] p-2 border rounded text-center"
-      />
+          <span className="px-4 py-1 text-sm rounded-full bg-emerald-50 text-emerald-600">
+            {status}
+          </span>
 
-    </div>
-  </TableCell>
-</TableRow>
+          <img
+            src={avatar}
+            alt={name}
+            className="w-20 h-20 rounded-2xl object-cover shadow-sm"
+          />
+        </div>
 
+        {/* Divider */}
+        <div className="h-px bg-gray-200 my-4" />
 
-              <TableRow>
-                <TableCell className="font-medium">تاريخ الإنشاء</TableCell>
-                <TableCell>{user?.createdAt ? formatDate(user.createdAt) : "غير معروف"}</TableCell>
-              </TableRow>
+        {/* Details rows */}
+        <div className="space-y-2 text-sm">
+          <DetailRow label="اسم المستخدم" value={name} />
+          <DetailRow label="رقم الهاتف" value={phone} />
+          <DetailRow label="البريد الالكتروني" value={email} />
+        </div>
 
-              <TableRow>
-                <TableCell className="font-medium">تاريخ التحديث</TableCell>
-                <TableCell>{user?.updatedAt ? formatDate(user.updatedAt) : "غير معروف"}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+        {/* Permissions card */}
+        <div className="mt-6">
+          <div className="text-lg font-semibold mb-3">الصلاحيات</div>
 
-          <div className="pt-4 flex justify-end gap-2" style={{ direction: "ltr" }}>
-            <Button
-              className="bg-primary text-white"
-              onClick={handleSave}
-              disabled={loading}
-            >
-              {loading
-                ? "جاري الحفظ..."
-               
-                : "حفظ التعديلات"}
-            </Button>
+          <div className="rounded-2xl border border-gray-200 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <div className="font-medium">قفل المستخدم</div>
+                <p className="text-xs text-gray-500 mt-1">
+                  لن يعد بإمكانه الاستفادة من خدمات التطبيق
+                </p>
+              </div>
+
+              <Switch
+                checked={locked}
+                onChange={onLockedChange}
+                ariaLabel="تفعيل / إلغاء قفل المستخدم"
+              />
+            </div>
           </div>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
-};
+}
 
-export default UserEditDialog;
+/* --------- Small helpers --------- */
+
+function DetailRow({ label, value }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="text-gray-500 w-28 shrink-0">{label}</div>
+      <div className="text-gray-900 truncate">{value}</div>
+    </div>
+  );
+}
+
+function Switch({ checked, onChange, ariaLabel }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      onClick={() => onChange(!checked)}
+      className={[
+        "relative inline-flex h-7 w-12 items-center rounded-full border transition",
+        checked
+          ? "bg-emerald-500 border-emerald-500"
+          : "bg-gray-200 border-gray-300",
+      ].join(" ")}
+    >
+      <span
+        className={[
+          "inline-block h-5 w-5 transform rounded-full bg-white shadow transition",
+          checked ? "translate-x-5" : "translate-x-1",
+        ].join(" ")}
+      />
+    </button>
+  );
+}

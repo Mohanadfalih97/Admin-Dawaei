@@ -1,232 +1,131 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { toast } from "react-toastify";
-import defaultProfileImage from "../../asset/Imge/profiledefautimg.png";
-import { Camera } from "lucide-react";
+import React, { useState } from 'react'; 
+import { Steps } from 'primereact/steps';
+import { Button } from 'primereact/button';
+import { FaCheckCircle } from "react-icons/fa";
 
-const InstitutionForm = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const locationData = useLocation();
 
-  const [institutionName, setInstitutionName] = useState("");
-  const [location, setLocation] = useState("");
-  const [phoneNumber, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [imagePreview, setImagePreview] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [isEdit, setIsEdit] = useState(false);
+export default function PharmacyProfileForm() {
+    const [activeIndex, setActiveIndex] = useState(0);
 
-  const fetchInstitution = useCallback(async () => {
-    if (!id) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.REACT_APP_API_URL}institution?id=${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Accept-Language": "en",
+    const items = [
+        {
+            label: 'بيانات الصيدلاني'
         },
-      });
-
-      const result = await response.json();
-      const institution = result.data?.items?.[0];
-
-      if (response.ok && institution) {
-        setInstitutionName(institution.institutionName || "");
-        setImagePreview(institution.imgUrl || "");
-        setLocation(institution.location || "");
-        setPhone(institution.phoneNumber || "");
-        setEmail(institution.email || "");
-        setIsEdit(true);
-      } else {
-        toast.info("لا توجد بيانات للمؤسسة، سيتم إنشاء مؤسسة جديدة");
-        setIsEdit(false);
-      }
-    } catch (err) {
-      toast.error("خطأ أثناء تحميل البيانات");
-    }
-  }, [id]);
-
-  useEffect(() => {
-    const company = locationData.state?.company;
-    if (company) {
-      setInstitutionName(company.institutionName || "");
-      setImagePreview(company.imgUrl || "");
-      setLocation(company.location || "");
-      setPhone(company.phoneNumber || "");
-      setEmail(company.email || "");
-      setIsEdit(true);
-    } else {
-      fetchInstitution();
-    }
-  }, [locationData.state, fetchInstitution]);
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!institutionName.trim()) {
-      toast.error("يرجى إدخال اسم المؤسسة");
-      return;
-    }
-
-    setLoading(true);
-    const token = localStorage.getItem("token");
-    let uploadedImgUrl = imagePreview;
-
-    try {
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append("file", imageFile);
-
-        const uploadResponse = await fetch(`${process.env.REACT_APP_API_URL}attachments`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Accept-Language": "en",
-          },
-          body: formData,
-        });
-
-        const uploadResult = await uploadResponse.json();
-        if (!uploadResponse.ok || !uploadResult.data) {
-          throw new Error(uploadResult.msg || "فشل رفع الصورة");
+        {
+            label: 'بيانات الصيدلية'
+        },
+        {
+            label: 'المستندات'
         }
+    ];
 
-        const baseUrl = process.env.REACT_APP_API_URL.replace(/\/api\/?$/, "");
-        uploadedImgUrl = uploadResult.data.startsWith("http")
-          ? uploadResult.data
-          : `${baseUrl}/uploads/${uploadResult.data}`;
-      }
+    const nextStep = () => setActiveIndex((prevIndex) => Math.min(prevIndex + 1, items.length - 1));
+    const prevStep = () => setActiveIndex((prevIndex) => Math.max(prevIndex - 1, 0));
 
-      const payload = {
-        institutionName,
-        imgUrl: uploadedImgUrl,
-        location,
-        phoneNumber,
-        email,
-      };
+    return (
+        <div dir="rtl" className="card">
+        
+<div>
+  <svg  xmlns="http://www.w3.org/2000/svg">
+  <rect className='w-[656px] h-[5px] text-[#54BEA0]' fill="gray" />
+</svg>
+</div>
+          
+<svg  xmlns="http://www.w3.org/2000/svg">
+  <rect className='w-[193px] h-[5px] text-[#54BEA0]' fill="blue" />
+</svg>
+  <Steps model={items} activeIndex={activeIndex} />
+            {/* المحتوى حسب الخطوة الحالية */}
+            <div className="p-4 md:p-6 space-y-8">
+                {activeIndex === 0 && (
+                    <div>
+                       {/* شريط التقدّم */}
+          
+                        <div>
+                            {/* هنا يمكن إضافة الحقول الخاصة بالبيانات */}
+                            <label>اسم الصيدلي:</label>
+                            <input type="text" placeholder="اكتب اسم الصيدلي" className="w-full p-2 border border-gray-300 rounded" />
+                        </div>
+                        <div>
+                            <label>رقم الهاتف:</label>
+                            <input type="tel" placeholder="اكتب رقم الهاتف" className="w-full p-2 border border-gray-300 rounded" />
+                        </div>
+                        <div>
+                            <label>البريد الإلكتروني:</label>
+                            <input type="email" placeholder="اكتب البريد الإلكتروني" className="w-full p-2 border border-gray-300 rounded" />
+                        </div>
+                    </div>
+                )}
 
-      const method = isEdit ? "PUT" : "POST";
-      const url = isEdit
-        ? `${process.env.REACT_APP_API_URL}institution/${id}`
-        : `${process.env.REACT_APP_API_URL}institution`;
+                {activeIndex === 1 && (
+                    <div>
+                        <h3>بيانات الصيدلية</h3>
+                        <div>
+                            <label>اسم الصيدلية:</label>
+                            <input type="text" placeholder="اكتب اسم الصيدلية" className="w-full p-2 border border-gray-300 rounded" />
+                        </div>
+                        <div>
+                            <label>رقم الهاتف:</label>
+                            <input type="tel" placeholder="اكتب رقم الهاتف" className="w-full p-2 border border-gray-300 rounded" />
+                        </div>
+                        <div>
+                            <label>وصف الصيدلية:</label>
+                            <textarea placeholder="اكتب وصف الصيدلية" className="w-full p-2 border border-gray-300 rounded" rows="4"></textarea>
+                        </div>
+                    </div>
+                )}
 
-      const saveResponse = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          "Accept-Language": "en",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+                {activeIndex === 2 && (
+                    <div>
+                        <h3>المستندات</h3>
+                        <div>
+                            <label>صورة رخصة الصيدلية:</label>
+                            <input type="file" className="w-full p-2 border border-gray-300 rounded" />
+                        </div>
+                        <div>
+                            <label>إرفاق مستند آخر:</label>
+                            <input type="file" className="w-full p-2 border border-gray-300 rounded" />
+                        </div>
+                    </div>
+                )}
+            </div>
 
-      if (saveResponse.ok) {
-        toast.success(isEdit ? "تم تحديث المؤسسة بنجاح" : "تم إنشاء المؤسسة بنجاح");
-        navigate("/InstitutionDetails");
-      } else {
-        const error = await saveResponse.json();
-        throw new Error(error.msg || "فشل العملية");
-      }
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-6 space-y-4 justify-content-center" style={{ direction: "rtl" }}>
-      <div className="flex flex-col items-center gap-2">
-        <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-300 shadow-md group">
-          <img
-            src={imagePreview || defaultProfileImage}
-            alt="صورة المؤسسة"
-            className="w-full h-full object-cover"
-          />
-          <input
-            type="file"
-            accept="image/*"
-            id="imageUpload"
-            onChange={handleImageChange}
-            className="hidden"
-          />
-          <label
-            htmlFor="imageUpload"
-            className="absolute inset-0 bg-black bg-opacity-40 flex justify-center items-center text-white text-2xl cursor-pointer opacity-0 group-hover:opacity-100 transition"
-          >
-            <Camera className="w-6 h-6" />
-          </label>
+            {/* أزرار الأسفل */}
+            <div className="px-4 md:px-6 py-4 border-t border-neutral-200 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="flex gap-2 w-full md:w-auto">
+                    <button
+                        type="button"
+                        onClick={prevStep}
+                        disabled={activeIndex === 0}
+                        className={`w-1/2 md:w-32 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border
+                            ${activeIndex === 0
+                                ? "border-neutral-200 text-neutral-400 cursor-not-allowed"
+                                : "border-neutral-300 text-neutral-700 hover:bg-neutral-50"}`}
+                    >
+                        السابق
+                    </button>
+                    {activeIndex < items.length - 1 ? (
+                        <button
+                            type="button"
+                            onClick={nextStep}
+                            className="w-1/2 md:w-32 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700"
+                        >
+                            التالي
+                        </button>
+                    ) : (
+                        <button
+                            type="submit"
+                            className={`w-1/2 md:w-40 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl
+                                ${activeIndex === 2
+                                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                                    : "bg-neutral-200 text-neutral-500 cursor-not-allowed"}`}
+                            disabled={activeIndex !== 2}
+                        >
+                            حفظ
+                        </button>
+                    )}
+                </div>
+            </div>
         </div>
-        <small className="text-gray-500">اضغط على الصورة لتغييرها</small>
-      </div>
-
-      <div>
-        <label htmlFor="institutionName" className="block mb-1 font-semibold text-gray-700">اسم المؤسسة *</label>
-        <input
-          id="institutionName"
-          type="text"
-          placeholder="اسم المؤسسة"
-          className="w-full border rounded px-4 py-2 text-center"
-          value={institutionName}
-          onChange={(e) => setInstitutionName(e.target.value)}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="location" className="block mb-1 font-semibold text-gray-700">الموقع</label>
-        <input
-          id="location"
-          type="text"
-          placeholder="الموقع"
-          className="w-full border rounded px-4 py-2 text-center"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="phoneNumber" className="block mb-1 font-semibold text-gray-700">رقم الهاتف</label>
-        <input
-          id="phoneNumber"
-          type="number"
-          placeholder="رقم الهاتف"
-          className="w-full border rounded px-4 py-2 text-center"
-          value={phoneNumber}
-          onChange={(e) => setPhone(e.target.value)}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="email" className="block mb-1 font-semibold text-gray-700">البريد الإلكتروني</label>
-        <input
-          id="email"
-          type="email"
-          placeholder="البريد الإلكتروني"
-          className="w-full border rounded px-4 py-2 text-center"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading}
-        className={`w-full text-white rounded py-2 transition ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary-dark"}`}
-      >
-        {loading ? (isEdit ? "جاري التحديث..." : "جاري الإنشاء...") : (isEdit ? "تحديث" : "إضافة")}
-      </button>
-    </form>
-  );
-};
-
-export default InstitutionForm;
+    );
+}

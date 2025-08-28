@@ -41,7 +41,6 @@
     "dayjs": "^1.11.13",
     "dotenv": "^10.0.0",
     "dotenv-expand": "^5.1.0",
-  
     "file-loader": "^6.2.0",
     "framer-motion": "^6.5.1",
     "fs-extra": "^10.0.0",
@@ -59,6 +58,7 @@
     "postcss-loader": "^6.2.1",
     "postcss-normalize": "^10.0.1",
     "postcss-preset-env": "^7.0.1",
+    "primereact": "^10.9.7",
     "prompts": "^2.4.2",
     "react": "^19.1.0",
     "react-app-polyfill": "^3.0.0",

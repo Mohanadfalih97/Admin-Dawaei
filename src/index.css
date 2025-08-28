@@ -2,21 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  margin: 0;
-  font-family: Tajawal, sans-serif;
-}
- .w-96{
-  width: 50rem !important;
- }
- input[type="password"]::-ms-reveal,
-input[type="password"]::-ms-clear {
-  display: none;
-}
-input[type="password"]::-webkit-credentials-auto-fill-button {
-  visibility: hidden;
-  display: none !important;
-  pointer-events: none;
-  position: absolute;
-  right: 0;
+html, body, #root {
+  height: 100%;
+  font-family: 'Cairo', system-ui, sans-serif;
 }

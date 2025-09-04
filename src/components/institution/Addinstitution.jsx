@@ -1,112 +1,164 @@
 // src/components/institution/Addinstitution.jsx
-import React, { useMemo, useState } from "react";
-import {
-  Check,
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  RefreshCcw,
-  X,
-  Image as ImageIcon
-} from "lucide-react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
+import { Check, User, Phone, Mail, MapPin, ImageIcon, X } from "lucide-react";
+import iraqflag from "../../asset/flags/iraqflag.png";
+import vector from "../../asset/Imge/Vector.png";
+import Addimg from "../../asset/Imge/09_add image.png";
 
 const GREEN = "#54BEA0";
 
-export default function Addinstitution() {
-  const [active, setActive] = useState(0);
-  const steps = useMemo(() => ["بيانات الصيدلاني", "بيانات الصيدلية", "المستندات"], []);
-  const next = () => setActive((i) => Math.min(i + 1, steps.length - 1));
-  const prev = () => setActive((i) => Math.max(i - 1, 0));
-  const progress = Math.round(((active + 1) / steps.length) * 100);
+/* دول + كود اتصال + صورة العلم (الباقي fallback بإيموجي لو ما توفرت الصور) */
+const COUNTRIES = [
+  { code: "IQ", name: "العراق",   dial: "+964", flagSrc: iraqflag, emoji: "🇮🇶" },
+  { code: "SA", name: "السعودية", dial: "+966", flagSrc: null,     emoji: "🇸🇦" },
+  { code: "AE", name: "الإمارات", dial: "+971", flagSrc: null,     emoji: "🇦🇪" },
+  { code: "KW", name: "الكويت",   dial: "+965", flagSrc: null,     emoji: "🇰🇼" },
+  { code: "JO", name: "الأردن",   dial: "+962", flagSrc: null,     emoji: "🇯🇴" },
+  { code: "TR", name: "تركيا",    dial: "+90",  flagSrc: null,     emoji: "🇹🇷" },
+];
 
-  // ملفات مرفوعة (ديمو)
+export default function Addinstitution() {
+  const steps = useMemo(() => ["بيانات الصيدلاني", "بيانات الصيدلية", "المستندات"], []);
+  const [active, setActive] = useState(0);
+
+  // للعرض/الأنيميشن
+  const [visualStep, setVisualStep] = useState(0);
+  const [animatedProgress, setAnimatedProgress] = useState(0);
+  const [didIntro, setDidIntro] = useState(false);
+  const introTimersRef = useRef([]);
+
+  // نسبة تقدّم صفر-مرتكز: 0% لأول خطوة، 100% لآخر خطوة
+  const progressFor = (step) => {
+    const denom = Math.max(1, steps.length - 1);
+    const clamped = Math.max(0, Math.min(step, steps.length - 1));
+    return Math.round((clamped / denom) * 100);
+  };
+
+  // إيقاف العرض التمهيدي + تنظيف التايمرز
+  const stopIntro = () => {
+    introTimersRef.current.forEach(clearTimeout);
+    introTimersRef.current = [];
+    setDidIntro(true);
+  };
+
+  // العرض التمهيدي عند أول تحميل (يمرّ على الخطوات مثل الصور)
+  useEffect(() => {
+    if (didIntro) return;
+
+    setVisualStep(0);
+    setAnimatedProgress(0);
+
+    const SEG = 900; // مدة كل مرحلة (ms)
+    const ts = [];
+
+    // 0% → 50% (الخطوة الثانية مرئية)
+    ts.push(
+      setTimeout(() => {
+        setVisualStep(1);
+        setAnimatedProgress(progressFor(1));
+      }, 100)
+    );
+
+    // 50% → 100% (الخطوة الثالثة مرئية)
+    ts.push(
+      setTimeout(() => {
+        setVisualStep(2);
+        setAnimatedProgress(progressFor(2));
+      }, 100 + SEG)
+    );
+
+    // رجوع للحالة الفعلية (عادة 0)
+    ts.push(
+      setTimeout(() => {
+        setVisualStep(active);
+        setAnimatedProgress(progressFor(active));
+        setDidIntro(true);
+      }, 100 + SEG * 2 + 250)
+    );
+
+    introTimersRef.current = ts;
+    return () => stopIntro();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [didIntro, steps.length]);
+
+  // الانتقال بين الخطوات مع تصفير الشريط ثم ملئه للنسبة الجديدة
+  function goTo(step) {
+    stopIntro(); // أي تفاعل يوقف العرض التمهيدي فورًا
+    const clamped = Math.max(0, Math.min(step, steps.length - 1));
+    setActive(clamped);
+    setVisualStep(clamped); // اجعل الخطوة الحالية مرئية فورًا
+
+    setAnimatedProgress(0); // الشريط يصير صفر
+    setTimeout(() => setAnimatedProgress(progressFor(clamped)), 50); // ثم يتحرك للنسبة الصحيحة
+  }
+
+  const next = () => goTo(active + 1);
+  const prev = () => goTo(active - 1);
+
+  // ملفات مرفوعة
   const [licenseFront, setLicenseFront] = useState(null);
   const [licenseBack, setLicenseBack] = useState(null);
 
-  const onPick =
-    (setter) =>
-    (e) => {
-      const f = e.target.files?.[0] ?? null;
-      setter(f);
-    };
-
-  const removeFile = (setter) => () => setter(null);
-
   return (
     <div dir="rtl" className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
-      {/* Modal Card */}
-      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl overflow-hidden">
+      <div className="w-[701px] h-auto gap-[19px] rounded-2xl bg-white shadow-xl overflow-hidden">
         {/* Header */}
         <div className="relative px-5 pt-5 pb-3">
-          <h2 className="text-lg font-semibold text-neutral-800">إضافة صيدلية جديدة</h2>
-          <button
-            className="absolute left-4 top-4 p-1 rounded-full hover:bg-neutral-100"
-            aria-label="إغلاق"
-          >
-            <X size={18} />
-          </button>
+          <div className="flex items-center justify-start">
+            <button className="p-1 rounded-full hover:bg-neutral-100 w-[24px] h-[24px]" aria-label="إغلاق">
+              <X size={18} />
+            </button>
+            <h2 className="text-lg font-semibold text-neutral-800">إضافة صيدلية جديدة</h2>
+          </div>
 
-          {/* Thin progress bar */}
-          <div className="mt-3 h-[3px] w-full rounded-full bg-neutral-200 overflow-hidden">
+          {/* Thin progress bar (صفر-مرتكز ويتحرك من الصفر في كل انتقال) */}
+          <div className="mt-3 h-[5px] w-full rounded-full bg-neutral-200 overflow-hidden">
             <div
-              className="h-full"
+              className="h-[5px]"
               style={{
-                width: `${progress}%`,
+                width: `${animatedProgress}%`,
                 backgroundColor: GREEN,
-                transition: "width 300ms ease"
+                transition: "width 700ms ease",
               }}
             />
           </div>
 
           {/* Stepper */}
-          <div className="mt-4 flex items-center justify-between gap-2">
+          <div className="p-[10px] flex items-center justify-between gap-2 w-[800px] mx-auto h-[8px] mt-6">
             {steps.map((label, idx) => {
-              const completed = idx < active;
-              const current = idx === active;
+              const isCurrent = idx === visualStep;
+              // الخطوة الحالية تعتبر مكتملة إلا إذا كانت الأولى (تظهر فارغة)
+              const isCompleted = idx < visualStep || (isCurrent && idx > 0);
+
               return (
                 <div key={label} className="flex-1 flex items-center gap-2">
                   <div className="flex items-center gap-2">
                     <div
                       className={[
-                        "size-6 rounded-full border grid place-items-center",
-                        completed
-                          ? "border-transparent bg-[--g] text-white"
-                          : current
-                          ? "border-[--g] text-[--g]"
-                          : "border-neutral-300 text-neutral-400"
+                        "size-6 rounded-full border grid place-items-center transition-colors duration-500",
+                        isCompleted
+                          ? "border-transparent bg-[--g] text-white" // مكتملة (مع ✓)
+                          : isCurrent
+                          ? "border-[--g] text-[--g]" // الحالية (فارغة) — يطبق على الأولى
+                          : "border-neutral-300 text-neutral-400", // قادمة
                       ].join(" ")}
                       style={{ "--g": GREEN }}
                     >
-                      {completed ? (
-                        <Check size={14} />
-                      ) : (
-                        <span className="text-[10px]">{idx + 1}</span>
-                      )}
+                      {isCompleted ? <Check size={14} /> : <span className="text-[10px]" />}
                     </div>
                     <span
                       className={[
-                        "text-sm",
-                        completed
+                        "text-sm transition-colors duration-500",
+                        isCurrent
+                          ? "text-neutral-800 font-medium" // تمييز عنوان الحالية
+                          : isCompleted
                           ? "text-neutral-700"
-                          : current
-                          ? "text-neutral-800 font-medium"
-                          : "text-neutral-400"
+                          : "text-neutral-400",
                       ].join(" ")}
                     >
                       {label}
                     </span>
                   </div>
-
-                  {/* connector */}
-                  {idx < steps.length - 1 && (
-                    <div
-                      className="h-[2px] flex-1 rounded-full"
-                      style={{
-                        background: idx < active ? GREEN : "rgb(229 231 235)"
-                      }}
-                    />
-                  )}
                 </div>
               );
             })}
@@ -121,48 +173,35 @@ export default function Addinstitution() {
             <StepDocuments
               licenseFront={licenseFront}
               licenseBack={licenseBack}
-              onPickFront={onPick(setLicenseFront)}
-              onPickBack={onPick(setLicenseBack)}
-              onRemoveFront={removeFile(setLicenseFront)}
-              onRemoveBack={removeFile(setLicenseBack)}
+              setLicenseFront={setLicenseFront}
+              setLicenseBack={setLicenseBack}
             />
           )}
         </div>
 
         {/* Footer */}
-        <div className="border-t border-neutral-200 px-5 py-4 flex items-center justify-between">
-          <button
-            onClick={prev}
-            disabled={active === 0}
-            className={`h-11 px-8 rounded-xl text-sm border transition
-              ${
-                active === 0
-                  ? "border-neutral-200 text-neutral-400 cursor-not-allowed"
-                  : "border-neutral-300 text-neutral-700 hover:bg-neutral-50"
-              }`}
-          >
-            السابق
-          </button>
-
-          <div className="flex items-center gap-2">
+        <div className="border-neutral-200 px-5 py-4 gap-[9px] flex items-center justify-between">
+          <div className="flex items-center gap-2 justify-end flex-1">
             <button
-              className="h-11 px-8 rounded-xl text-sm border border-neutral-300 text-neutral-700 hover:bg-neutral-50"
+              className="h-[45px] w-[169px] px-8 rounded-[16px] text-sm border border-neutral-300 text-neutral-700 hover:bg-neutral-50"
               type="button"
+              onClick={prev}
+              disabled={active === 0}
             >
-              إلغاء
+              رجوع
             </button>
 
             {active < steps.length - 1 ? (
               <button
                 onClick={next}
-                className="h-11 px-10 rounded-xl text-sm text-white hover:opacity-90"
+                className="h-[45px] w-[214px] px-10 rounded-[16px] text-sm text-white hover:opacity-90"
                 style={{ backgroundColor: GREEN }}
               >
                 التالي
               </button>
             ) : (
               <button
-                className="h-11 px-10 rounded-xl text-sm text-white hover:opacity-90"
+                className="h-[45px] w-[214px] px-10 rounded-[16px] text-sm text-white hover:opacity-90"
                 style={{ backgroundColor: GREEN }}
                 type="submit"
               >
@@ -185,12 +224,10 @@ function StepPharmacist() {
         placeholder="الدكتور/احمد عباس محمد"
         icon={<User size={16} />}
       />
-      <Field
-        label="رقم الهاتف"
-        placeholder="+9647XXXXXXXXX"
-        icon={<Phone size={16} />}
-        after={<FlagIQ />}
-      />
+
+      {/* رقم الهاتف = دروب داون مخصص يظهر العلم فقط + حقل للرقم */}
+      <PhoneField label="رقم الهاتف" />
+
       <Field
         label="البريد الإلكتروني"
         placeholder="ahmedmo@gmail.com"
@@ -205,45 +242,251 @@ function StepPharmacy() {
   return (
     <div className="space-y-4">
       <Field label="اسم الصيدلية" placeholder="صيدلية الحياة" icon={<User size={16} />} />
-      <Field
-        label="الوصف"
-        isTextarea
-        placeholder="وصف عام: توفر جميع أنواع الأدوية …"
-        icon={<ImageIcon size={16} />}
-      />
+      <Field label="الوصف"  placeholder="وصف عام: توفر جميع أنواع الأدوية …" icon={<ImageIcon size={16} />} />
       <Field label="العنوان" placeholder="بغداد - السيدية" icon={<MapPin size={16} />} />
     </div>
   );
 }
 
 /* ---------- الخطوة 3: المستندات ---------- */
-function StepDocuments({
-  licenseFront,
-  licenseBack,
-  onPickFront,
-  onPickBack,
-  onRemoveFront,
-  onRemoveBack
-}) {
+function StepDocuments({ licenseFront, licenseBack, setLicenseFront, setLicenseBack }) {
   return (
-    <div className="space-y-5">
-      <UploadRow
-        title="صورة واجهة الصيدلية"
+    <div className="space-y-6" dir="rtl">
+      <FileUploadField
+        label="صورة واجهة الصيدلية"
+        placeholder="ارفع صورة واجهة الصيدلية"
         file={licenseFront}
-        onPick={onPickFront}
-        onRemove={onRemoveFront}
+        setFile={setLicenseFront}
       />
-      <UploadRow
-        title="صورة واجهة الصيدلية"
+
+      <FileUploadField
+        label="صورة رخصة الصيدلية"
+        placeholder="ارفع صورة رخصة الصيدلية"
         file={licenseBack}
-        onPick={onPickBack}
-        onRemove={onRemoveBack}
+        setFile={setLicenseBack}
       />
     </div>
   );
 }
 
-/* ---------- حقول مع أيقونات ---------- */
+/* ---------- مكوّن الحقل القابل للنقر + بطاقة المعاينة أسفله ---------- */
+function FileUploadField({ label, placeholder, file, setFile }) {
+  const [inputId] = useState(() => Math.random().toString(36).slice(2));
+  const [preview, setPreview] = useState(null);
+
+  useEffect(() => {
+    if (file && file.type?.startsWith("image/")) {
+      const url = URL.createObjectURL(file);
+      setPreview(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    setPreview(null);
+  }, [file]);
+
+  const onPick = (e) => {
+    const f = e.target.files?.[0] ?? null;
+    setFile(f);
+  };
+
+  const onRemove = () => setFile(null);
+
+  return (
+    <div className="space-y-2">
+      <label className="text-sm text-neutral-700">{label}</label>
+
+      {/* الحقل النصي يفتح مُلتقط الملفات */}
+      <div className="relative cursor-pointer" onClick={() => document.getElementById(inputId)?.click()} role="button">
+        <input
+          type="text"
+          className="w-full rounded-xl border border-neutral-300 pr-3 pl-10 h-11 text-sm placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[--g] cursor-pointer"
+          placeholder={placeholder}
+          style={{ "--g": GREEN }}
+          readOnly
+          value={file?.name ?? ""}
+          img={<Addimg size={16} />}
+        />
+      </div>
+
+      {/* البطاقة أسفل الحقل */}
+      <AttachmentCard file={file} preview={preview} onRemove={onRemove} />
+
+      {/* input الحقيقي */}
+      <input id={inputId} type="file" className="hidden" accept="image/*" onChange={onPick} />
+    </div>
+  );
+}
+
+/* ---------- بطاقة المرفق ---------- */
+function AttachmentCard({ file, preview, onRemove }) {
+  const typeText = file ? file.type || "image/*" : "";
+  const sizeText = file ? formatSize(file.size) : "الحدّ الأقصى 12MB";
+  if (!file) return null;
+
+  return (
+    <div className="relative">
+      <div className="p-[10px] flex items-start gap-3 border border-[#D9D9D9] border-[0.5px] rounded-[8px] bg-white">
+        <div className="flex-1 w-full space-y-2">
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%" }}>
+            {/* المعاينة */}
+            <div className="h-[50px] w-[50px] overflow-hidden ring-1 ring-neutral-200 grid place-items-center bg-neutral-50 rounded">
+              {preview ? (
+                <img src={preview} alt="preview" className="w-[50px] h-[50px] object-cover" />
+              ) : (
+                <div className="size-6 rounded-sm" style={{ backgroundColor: GREEN }} />
+              )}
+            </div>
+
+            {/* المعلومات */}
+            <div className="flex-1 min-w-0 text-right">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="text-[10px] text-emerald-600">مرفق</div>
+                  <span className="text-[10px] text-emerald-600">- {typeText}</span>
+                </div>
+
+                {/* حذف */}
+                <button
+                  type="button"
+                  onClick={onRemove}
+                  className="grid place-items-center rounded-full border border-red-200 bg-[#FFCDCC] text-red-500 hover:bg-red-50 shadow-sm w-[18px] h-[18px]"
+                  aria-label="حذف الملف"
+                  title="حذف"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+
+              {/* الحجم */}
+              <div className="mt-1 text-xs text-neutral-500" style={{ direction: "ltr" }}>
+                {sizeText}
+              </div>
+            </div>
+          </div>
+
+          {/* شريط التقدم داخل البطاقة */}
+          <div className="mt-2 h-[6px] w-full rounded-full bg-neutral-200 overflow-hidden">
+            <div className="h-full" style={{ width: "100%", backgroundColor: "#55C964", transition: "width 400ms ease" }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- حقل هاتف: دروب داون مخصص للأعلام + حقل الرقم ---------- */
+function PhoneField({ label }) {
+  const [country, setCountry] = useState(COUNTRIES[0]);
+  const [number, setNumber] = useState("");
+
+  return (
+    <div className="space-y-1.5" dir="rtl">
+      <label className="text-sm text-neutral-700">{label}</label>
+
+      <div className="flex items-center gap-2">
+        {/* الدروب داون المخصص لصور الأعلام (بدون أسماء/أرقام مرئية) */}
+        <FlagDropdown options={COUNTRIES} value={country} onChange={setCountry} />
+
+        {/* حقل الرقم */}
+        <div className="relative flex-1">
+          <div className="absolute top-1/2 -translate-y-1/2 left-3 text-neutral-400">
+            <Phone size={16} />
+          </div>
+          <input
+            dir="ltr"
+            inputMode="numeric"
+            placeholder="+9647XXXXXXXXX"
+            className="w-full rounded-xl border border-neutral-300 pr-3 pl-10 h-11 text-sm placeholder-neutral-400 focus:outline-none text-right focus:ring-2 focus:ring-[--g]"
+            style={{ "--g": GREEN }}
+            value={number}
+            onChange={(e) => setNumber(e.target.value)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Dropdown مخصص للأعلام ---------- */
+function FlagDropdown({ options, value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const onDocClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      {/* الزر يعرض العلم الحالي فقط */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-[61px] h-[40px]  rounded-[16px] border border-neutral-300 flex justify-center   items-center hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-[--g] gap-1"
+        style={{ "--g": GREEN }}
+        aria-label={`الدولة المختارة: ${value?.name || ""} ${value?.dial || ""}`}
+        title={`${value?.name || ""} ${value?.dial || ""}`}
+        
+      >
+ 
+        <FlagIcon
+         country={value}  />
+                <img src={vector} alt="" srcset="" />
+      </button>
+
+      {/* القائمة: شبكة أعلام فقط */}
+      {open && (
+        <div
+          className="absolute z-20 mt-2 w-[260px] max-h-64 overflow-auto rounded-xl border border-neutral-200 bg-white shadow-md p-2 right-0"
+          role="listbox"
+        >
+          <ul className="grid grid-cols-5 gap-2">
+            {options.map((c) => (
+              <li key={c.code}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange(c);
+                    setOpen(false);
+                  }}
+                  className={[
+                    "w-9 h-7 rounded-[16px] border grid place-items-center hover:bg-neutral-50",
+                    c.code === value?.code ? "border-[--g] ring-1 ring-[--g]" : "border-neutral-200",
+                  ].join(" ")}
+                  style={{ "--g": GREEN }}
+                  title={`${c.name} ${c.dial}`}
+                  aria-label={`${c.name} ${c.dial}`}
+                >
+                  <FlagIcon country={c} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FlagIcon({ country }) {
+  if (country?.flagSrc) {
+    return (
+      <img
+        src={country.flagSrc}
+        alt={country.name}
+        className="w-[20px] h-[20px] rounded-full object-cover"
+        draggable={false}
+      />
+    );
+  }
+  // باك-أب بالإيموجي لو ما عندنا صورة
+  return <span className="text-base leading-none">{country?.emoji || "🏳️"}</span>;
+}
+
+/* ---------- حقول نموذج عامة ---------- */
 function Field({ label, placeholder, icon, after, isTextarea }) {
   return (
     <div className="space-y-1.5">
@@ -262,7 +505,7 @@ function Field({ label, placeholder, icon, after, isTextarea }) {
         ) : (
           <input
             placeholder={placeholder}
-            className="w-full rounded-xl border border-neutral-300 pr-10 pl-10 h-11 text-sm placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[--g]"
+            className="w-full rounded-xl border border-neutral-300 pr-3 pl-10 h-11 text-sm placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[--g]"
             style={{ "--g": GREEN }}
           />
         )}
@@ -271,87 +514,9 @@ function Field({ label, placeholder, icon, after, isTextarea }) {
   );
 }
 
-/* ---------- صف رفع ملف مطابق للتصميم ---------- */
-function UploadRow({ title, file, onPick, onRemove }) {
-  const [id] = useState(() => Math.random().toString(36).slice(2));
-  const sizeText = file ? formatSize(file.size) : "أضف صورة واجهة الصيدلية (png, jpg …) حتى 12MB";
-
-  return (
-    <div className="space-y-2">
-      <div className="text-sm text-neutral-700">{title}</div>
-
-      <label
-        htmlFor={id}
-        className="block rounded-2xl border border-[--g] p-3 cursor-pointer hover:bg-emerald-50 transition"
-        style={{ "--g": GREEN }}
-      >
-        <div className="flex items-start gap-3">
-          {/* زر إعادة اختيار */}
-          <div className="mt-0.5 shrink-0 grid place-items-center size-8 rounded-xl border border-[--g] text-[--g]">
-            <RefreshCcw size={16} />
-          </div>
-
-          {/* معلومات الملف */}
-          <div className="flex-1 min-w-0">
-            <div className="text-sm text-neutral-500 truncate">
-              {file ? file.name : "اسحب وأفلت أو انقر للاختيار"}
-            </div>
-            <div className="text-xs text-emerald-600">{file ? "image/*" : ""}</div>
-
-            {/* شريط التقدم */}
-            <div className="mt-2 h-[6px] w-full rounded-full bg-neutral-200 overflow-hidden">
-              <div
-                className="h-full"
-                style={{
-                  width: file ? "100%" : "0%",
-                  backgroundColor: GREEN,
-                  transition: "width 400ms ease"
-                }}
-              />
-            </div>
-
-            <div className="mt-1 text-xs text-neutral-500">
-              {file ? sizeText : "الحدّ الأقصى 12MB"}
-            </div>
-          </div>
-
-          {/* حذف */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              onRemove();
-            }}
-            className="mt-0.5 shrink-0 grid place-items-center size-8 rounded-xl border border-red-200 text-red-500 hover:bg-red-50"
-            aria-label="حذف الملف"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      </label>
-
-      <input id={id} type="file" className="hidden" onChange={onPick} />
-    </div>
-  );
-}
-
-/* ---------- بادج علم العراق البسيط ---------- */
-function FlagIQ() {
-  return (
-    <div className="flex items-center gap-1 text-xs text-neutral-500">
-      <span className="inline-block w-5 h-3 rounded overflow-hidden ring-1 ring-neutral-300">
-        <span className="block h-1 bg-red-600" />
-        <span className="block h-1 bg-white" />
-        <span className="block h-1 bg-black" />
-      </span>
-      +964
-    </div>
-  );
-}
-
 /* ---------- مساعدات ---------- */
 function formatSize(bytes) {
-  if (!bytes) return "";
+  if (!bytes && bytes !== 0) return "";
   const units = ["B", "KB", "MB", "GB"];
   let i = 0;
   let v = bytes;
